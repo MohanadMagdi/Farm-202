@@ -249,7 +249,7 @@ export default function InventoryPage() {
   const createDispatchOrder = () => {
     toast({
       title: "إذن صرف",
-      description: "سيتم إنشا�� إذن الصرف قريباً",
+      description: "سيتم إنشاء إذن الصرف قريباً",
     });
   };
 
@@ -399,7 +399,7 @@ export default function InventoryPage() {
                   <div>
                     <div className="text-2xl font-bold text-green-600">0</div>
                     <p className="text-xs text-muted-foreground">
-                      ��ا توجد تنبيهات
+                      لا توجد تنبيهات
                     </p>
                   </div>
                 </>
@@ -465,13 +465,13 @@ export default function InventoryPage() {
         </Card>
       )}
 
-      <Tabs defaultValue="items" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+      <Tabs defaultValue="items" className="w-full" dir="rtl">
+        <TabsList className="grid w-full grid-cols-2" dir="rtl">
           <TabsTrigger value="items">الأصناف</TabsTrigger>
           <TabsTrigger value="movements">حركة المخزون</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="items" className="space-y-4">
+        <TabsContent value="items" className="space-y-4" dir="rtl">
           {/* Filters */}
           <Card>
             <CardHeader>
@@ -535,7 +535,7 @@ export default function InventoryPage() {
             </CardHeader>
             <CardContent>
               <div className="rounded-md border">
-                <Table>
+                <Table dir="rtl">
                   <TableHeader>
                     <TableRow>
                       <TableHead className="text-right w-1/6">اسم الصنف</TableHead>
@@ -657,17 +657,17 @@ export default function InventoryPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="movements" className="space-y-4">
+        <TabsContent value="movements" className="space-y-4" dir="rtl">
           <Card>
             <CardHeader>
-              <CardTitle>حركة المخز��ن</CardTitle>
+              <CardTitle>حركة المخزون</CardTitle>
               <CardDescription>
                 سجل بحركات الداخل والخارج للمخزون
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="rounded-md border">
-                <Table>
+                <Table dir="rtl">
                   <TableHeader>
                     <TableRow>
                       <TableHead className="text-right">التاريخ</TableHead>
