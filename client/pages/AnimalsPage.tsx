@@ -81,7 +81,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
   };
 
   const handleDelete = async (animal: Animal) => {
-    if (window.confirm(`هل أنت متأك�� من حذف الحيوان ${animal.tagId}؟`)) {
+    if (window.confirm(`هل أنت متأكد من حذف الحيوان ${animal.tagId}؟`)) {
       try {
         await db.collection('animals').doc(animal.id).delete();
         loadAnimals();
@@ -91,11 +91,25 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
     }
   };
 
-  const filteredAnimals = mockAnimals
-    .filter(animal => animal.type === animalType)
-    .filter(animal => 
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="grid gap-4 md:grid-cols-4">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="h-32 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const filteredAnimals = animals
+    .filter(animal =>
       animal.tagId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (animal.supplier && animal.supplier.includes(searchTerm))
+      (animal.purchase?.supplier && animal.purchase.supplier.includes(searchTerm))
     )
     .filter(animal => statusFilter === "all" || animal.status === statusFilter)
     .filter(animal => healthFilter === "all" || animal.healthStatus === healthFilter);
@@ -217,7 +231,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                 <SelectValue placeholder="حالة الحيوان" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">جميع الحا��ات</SelectItem>
+                <SelectItem value="all">جميع الحالات</SelectItem>
                 <SelectItem value="active">نشط</SelectItem>
                 <SelectItem value="sold">مُباع</SelectItem>
                 <SelectItem value="dead">نافق</SelectItem>
