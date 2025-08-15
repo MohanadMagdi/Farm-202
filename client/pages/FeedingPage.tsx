@@ -25,18 +25,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  formatArabicNumber,
-  formatWeight,
-  formatArabicDate,
-} from "@/lib/arabic-utils";
-import {
-  db,
-  FeedingSchedule,
-  FeedingRecord,
-  InventoryItem,
-  Barn,
-} from "@/lib/firebase-mock";
+import { Progress } from "@/components/ui/progress";
+import { formatArabicDate } from "@/lib/arabic-utils";
+import { dataService, farmHelpers } from "@/lib/data-service";
+import type { 
+  FeedingRecord, 
+  FeedingSchedule, 
+  Barn, 
+  WarehouseItem, 
+  Animal,
+  FeedingAnalytics 
+} from "@shared/types";
 import FeedingFormModal from "@/components/forms/FeedingFormModal";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -51,60 +50,154 @@ import {
   Edit,
   Trash2,
   Eye,
+  Calculator,
+  TrendingUp,
+  Target,
+  Activity,
 } from "lucide-react";
 
 export default function FeedingPage() {
-  const [feedingSchedules, setFeedingSchedules] = useState<FeedingSchedule[]>(
-    [],
-  );
+  const [feedingSchedules, setFeedingSchedules] = useState<FeedingSchedule[]>([]);
   const [feedingRecords, setFeedingRecords] = useState<FeedingRecord[]>([]);
-  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+  const [warehouseItems, setWarehouseItems] = useState<WarehouseItem[]>([]);
   const [barns, setBarns] = useState<Barn[]>([]);
+  const [animals, setAnimals] = useState<Animal[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split("T")[0],
+    new Date().toISOString().split("T")[0]
   );
+
+  // Analytics state
+  const [analytics, setAnalytics] = useState({
+    totalScheduledFeeding: 0,
+    totalActualFeeding: 0,
+    completionRate: 0,
+    feedCost: 0,
+    avgFeedPerAnimal: 0,
+    avgFeedingEfficiency: 0,
+    barnAnalytics: [] as any[],
+    feedTypeUsage: [] as any[],
+  });
 
   // Modal states
   const [showFeedingModal, setShowFeedingModal] = useState(false);
-  const [selectedFeedingRecord, setSelectedFeedingRecord] =
-    useState<FeedingRecord | null>(null);
+  const [selectedFeedingRecord, setSelectedFeedingRecord] = useState<FeedingRecord | null>(null);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [preselectedBarnId, setPreselectedBarnId] = useState<string>();
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [selectedDate]);
 
   const loadData = async () => {
     try {
       const [
-        schedulesSnapshot,
-        recordsSnapshot,
-        inventorySnapshot,
-        barnsSnapshot,
+        schedulesData,
+        recordsData,
+        warehouseData,
+        barnsData,
+        animalsData,
       ] = await Promise.all([
-        db.collection("feedingSchedules").get(),
-        db.collection("feedingRecords").get(),
-        db.collection("inventory").where("category", "==", "feed").get(),
-        db.collection("barns").get(),
+        dataService.feedingSchedules.getAll(),
+        dataService.feedingRecords.getAll(),
+        dataService.warehouseItems.getByType("chemicals"), // Feed items are in chemicals warehouse
+        dataService.barns.getAll(),
+        dataService.animals.getAll(),
       ]);
 
-      setFeedingSchedules(
-        schedulesSnapshot.docs.map((doc) => doc.data() as FeedingSchedule),
-      );
-      setFeedingRecords(
-        recordsSnapshot.docs.map((doc) => doc.data() as FeedingRecord),
-      );
-      setInventoryItems(
-        inventorySnapshot.docs.map((doc) => doc.data() as InventoryItem),
-      );
-      setBarns(barnsSnapshot.docs.map((doc) => doc.data() as Barn));
+      setFeedingSchedules(schedulesData);
+      setFeedingRecords(recordsData);
+      setWarehouseItems(warehouseData.filter(item => item.category.includes("علف") || item.category.includes("أعلاف")));
+      setBarns(barnsData);
+      setAnimals(animalsData);
+
+      calculateAnalytics(recordsData, barnsData, animalsData, warehouseData);
     } catch (error) {
       console.error("Error loading feeding data:", error);
+      toast({
+        title: "خطأ في تحميل البيانات",
+        description: "حدث خطأ أثناء تحميل بيانات التغذية",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
+  };
+
+  const calculateAnalytics = (
+    records: FeedingRecord[],
+    barnsData: Barn[],
+    animalsData: Animal[],
+    warehouseData: WarehouseItem[]
+  ) => {
+    const selectedDateObj = new Date(selectedDate);
+    
+    // Filter records for selected date
+    const todayRecords = records.filter(record => 
+      record.date.toDateString() === selectedDateObj.toDateString()
+    );
+
+    const totalActualFeeding = todayRecords.reduce((sum, record) => sum + record.quantityIssued, 0);
+    const totalAnimalsCount = todayRecords.reduce((sum, record) => sum + record.animalsCount, 0);
+    const feedCost = todayRecords.reduce((sum, record) => {
+      const feedItem = warehouseData.find(item => item.name === record.feedType);
+      return sum + (record.quantityIssued * (feedItem?.unitPrice || 0));
+    }, 0);
+
+    const avgFeedPerAnimal = totalAnimalsCount > 0 ? totalActualFeeding / totalAnimalsCount : 0;
+    const avgFeedingEfficiency = todayRecords.length > 0 
+      ? todayRecords.reduce((sum, record) => sum + (record.feedingEfficiency || 0), 0) / todayRecords.length 
+      : 0;
+
+    // Calculate barn-specific analytics
+    const barnAnalytics = barnsData.map(barn => {
+      const barnRecords = todayRecords.filter(record => record.barnId === barn.id);
+      const barnAnimals = animalsData.filter(animal => animal.barnId === barn.id);
+      const feedIssued = barnRecords.reduce((sum, record) => sum + record.quantityIssued, 0);
+      const avgDailyGain = barnAnimals.length > 0 
+        ? barnAnimals.reduce((sum, animal) => sum + farmHelpers.calculateADG(animal), 0) / barnAnimals.length 
+        : 0;
+      const efficiency = feedIssued > 0 && avgDailyGain > 0 
+        ? farmHelpers.calculateFeedingEfficiency(feedIssued / barnAnimals.length, avgDailyGain) 
+        : 0;
+
+      return {
+        barnId: barn.id,
+        barnName: barn.name,
+        feedIssued,
+        animalsCount: barnAnimals.length,
+        feedPerAnimal: barnAnimals.length > 0 ? feedIssued / barnAnimals.length : 0,
+        efficiency,
+        avgDailyGain,
+      };
+    });
+
+    // Calculate feed type usage
+    const feedTypeUsage = warehouseData.map(item => {
+      const consumed = todayRecords
+        .filter(record => record.feedType === item.name)
+        .reduce((sum, record) => sum + record.quantityIssued, 0);
+      const cost = consumed * item.unitPrice;
+      
+      return {
+        feedType: item.name,
+        consumed,
+        cost,
+        unit: item.unit,
+        recordsCount: todayRecords.filter(record => record.feedType === item.name).length,
+      };
+    }).filter(item => item.consumed > 0);
+
+    setAnalytics({
+      totalScheduledFeeding: 0, // TODO: Calculate from schedules
+      totalActualFeeding,
+      completionRate: 0, // TODO: Calculate from schedules vs records
+      feedCost,
+      avgFeedPerAnimal,
+      avgFeedingEfficiency,
+      barnAnalytics,
+      feedTypeUsage,
+    });
   };
 
   const handleAddFeeding = (barnId?: string) => {
@@ -121,6 +214,26 @@ export default function FeedingPage() {
     setShowFeedingModal(true);
   };
 
+  const handleDeleteFeeding = async (record: FeedingRecord) => {
+    if (window.confirm(`هل أنت متأكد من حذف تسجيل التغذية؟`)) {
+      try {
+        await dataService.feedingRecords.delete(record.id);
+        toast({
+          title: "تم الحذف بنجاح",
+          description: "تم حذف تسجيل التغذية بنجاح",
+        });
+        loadData();
+      } catch (error) {
+        console.error("Error deleting feeding record:", error);
+        toast({
+          title: "خطأ في الحذف",
+          description: "حدث خطأ أثناء حذف تسجيل التغذية",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   const handleModalSave = () => {
     loadData();
     toast({
@@ -132,7 +245,7 @@ export default function FeedingPage() {
   const exportReport = () => {
     toast({
       title: "تصدير التقرير",
-      description: "سيتم تنفيذ الت��دير قريباً",
+      description: "سيتم تنفيذ التصدير قريباً",
     });
   };
 
@@ -151,57 +264,15 @@ export default function FeedingPage() {
     );
   }
 
-  // Calculate feeding statistics
-  const todaySchedules = feedingSchedules.filter(
-    (schedule) =>
-      schedule.date.toDateString() === new Date(selectedDate).toDateString(),
+  // Filter data for selected date
+  const selectedDateObj = new Date(selectedDate);
+  const todayRecords = feedingRecords.filter(record => 
+    record.date.toDateString() === selectedDateObj.toDateString()
   );
 
-  const todayRecords = feedingRecords.filter(
-    (record) =>
-      record.time.toDateString() === new Date(selectedDate).toDateString(),
+  const todaySchedules = feedingSchedules.filter(schedule => 
+    schedule.isActive
   );
-
-  const totalScheduledFeeding = todaySchedules.reduce(
-    (sum, schedule) =>
-      sum +
-      schedule.entries.reduce(
-        (entrySum, entry) => entrySum + entry.qtyKgBarnTotal,
-        0,
-      ),
-    0,
-  );
-
-  const totalActualFeeding = todayRecords.reduce(
-    (sum, record) => sum + record.qtyKg,
-    0,
-  );
-
-  const completionRate =
-    totalScheduledFeeding > 0
-      ? Math.round((totalActualFeeding / totalScheduledFeeding) * 100)
-      : 0;
-
-  const pendingFeedings =
-    todaySchedules.reduce((sum, schedule) => sum + schedule.entries.length, 0) -
-    todayRecords.length;
-
-  // Mock upcoming feeding times
-  const upcomingFeedings = [
-    {
-      time: "07:00",
-      barn: "الحظيرة الرئيسية - ذكور",
-      feed: "دريس البرسيم",
-      qty: 25,
-    },
-    {
-      time: "13:00",
-      barn: "حظيرة الإناث الرئيسية",
-      feed: "تبن القمح",
-      qty: 20,
-    },
-    { time: "18:00", barn: "حظيرة الصغار", feed: "علف مركز 16%", qty: 15 },
-  ];
 
   return (
     <div className="space-y-6">
@@ -210,7 +281,7 @@ export default function FeedingPage() {
         <div>
           <h1 className="text-3xl font-bold text-farm-800">إدارة التغذية</h1>
           <p className="text-muted-foreground">
-            جداول التغذية وتسجيل الوجبات اليومية
+            جداول التغذية وتسجيل الوجبات اليومية وحساب كفاءة التغذية
           </p>
         </div>
         <div className="flex items-center space-x-3 space-x-reverse">
@@ -226,110 +297,155 @@ export default function FeedingPage() {
           </Button>
           <Button onClick={() => handleAddFeeding()}>
             <Plus className="h-4 w-4 ml-2" />
-            إضافة جدول تغذية
+            تسجيل تغذية
           </Button>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-5">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              إجمالي التغذية المجدولة
+            <CardTitle className="text-sm font-medium flex items-center">
+              <Utensils className="h-4 w-4 ml-1" />
+              إجمالي التغذية
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-farm-800">
-              {formatWeight(totalScheduledFeeding)}
+              {farmHelpers.formatWeight(analytics.totalActualFeeding)}
             </div>
             <p className="text-xs text-muted-foreground">
-              لتاريخ {new Date(selectedDate).toLocaleDateString("ar-EG")}
+              لتاريخ {formatArabicDate(selectedDateObj)}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              التغذية المنجزة
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {formatWeight(totalActualFeeding)}
-            </div>
-            <div className="flex items-center space-x-1 space-x-reverse text-xs text-muted-foreground">
-              <CheckCircle className="h-3 w-3 text-green-500" />
-              <span>{completionRate}% مكتمل</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              الوجبات المتبقية
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">
-              {formatArabicNumber(Math.max(0, pendingFeedings))}
-            </div>
-            <div className="flex items-center space-x-1 space-x-reverse text-xs text-muted-foreground">
-              <Clock className="h-3 w-3 text-yellow-500" />
-              <span>وجبة متبقية</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              معدل الاستهلاك
+            <CardTitle className="text-sm font-medium flex items-center">
+              <Calculator className="h-4 w-4 ml-1" />
+              تكلفة التغذية
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-farm-800">
-              {formatWeight(
-                totalActualFeeding / Math.max(1, todayRecords.length),
-              )}
+              {farmHelpers.formatCurrency(analytics.feedCost)}
             </div>
             <p className="text-xs text-muted-foreground">
-              متوسط للوجبة الواحدة
+              التكلفة اليومية
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center">
+              <Target className="h-4 w-4 ml-1" />
+              متوسط العلف للحيوان
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-farm-800">
+              {farmHelpers.formatWeight(analytics.avgFeedPerAnimal)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              كيلو/حيوان/يوم
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center">
+              <TrendingUp className="h-4 w-4 ml-1" />
+              كفاءة التغذية
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-farm-800">
+              {analytics.avgFeedingEfficiency.toFixed(1)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              معامل التحويل الغذائي
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center">
+              <CheckCircle className="h-4 w-4 ml-1" />
+              الوجبات المسجلة
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+              {todayRecords.length}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              وجبة اليوم
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Upcoming Feedings Alert */}
-      {upcomingFeedings.length > 0 && (
+      {/* Feeding Efficiency Analysis by Barn */}
+      {analytics.barnAnalytics.length > 0 && (
         <Card className="border-blue-200 bg-blue-50">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2 space-x-reverse text-blue-800">
-              <Clock className="h-5 w-5" />
-              <span>مواعيد التغذية القادمة</span>
+              <Activity className="h-5 w-5" />
+              <span>تحليل كفاءة التغذية حسب الحظيرة</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-3 md:grid-cols-3">
-              {upcomingFeedings.map((feeding, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-3 bg-white rounded"
-                >
-                  <div>
-                    <div className="font-medium">{feeding.time}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {feeding.barn}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {analytics.barnAnalytics
+                .filter(barn => barn.feedIssued > 0)
+                .map((barn) => (
+                <div key={barn.barnId} className="p-4 bg-white rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-medium">{barn.barnName}</h4>
+                    <Badge variant="outline">{barn.animalsCount} حيوان</Badge>
+                  </div>
+                  
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>العلف المصروف:</span>
+                      <span className="font-semibold">{farmHelpers.formatWeight(barn.feedIssued)}</span>
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      {feeding.feed} - {formatWeight(feeding.qty)}
+                    <div className="flex justify-between">
+                      <span>العلف/حيوان:</span>
+                      <span className="font-semibold">{farmHelpers.formatWeight(barn.feedPerAnimal)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>متوسط النمو:</span>
+                      <span className="font-semibold">{barn.avgDailyGain.toFixed(2)} كيلو/يوم</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>كفاءة التغذية:</span>
+                      <span className={`font-semibold ${
+                        barn.efficiency <= 3 ? 'text-green-600' :
+                        barn.efficiency <= 5 ? 'text-yellow-600' : 'text-red-600'
+                      }`}>
+                        {barn.efficiency.toFixed(1)}
+                      </span>
                     </div>
                   </div>
-                  <Button size="sm" onClick={() => handleAddFeeding()}>
-                    تسجيل
-                  </Button>
+                  
+                  <div className="mt-2 pt-2 border-t">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">تقييم الكفاءة:</span>
+                      <Badge className={
+                        barn.efficiency <= 3 ? 'bg-green-100 text-green-800' :
+                        barn.efficiency <= 5 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
+                      }>
+                        {barn.efficiency <= 3 ? 'ممتاز' :
+                         barn.efficiency <= 5 ? 'جيد' : 'يحتاج تحسين'}
+                      </Badge>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -337,137 +453,19 @@ export default function FeedingPage() {
         </Card>
       )}
 
-      <Tabs defaultValue="schedules" className="w-full" dir="rtl">
+      <Tabs defaultValue="records" className="w-full" dir="rtl">
         <TabsList className="grid w-full grid-cols-3" dir="rtl">
-          <TabsTrigger value="schedules">جداول التغذية</TabsTrigger>
           <TabsTrigger value="records">سجلات التغذية</TabsTrigger>
-          <TabsTrigger value="analytics">التحليلات</TabsTrigger>
+          <TabsTrigger value="schedules">جداول التغذية</TabsTrigger>
+          <TabsTrigger value="analytics">التحليلات والكفاءة</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="schedules" className="space-y-4" dir="rtl">
-          <Card>
-            <CardHeader>
-              <CardTitle>جداول التغذية اليومية</CardTitle>
-              <CardDescription>
-                الجداول المخططة لتاريخ{" "}
-                {formatArabicDate(new Date(selectedDate))}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-md border">
-                <Table dir="rtl">
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="text-right">الحظيرة</TableHead>
-                      <TableHead className="text-right">عدد الوجبات</TableHead>
-                      <TableHead className="text-right">المواعيد</TableHead>
-                      <TableHead className="text-right">
-                        إجمالي الكمية
-                      </TableHead>
-                      <TableHead className="text-right">الحالة</TableHead>
-                      <TableHead className="text-right">الإجراءات</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {todaySchedules.map((schedule) => {
-                      const barn = barns.find((b) => b.id === schedule.barnId);
-                      const totalQty = schedule.entries.reduce(
-                        (sum, entry) => sum + entry.qtyKgBarnTotal,
-                        0,
-                      );
-                      const recordedFeedings = todayRecords.filter(
-                        (r) => r.barnId === schedule.barnId,
-                      ).length;
-                      const completed =
-                        recordedFeedings >= schedule.entries.length;
-
-                      return (
-                        <TableRow key={schedule.id}>
-                          <TableCell className="text-right">
-                            {barn?.name || schedule.barnId}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {formatArabicNumber(schedule.sessionsPerDay)}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex flex-wrap gap-1 justify-end">
-                              {schedule.entries.map((entry, index) => (
-                                <Badge
-                                  key={index}
-                                  variant="outline"
-                                  className="text-xs"
-                                >
-                                  {entry.time}
-                                </Badge>
-                              ))}
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {formatWeight(totalQty)}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Badge
-                              className={
-                                completed
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-yellow-100 text-yellow-800"
-                              }
-                            >
-                              {completed ? "مكتمل" : "قيد التنفيذ"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center gap-1 justify-end">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-8 w-8 p-0"
-                              >
-                                <Eye className="h-3 w-3" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-8 w-8 p-0"
-                              >
-                                <Edit className="h-3 w-3" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  handleAddFeeding(schedule.barnId)
-                                }
-                                className="h-8 w-8 p-0 text-green-600 hover:text-green-700"
-                              >
-                                <Utensils className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                    {todaySchedules.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8">
-                          لا توجد جداول تغذية لهذا التاريخ
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         <TabsContent value="records" className="space-y-4" dir="rtl">
           <Card>
             <CardHeader>
               <CardTitle>سجلات التغذية المنجزة</CardTitle>
               <CardDescription>
-                الوجبات المسجلة لتاريخ{" "}
-                {formatArabicDate(new Date(selectedDate))}
+                الوجبات المسجلة لتاريخ {formatArabicDate(selectedDateObj)}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -478,36 +476,45 @@ export default function FeedingPage() {
                       <TableHead className="text-right">الوقت</TableHead>
                       <TableHead className="text-right">الحظيرة</TableHead>
                       <TableHead className="text-right">نوع العلف</TableHead>
-                      <TableHead className="text-right">الكمية</TableHead>
-                      <TableHead className="text-right">
-                        المسجل بواسطة
-                      </TableHead>
+                      <TableHead className="text-right">الكمية المصروفة</TableHead>
+                      <TableHead className="text-right">عدد الحيوانات</TableHead>
+                      <TableHead className="text-right">العلف/حيوان</TableHead>
+                      <TableHead className="text-right">كفاءة التغذية</TableHead>
+                      <TableHead className="text-right">المسجل بواسطة</TableHead>
                       <TableHead className="text-right">الإجراءات</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {todayRecords.map((record) => {
                       const barn = barns.find((b) => b.id === record.barnId);
-                      const feedItem = inventoryItems.find(
-                        (i) => i.id === record.feedItemId,
-                      );
 
                       return (
                         <TableRow key={record.id}>
                           <TableCell className="text-right">
-                            {record.time.toLocaleTimeString("ar-EG", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
+                            {record.time}
                           </TableCell>
                           <TableCell className="text-right">
                             {barn?.name || record.barnId}
                           </TableCell>
                           <TableCell className="text-right">
-                            {feedItem?.name || "غير معروف"}
+                            {record.feedType}
                           </TableCell>
                           <TableCell className="text-right">
-                            {formatWeight(record.qtyKg)}
+                            {farmHelpers.formatWeight(record.quantityIssued)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {record.animalsCount}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {farmHelpers.formatWeight(record.feedPerAnimal)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Badge className={
+                              (record.feedingEfficiency || 0) <= 3 ? 'bg-green-100 text-green-800' :
+                              (record.feedingEfficiency || 0) <= 5 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
+                            }>
+                              {record.feedingEfficiency?.toFixed(1) || 'N/A'}
+                            </Badge>
                           </TableCell>
                           <TableCell className="text-right">
                             {record.recordedBy}
@@ -529,6 +536,14 @@ export default function FeedingPage() {
                               >
                                 <Edit className="h-3 w-3" />
                               </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDeleteFeeding(record)}
+                                className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -536,8 +551,107 @@ export default function FeedingPage() {
                     })}
                     {todayRecords.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8">
+                        <TableCell colSpan={9} className="text-center py-8">
                           لم يتم تسجيل أي وجبات لهذا التاريخ
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="schedules" className="space-y-4" dir="rtl">
+          <Card>
+            <CardHeader>
+              <CardTitle>جداول التغذية النشطة</CardTitle>
+              <CardDescription>
+                الجداول المعتمدة لتغذية الحيوانات
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-md border">
+                <Table dir="rtl">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-right">الحظيرة</TableHead>
+                      <TableHead className="text-right">نوع العلف</TableHead>
+                      <TableHead className="text-right">الكمية</TableHead>
+                      <TableHead className="text-right">عدد الوجبات</TableHead>
+                      <TableHead className="text-right">المواعيد</TableHead>
+                      <TableHead className="text-right">حالة النشاط</TableHead>
+                      <TableHead className="text-right">الإجراءات</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {todaySchedules.map((schedule) => {
+                      const barn = barns.find((b) => b.id === schedule.barnId);
+
+                      return (
+                        <TableRow key={schedule.id}>
+                          <TableCell className="text-right">
+                            {barn?.name || schedule.barnId}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {schedule.feedType}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {farmHelpers.formatWeight(schedule.quantity)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {schedule.timesPerDay}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex flex-wrap gap-1 justify-end">
+                              {schedule.scheduledTime.split(',').map((time, index) => (
+                                <Badge key={index} variant="outline" className="text-xs">
+                                  {time.trim()}
+                                </Badge>
+                              ))}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Badge className={
+                              schedule.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                            }>
+                              {schedule.isActive ? 'نشط' : 'غير نشط'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center gap-1 justify-end">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                              >
+                                <Eye className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                              >
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleAddFeeding(schedule.barnId)}
+                                className="h-8 w-8 p-0 text-green-600 hover:text-green-700"
+                              >
+                                <Utensils className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                    {todaySchedules.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-8">
+                          لا توجد جداول تغذية نشطة
                         </TableCell>
                       </TableRow>
                     )}
@@ -550,78 +664,95 @@ export default function FeedingPage() {
 
         <TabsContent value="analytics" className="space-y-4" dir="rtl">
           <div className="grid gap-6 md:grid-cols-2">
+            {/* Feed Type Usage */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2 space-x-reverse">
                   <BarChart3 className="h-5 w-5 text-farm-600" />
-                  <span>استهلاك العلف حسب النوع</span>
+                  <span>ا��تهلاك العلف حسب النوع</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {inventoryItems.map((item) => {
-                    const consumed = todayRecords
-                      .filter((r) => r.feedItemId === item.id)
-                      .reduce((sum, r) => sum + r.qtyKg, 0);
-
-                    if (consumed === 0) return null;
-
-                    return (
-                      <div
-                        key={item.id}
-                        className="flex items-center justify-between"
-                      >
-                        <span className="font-medium">{item.name}</span>
+                  {analytics.feedTypeUsage.map((item) => (
+                    <div key={item.feedType} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{item.feedType}</span>
                         <div className="text-left">
                           <div className="font-semibold">
-                            {formatWeight(consumed)}
+                            {farmHelpers.formatWeight(item.consumed)}
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            {formatArabicNumber(
-                              todayRecords.filter(
-                                (r) => r.feedItemId === item.id,
-                              ).length,
-                            )}{" "}
-                            وجبة
+                            {farmHelpers.formatCurrency(item.cost)}
                           </div>
                         </div>
                       </div>
-                    );
-                  })}
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>{item.recordsCount} وجبة</span>
+                        <span>{(item.consumed / analytics.totalActualFeeding * 100).toFixed(1)}% من الإجمالي</span>
+                      </div>
+                      <Progress 
+                        value={item.consumed / analytics.totalActualFeeding * 100} 
+                        className="h-2"
+                      />
+                    </div>
+                  ))}
+                  
+                  {analytics.feedTypeUsage.length === 0 && (
+                    <p className="text-center text-muted-foreground py-4">
+                      لا توجد بيانات استهلاك لهذا التاريخ
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
 
+            {/* Feeding Efficiency Guidelines */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2 space-x-reverse">
-                  <Calendar className="h-5 w-5 text-farm-600" />
-                  <span>معدل التغذية الأسبوعي</span>
+                  <Target className="h-5 w-5 text-farm-600" />
+                  <span>معايير كفاءة التغذية</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-farm-800">
-                      {formatWeight(totalActualFeeding * 7)}
+                  <div className="p-3 bg-green-50 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium text-green-800">ممتاز</span>
+                      <Badge className="bg-green-100 text-green-800">أقل من 3</Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      متوسط الاستهلاك الأسبوعي المتوقع
+                    <p className="text-sm text-green-700">
+                      كفاءة عالية في تحويل العلف إلى نمو
+                    </p>
+                  </div>
+                  
+                  <div className="p-3 bg-yellow-50 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium text-yellow-800">جيد</span>
+                      <Badge className="bg-yellow-100 text-yellow-800">3 - 5</Badge>
+                    </div>
+                    <p className="text-sm text-yellow-700">
+                      كفاءة مقبولة، يمكن تحسينها
+                    </p>
+                  </div>
+                  
+                  <div className="p-3 bg-red-50 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium text-red-800">يحتاج تحسين</span>
+                      <Badge className="bg-red-100 text-red-800">أكثر من 5</Badge>
+                    </div>
+                    <p className="text-sm text-red-700">
+                      كفاءة منخفضة، مراجعة نوعية العلف والصحة
                     </p>
                   </div>
 
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>اليوم</span>
-                      <span>{formatWeight(totalActualFeeding)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm text-muted-foreground">
-                      <span>أمس</span>
-                      <span>{formatWeight(totalActualFeeding * 0.9)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm text-muted-foreground">
-                      <span>منذ يومين</span>
-                      <span>{formatWeight(totalActualFeeding * 1.1)}</span>
+                  <div className="pt-4 border-t">
+                    <h4 className="font-medium mb-2">المعادلات المستخدمة:</h4>
+                    <div className="space-y-1 text-sm text-muted-foreground">
+                      <p>• العلف لكل حيوان = إجمالي العلف ÷ عدد الحيوانات</p>
+                      <p>• كفاءة التغذية = العلف لكل حيوان ÷ معدل النمو اليومي</p>
+                      <p>• معدل النمو اليومي = (الوزن الحالي - وزن الميلاد) ÷ العمر بالأيام</p>
                     </div>
                   </div>
                 </div>
