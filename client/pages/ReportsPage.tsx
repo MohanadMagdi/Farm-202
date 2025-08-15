@@ -467,10 +467,10 @@ export default function ReportsPage() {
 
                       return (
                         <TableRow key={animal.id}>
-                          <TableCell className="font-medium">
+                          <TableCell className="font-medium text-right">
                             {animal.tagId}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-right">
                             <Badge variant="outline">
                               {animal.type === "male"
                                 ? "ذكر"
@@ -479,24 +479,24 @@ export default function ReportsPage() {
                                   : "صغير"}
                             </Badge>
                           </TableCell>
-                          <TableCell>{formatArabicNumber(ageInDays)}</TableCell>
-                          <TableCell>
+                          <TableCell className="text-right">{formatArabicNumber(ageInDays)}</TableCell>
+                          <TableCell className="text-right">
                             {formatWeight(animal.currentWeightKg)}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-right">
                             {formatWeight(animal.metrics.totalGainKg)}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-right">
                             {animal.metrics.adg.toFixed(2)} كيلو/يوم
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-right">
                             {animal.feedEfficiency.toFixed(2)}
                           </TableCell>
                           <TableCell
                             className={
                               animal.profitability > 0
-                                ? "text-green-600"
-                                : "text-red-600"
+                                ? "text-green-600 text-right"
+                                : "text-red-600 text-right"
                             }
                           >
                             {formatEGP(animal.profitability)}
@@ -541,18 +541,18 @@ export default function ReportsPage() {
                   <TableBody>
                     {inventoryTurnover.map((item) => (
                       <TableRow key={item.id}>
-                        <TableCell className="font-medium">
+                        <TableCell className="font-medium text-right">
                           {item.name}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="text-right">
                           {formatArabicNumber(item.currentStock)} {item.unit}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="text-right">
                           {formatArabicNumber(item.totalOut)} {item.unit}
                         </TableCell>
-                        <TableCell>{item.turnoverRate.toFixed(2)}x</TableCell>
-                        <TableCell>{formatEGP(item.value)}</TableCell>
-                        <TableCell>
+                        <TableCell className="text-right">{item.turnoverRate.toFixed(2)}x</TableCell>
+                        <TableCell className="text-right">{formatEGP(item.value)}</TableCell>
+                        <TableCell className="text-right">
                           <Badge
                             className={
                               item.currentStock <= item.minLevel
