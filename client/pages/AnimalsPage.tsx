@@ -150,7 +150,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
             <Download className="h-4 w-4 ml-2" />
             تصدير
           </Button>
-          <Button>
+          <Button onClick={() => setIsAddModalOpen(true)}>
             <Plus className="h-4 w-4 ml-2" />
             إضافة {animalType === 'male' ? 'ذكر' : animalType === 'female' ? 'أنثى' : 'صغير'} جديد
           </Button>
