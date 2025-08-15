@@ -335,13 +335,13 @@ export default function FeedingPage() {
       )}
 
       <Tabs defaultValue="schedules" className="w-full" dir="rtl">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-3" dir="rtl">
           <TabsTrigger value="schedules">جداول التغذية</TabsTrigger>
           <TabsTrigger value="records">سجلات التغذية</TabsTrigger>
           <TabsTrigger value="analytics">التحليلات</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="schedules" className="space-y-4">
+        <TabsContent value="schedules" className="space-y-4" dir="rtl">
           <Card>
             <CardHeader>
               <CardTitle>جداول التغذية اليومية</CardTitle>
@@ -352,7 +352,7 @@ export default function FeedingPage() {
             </CardHeader>
             <CardContent>
               <div className="rounded-md border">
-                <Table>
+                <Table dir="rtl">
                   <TableHeader>
                     <TableRow>
                       <TableHead className="text-right">الحظيرة</TableHead>
@@ -452,7 +452,7 @@ export default function FeedingPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="records" className="space-y-4">
+        <TabsContent value="records" className="space-y-4" dir="rtl">
           <Card>
             <CardHeader>
               <CardTitle>سجلات التغذية المنجزة</CardTitle>
@@ -463,7 +463,7 @@ export default function FeedingPage() {
             </CardHeader>
             <CardContent>
               <div className="rounded-md border">
-                <Table>
+                <Table dir="rtl">
                   <TableHeader>
                     <TableRow>
                       <TableHead className="text-right">الوقت</TableHead>
@@ -531,7 +531,7 @@ export default function FeedingPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="analytics" className="space-y-4">
+        <TabsContent value="analytics" className="space-y-4" dir="rtl">
           <div className="grid gap-6 md:grid-cols-2">
             <Card>
               <CardHeader>
