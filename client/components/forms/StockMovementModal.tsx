@@ -103,8 +103,9 @@ export default function StockMovementModal({
 
     setLoading(true);
     try {
-      const finalReason = formData.reason === "other" ? formData.customReason : formData.reason;
-      
+      const finalReason =
+        formData.reason === "other" ? formData.customReason : formData.reason;
+
       await db.collection("stockMovements").add({
         direction: mode,
         inventoryItemId: inventoryItem.id,
@@ -128,7 +129,7 @@ export default function StockMovementModal({
   };
 
   const currentStock = inventoryItem ? db.getCurrentStock(inventoryItem.id) : 0;
-  const newStock = formData.quantity 
+  const newStock = formData.quantity
     ? currentStock + (mode === "in" ? 1 : -1) * parseFloat(formData.quantity)
     : currentStock;
 
@@ -140,16 +141,16 @@ export default function StockMovementModal({
             {mode === "in" ? "إضافة للمخ��ون" : "صرف من المخزون"}
           </DialogTitle>
           <DialogDescription>
-            {inventoryItem ? `${inventoryItem.name} - المخزون الحالي: ${formatArabicNumber(currentStock)} ${inventoryItem.unit}` : ""}
+            {inventoryItem
+              ? `${inventoryItem.name} - المخزون الحالي: ${formatArabicNumber(currentStock)} ${inventoryItem.unit}`
+              : ""}
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
           {/* Quantity */}
           <div>
-            <Label htmlFor="quantity">
-              الكمية ({inventoryItem?.unit}) *
-            </Label>
+            <Label htmlFor="quantity">الكمية ({inventoryItem?.unit}) *</Label>
             <Input
               id="quantity"
               type="number"
@@ -162,8 +163,11 @@ export default function StockMovementModal({
             />
             {formData.quantity && (
               <p className="text-xs text-muted-foreground mt-1">
-                المخزون بعد العملية: {formatArabicNumber(newStock)} {inventoryItem?.unit}
-                {newStock < 0 && <span className="text-red-600"> (مخزون سالب!)</span>}
+                المخزون بعد العملية: {formatArabicNumber(newStock)}{" "}
+                {inventoryItem?.unit}
+                {newStock < 0 && (
+                  <span className="text-red-600"> (مخزون سالب!)</span>
+                )}
               </p>
             )}
           </div>
@@ -206,7 +210,8 @@ export default function StockMovementModal({
           )}
 
           {/* Barn Selection (for barn-related movements) */}
-          {(formData.reason === "issue_to_barn" || formData.reason === "return_from_barn") && (
+          {(formData.reason === "issue_to_barn" ||
+            formData.reason === "return_from_barn") && (
             <div>
               <Label htmlFor="barn">الحظيرة</Label>
               <Select
@@ -233,7 +238,10 @@ export default function StockMovementModal({
           {(formData.reason === "purchase" || formData.reason === "sale") && (
             <div>
               <Label htmlFor="cost">
-                {formData.reason === "purchase" ? "التكلفة الإجمالية" : "سعر البيع الإجمالي"} (جنيه)
+                {formData.reason === "purchase"
+                  ? "التكلفة الإجمالية"
+                  : "سعر البيع الإجمالي"}{" "}
+                (جنيه)
               </Label>
               <Input
                 id="cost"
@@ -247,8 +255,11 @@ export default function StockMovementModal({
               />
               {formData.cost && formData.quantity && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  {formData.reason === "purchase" ? "التكلفة" : "السعر"} للوحدة: {" "}
-                  {(parseFloat(formData.cost) / parseFloat(formData.quantity)).toFixed(2)} جنيه
+                  {formData.reason === "purchase" ? "التكلفة" : "السعر"} للوحدة:{" "}
+                  {(
+                    parseFloat(formData.cost) / parseFloat(formData.quantity)
+                  ).toFixed(2)}{" "}
+                  جنيه
                 </p>
               )}
             </div>

@@ -225,7 +225,10 @@ export default function InventoryPage() {
     setShowInventoryModal(true);
   };
 
-  const handleStockMovement = (item: InventoryItem, direction: "in" | "out") => {
+  const handleStockMovement = (
+    item: InventoryItem,
+    direction: "in" | "out",
+  ) => {
     setSelectedItem(item);
     setStockModalMode(direction);
     setShowStockModal(true);
@@ -445,7 +448,8 @@ export default function InventoryPage() {
                   <span className="font-medium">{item.name}</span>
                   <div className="flex items-center space-x-2 space-x-reverse">
                     <span className="text-sm text-muted-foreground">
-                      المخزون الحالي: {formatArabicNumber(db.getCurrentStock(item.id))}{" "}
+                      المخزون الحالي:{" "}
+                      {formatArabicNumber(db.getCurrentStock(item.id))}{" "}
                       {item.unit}
                     </span>
                     <Badge
@@ -454,7 +458,11 @@ export default function InventoryPage() {
                     >
                       الحد الأدنى: {formatArabicNumber(item.minLevel)}
                     </Badge>
-                    <Button size="sm" variant="outline" onClick={() => requestSupply(item)}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => requestSupply(item)}
+                    >
                       طلب توريد
                     </Button>
                   </div>
@@ -538,16 +546,28 @@ export default function InventoryPage() {
                 <Table dir="rtl">
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-right w-1/6">اسم الصنف</TableHead>
+                      <TableHead className="text-right w-1/6">
+                        اسم الصنف
+                      </TableHead>
                       <TableHead className="text-right w-1/12">الفئة</TableHead>
                       <TableHead className="text-right w-1/8">
                         المخزون الحالي
                       </TableHead>
-                      <TableHead className="text-right w-1/12">الحد الأدنى</TableHead>
-                      <TableHead className="text-right w-1/8">سعر الوحدة</TableHead>
-                      <TableHead className="text-right w-1/12">الحالة</TableHead>
-                      <TableHead className="text-right w-1/8">آخر توريد</TableHead>
-                      <TableHead className="text-right w-1/6">الإجراءات</TableHead>
+                      <TableHead className="text-right w-1/12">
+                        الحد الأدنى
+                      </TableHead>
+                      <TableHead className="text-right w-1/8">
+                        سعر الوحدة
+                      </TableHead>
+                      <TableHead className="text-right w-1/12">
+                        الحالة
+                      </TableHead>
+                      <TableHead className="text-right w-1/8">
+                        آخر توريد
+                      </TableHead>
+                      <TableHead className="text-right w-1/6">
+                        الإجراءات
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -571,7 +591,8 @@ export default function InventoryPage() {
                                   variant="outline"
                                   className="text-xs mt-1"
                                 >
-                                  {formatArabicNumber(item.concentratePct)}% بروتين
+                                  {formatArabicNumber(item.concentratePct)}%
+                                  بروتين
                                 </Badge>
                               )}
                             </div>
@@ -690,7 +711,9 @@ export default function InventoryPage() {
                           <TableCell className="text-right">
                             {formatArabicDate(movement.createdAt)}
                           </TableCell>
-                          <TableCell className="text-right">{item?.name || "غير معروف"}</TableCell>
+                          <TableCell className="text-right">
+                            {item?.name || "غير معروف"}
+                          </TableCell>
                           <TableCell className="text-right">
                             <Badge
                               variant={
@@ -711,8 +734,12 @@ export default function InventoryPage() {
                             {formatArabicNumber(movement.quantity)}{" "}
                             {movement.unit}
                           </TableCell>
-                          <TableCell className="text-right">{movement.reason}</TableCell>
-                          <TableCell className="text-right">{movement.requestedBy}</TableCell>
+                          <TableCell className="text-right">
+                            {movement.reason}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {movement.requestedBy}
+                          </TableCell>
                           <TableCell className="text-right">
                             {movement.cost ? formatEGP(movement.cost) : "-"}
                           </TableCell>

@@ -348,7 +348,9 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                     <TableCell className="font-medium text-right">
                       {animal.tagId}
                     </TableCell>
-                    <TableCell className="text-right">{formatArabicDate(animal.birthDate)}</TableCell>
+                    <TableCell className="text-right">
+                      {formatArabicDate(animal.birthDate)}
+                    </TableCell>
                     <TableCell className="text-right">
                       {formatWeight(animal.currentWeightKg)}
                     </TableCell>
@@ -364,7 +366,9 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                         {animalStatus[animal.status]}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right">{animal.barnId}</TableCell>
+                    <TableCell className="text-right">
+                      {animal.barnId}
+                    </TableCell>
                     {animalType !== "newborn" && (
                       <TableCell className="text-right">
                         {animal.purchase?.priceEGP

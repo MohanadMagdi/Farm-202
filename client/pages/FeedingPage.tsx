@@ -67,7 +67,8 @@ export default function FeedingPage() {
 
   // Modal states
   const [showFeedingModal, setShowFeedingModal] = useState(false);
-  const [selectedFeedingRecord, setSelectedFeedingRecord] = useState<FeedingRecord | null>(null);
+  const [selectedFeedingRecord, setSelectedFeedingRecord] =
+    useState<FeedingRecord | null>(null);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [preselectedBarnId, setPreselectedBarnId] = useState<string>();
 
@@ -326,7 +327,9 @@ export default function FeedingPage() {
                       {feeding.feed} - {formatWeight(feeding.qty)}
                     </div>
                   </div>
-                  <Button size="sm" onClick={() => handleAddFeeding()}>تسجيل</Button>
+                  <Button size="sm" onClick={() => handleAddFeeding()}>
+                    تسجيل
+                  </Button>
                 </div>
               ))}
             </div>
@@ -380,7 +383,9 @@ export default function FeedingPage() {
 
                       return (
                         <TableRow key={schedule.id}>
-                          <TableCell className="text-right">{barn?.name || schedule.barnId}</TableCell>
+                          <TableCell className="text-right">
+                            {barn?.name || schedule.barnId}
+                          </TableCell>
                           <TableCell className="text-right">
                             {formatArabicNumber(schedule.sessionsPerDay)}
                           </TableCell>
@@ -397,7 +402,9 @@ export default function FeedingPage() {
                               ))}
                             </div>
                           </TableCell>
-                          <TableCell className="text-right">{formatWeight(totalQty)}</TableCell>
+                          <TableCell className="text-right">
+                            {formatWeight(totalQty)}
+                          </TableCell>
                           <TableCell className="text-right">
                             <Badge
                               className={
@@ -428,7 +435,9 @@ export default function FeedingPage() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleAddFeeding(schedule.barnId)}
+                                onClick={() =>
+                                  handleAddFeeding(schedule.barnId)
+                                }
                                 className="h-8 w-8 p-0 text-green-600 hover:text-green-700"
                               >
                                 <Utensils className="h-3 w-3" />
@@ -491,10 +500,18 @@ export default function FeedingPage() {
                               minute: "2-digit",
                             })}
                           </TableCell>
-                          <TableCell className="text-right">{barn?.name || record.barnId}</TableCell>
-                          <TableCell className="text-right">{feedItem?.name || "غير معروف"}</TableCell>
-                          <TableCell className="text-right">{formatWeight(record.qtyKg)}</TableCell>
-                          <TableCell className="text-right">{record.recordedBy}</TableCell>
+                          <TableCell className="text-right">
+                            {barn?.name || record.barnId}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {feedItem?.name || "غير معروف"}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {formatWeight(record.qtyKg)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {record.recordedBy}
+                          </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center gap-1 justify-end">
                               <Button

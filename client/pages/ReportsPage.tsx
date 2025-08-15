@@ -479,7 +479,9 @@ export default function ReportsPage() {
                                   : "صغير"}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-right">{formatArabicNumber(ageInDays)}</TableCell>
+                          <TableCell className="text-right">
+                            {formatArabicNumber(ageInDays)}
+                          </TableCell>
                           <TableCell className="text-right">
                             {formatWeight(animal.currentWeightKg)}
                           </TableCell>
@@ -550,8 +552,12 @@ export default function ReportsPage() {
                         <TableCell className="text-right">
                           {formatArabicNumber(item.totalOut)} {item.unit}
                         </TableCell>
-                        <TableCell className="text-right">{item.turnoverRate.toFixed(2)}x</TableCell>
-                        <TableCell className="text-right">{formatEGP(item.value)}</TableCell>
+                        <TableCell className="text-right">
+                          {item.turnoverRate.toFixed(2)}x
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {formatEGP(item.value)}
+                        </TableCell>
                         <TableCell className="text-right">
                           <Badge
                             className={

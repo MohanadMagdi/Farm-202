@@ -124,26 +124,32 @@ export default function InventoryFormModal({
       }
 
       if (mode === "edit" && inventoryItem) {
-        await db.collection("inventory").doc(inventoryItem.id).update(inventoryData);
-        
+        await db
+          .collection("inventory")
+          .doc(inventoryItem.id)
+          .update(inventoryData);
+
         // Update stock if changed
         const currentStock = db.getCurrentStock(inventoryItem.id);
         const newStock = parseInt(formData.currentStock);
         if (currentStock !== newStock) {
           const difference = newStock - currentStock;
           await db.collection("stockMovements").add({
-            direction: difference > 0 ? "in" : "out" as const,
+            direction: difference > 0 ? "in" : ("out" as const),
             inventoryItemId: inventoryItem.id,
             qty: Math.abs(difference),
             unit: formData.unit,
-            reason: difference > 0 ? "manual_adjustment_in" : "manual_adjustment_out" as const,
+            reason:
+              difference > 0
+                ? "manual_adjustment_in"
+                : ("manual_adjustment_out" as const),
             requestedBy: "مدير المخزن",
             createdAt: new Date(),
           });
         }
       } else {
         const docRef = await db.collection("inventory").add(inventoryData);
-        
+
         // Add initial stock if specified
         if (formData.currentStock && parseInt(formData.currentStock) > 0) {
           await db.collection("stockMovements").add({
