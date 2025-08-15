@@ -26,40 +26,30 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  formatEGP,
-  formatWeight,
-  formatArabicDate,
-  animalTypes,
-  healthStatus,
-  animalStatus,
-} from "@/lib/arabic-utils";
-import { db, Animal } from "@/lib/firebase-mock";
+import { formatArabicDate } from "@/lib/arabic-utils";
+import { dataService, farmHelpers } from "@/lib/data-service";
+import type { Animal, AnimalCategory } from "@shared/types";
 import { toast } from "@/hooks/use-toast";
 import {
   Search,
   Plus,
-  Filter,
   Download,
-  Eye,
   Edit,
   Trash2,
-  Activity,
-  MapPin,
   Scale,
+  MapPin,
+  Heart,
+  TrendingUp,
 } from "lucide-react";
 
-// Modal states and data loading
-
 interface AnimalsPageProps {
-  animalType: "male" | "female" | "newborn";
+  animalType: AnimalCategory;
 }
 
 export default function AnimalsPage({ animalType }: AnimalsPageProps) {
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [healthFilter, setHealthFilter] = useState<string>("all");
 
   // Modal states
@@ -68,23 +58,56 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
   const [isWeightModalOpen, setIsWeightModalOpen] = useState(false);
   const [selectedAnimal, setSelectedAnimal] = useState<Animal | null>(null);
 
+  // Analytics
+  const [analytics, setAnalytics] = useState({
+    totalCount: 0,
+    avgWeight: 0,
+    healthyCount: 0,
+    totalValue: 0,
+    pregnantCount: 0,
+    isolatedCount: 0,
+  });
+
   useEffect(() => {
     loadAnimals();
   }, [animalType]);
 
   const loadAnimals = async () => {
     try {
-      const snapshot = await db
-        .collection("animals")
-        .where("type", "==", animalType)
-        .get();
-      const animalsData = snapshot.docs.map((doc) => doc.data() as Animal);
+      setLoading(true);
+      const animalsData = await dataService.animals.getByCategory(animalType);
       setAnimals(animalsData);
+      calculateAnalytics(animalsData);
     } catch (error) {
       console.error("Error loading animals:", error);
+      toast({
+        title: "خطأ في تحميل البيانات",
+        description: "حدث خطأ أثناء تحميل بيانات الحيوانات",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
+  };
+
+  const calculateAnalytics = (animalsData: Animal[]) => {
+    const totalCount = animalsData.length;
+    const avgWeight = totalCount > 0 
+      ? animalsData.reduce((sum, animal) => sum + animal.weight, 0) / totalCount 
+      : 0;
+    const healthyCount = animalsData.filter(a => a.healthStatus === "سليم" || a.healthStatus === "سليمة").length;
+    const totalValue = animalsData.reduce((sum, animal) => sum + (animal.currentPrice || animal.purchasePrice || 0), 0);
+    const pregnantCount = animalsData.filter(a => a.isPregnant).length;
+    const isolatedCount = animalsData.filter(a => a.isIsolated).length;
+
+    setAnalytics({
+      totalCount,
+      avgWeight,
+      healthyCount,
+      totalValue,
+      pregnantCount,
+      isolatedCount,
+    });
   };
 
   const handleEdit = (animal: Animal) => {
@@ -106,13 +129,66 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
   };
 
   const handleDelete = async (animal: Animal) => {
-    if (window.confirm(`هل أنت متأكد من حذف الحيوان ${animal.tagId}؟`)) {
+    if (window.confirm(`هل أنت متأكد من حذف الحيوان ${animal.earTagId}؟`)) {
       try {
-        await db.collection("animals").doc(animal.id).delete();
+        await dataService.animals.delete(animal.id);
         loadAnimals();
+        toast({
+          title: "تم الحذف بنجاح",
+          description: `تم حذف الحيوان ${animal.earTagId} بنجاح`,
+        });
       } catch (error) {
         console.error("Error deleting animal:", error);
+        toast({
+          title: "خطأ في الحذف",
+          description: "حدث خطأ أثناء حذف الحيوان",
+          variant: "destructive",
+        });
       }
+    }
+  };
+
+  const filteredAnimals = animals.filter(
+    (animal) =>
+      animal.earTagId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (animal.supplier && animal.supplier.includes(searchTerm))
+  ).filter(
+    (animal) => healthFilter === "all" || animal.healthStatus === healthFilter
+  );
+
+  const getHealthStatusColor = (status: string) => {
+    const healthyStatuses = ["سليم", "سليمة", "healthy"];
+    const sickStatuses = ["مريض", "مريضة", "sick"];
+    const treatmentStatuses = ["تحت العلاج", "under_treatment"];
+    const quarantineStatuses = ["حجر صحي", "quarantine"];
+
+    if (healthyStatuses.includes(status)) {
+      return "bg-green-100 text-green-800";
+    } else if (sickStatuses.includes(status)) {
+      return "bg-red-100 text-red-800";
+    } else if (treatmentStatuses.includes(status)) {
+      return "bg-yellow-100 text-yellow-800";
+    } else if (quarantineStatuses.includes(status)) {
+      return "bg-orange-100 text-orange-800";
+    }
+    return "bg-gray-100 text-gray-800";
+  };
+
+  const getAnimalTypeLabel = (type: AnimalCategory) => {
+    switch (type) {
+      case "male": return "الذكور";
+      case "female": return "الإناث";
+      case "newborn": return "الصغار";
+      default: return "الحيوانات";
+    }
+  };
+
+  const getAddButtonLabel = (type: AnimalCategory) => {
+    switch (type) {
+      case "male": return "إضافة ذكر جديد";
+      case "female": return "إضافة أنثى جديدة";
+      case "newborn": return "إضافة صغير جديد";
+      default: return "إضافة حيوان جديد";
     }
   };
 
@@ -131,59 +207,16 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
     );
   }
 
-  const filteredAnimals = animals
-    .filter(
-      (animal) =>
-        animal.tagId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (animal.purchase?.supplier &&
-          animal.purchase.supplier.includes(searchTerm)),
-    )
-    .filter(
-      (animal) => statusFilter === "all" || animal.status === statusFilter,
-    )
-    .filter(
-      (animal) =>
-        healthFilter === "all" || animal.healthStatus === healthFilter,
-    );
-
-  const getHealthStatusColor = (status: keyof typeof healthStatus) => {
-    switch (status) {
-      case "healthy":
-        return "bg-green-100 text-green-800";
-      case "sick":
-        return "bg-red-100 text-red-800";
-      case "under_treatment":
-        return "bg-yellow-100 text-yellow-800";
-      case "quarantine":
-        return "bg-orange-100 text-orange-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getStatusColor = (status: keyof typeof animalStatus) => {
-    switch (status) {
-      case "active":
-        return "bg-green-100 text-green-800";
-      case "sold":
-        return "bg-blue-100 text-blue-800";
-      case "dead":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-farm-800">
-            إدارة {animalTypes[animalType]}
+            إدارة {getAnimalTypeLabel(animalType)}
           </h1>
           <p className="text-muted-foreground">
-            عرض وإدارة {animalTypes[animalType]} في المزرعة
+            عرض وإدارة {getAnimalTypeLabel(animalType)} في المزرعة
           </p>
         </div>
         <div className="flex items-center space-x-3 space-x-reverse">
@@ -193,26 +226,20 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
           </Button>
           <Button onClick={() => setIsAddModalOpen(true)}>
             <Plus className="h-4 w-4 ml-2" />
-            إضافة{" "}
-            {animalType === "male"
-              ? "ذكر"
-              : animalType === "female"
-                ? "أنثى"
-                : "صغير"}{" "}
-            جديد
+            {getAddButtonLabel(animalType)}
           </Button>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-6">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">إجمالي العدد</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-farm-800">
-              {filteredAnimals.length}
+              {analytics.totalCount}
             </div>
           </CardContent>
         </Card>
@@ -223,48 +250,56 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-farm-800">
-              {filteredAnimals.length > 0
-                ? formatWeight(
-                    filteredAnimals.reduce(
-                      (sum, animal) => sum + animal.currentWeightKg,
-                      0,
-                    ) / filteredAnimals.length,
-                  )
-                : "0 كيلو"}
+              {farmHelpers.formatWeight(analytics.avgWeight)}
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              الحيوانات السليمة
+            <CardTitle className="text-sm font-medium flex items-center">
+              <Heart className="h-4 w-4 ml-1 text-green-600" />
+              السليمة
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {
-                filteredAnimals.filter((a) => a.healthStatus === "healthy")
-                  .length
-              }
+              {analytics.healthyCount}
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              القيمة التقديرية
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">القيمة التقديرية</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-farm-800">
-              {formatEGP(
-                filteredAnimals.reduce(
-                  (sum, animal) => sum + (animal.purchase?.priceEGP || 0),
-                  0,
-                ),
-              )}
+              {farmHelpers.formatCurrency(analytics.totalValue)}
+            </div>
+          </CardContent>
+        </Card>
+
+        {animalType === "female" && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">الحوامل</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-pink-600">
+                {analytics.pregnantCount}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">في العزل</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">
+              {analytics.isolatedCount}
             </div>
           </CardContent>
         </Card>
@@ -289,28 +324,18 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
               </div>
             </div>
 
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-48">
-                <SelectValue placeholder="حالة الحيوان" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">جميع الحالات</SelectItem>
-                <SelectItem value="active">نشط</SelectItem>
-                <SelectItem value="sold">مُباع</SelectItem>
-                <SelectItem value="dead">نافق</SelectItem>
-              </SelectContent>
-            </Select>
-
             <Select value={healthFilter} onValueChange={setHealthFilter}>
               <SelectTrigger className="w-full md:w-48">
                 <SelectValue placeholder="الحالة الصحية" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">جميع الحالات الصحية</SelectItem>
-                <SelectItem value="healthy">سليم</SelectItem>
-                <SelectItem value="sick">مريض</SelectItem>
-                <SelectItem value="under_treatment">تحت العلاج</SelectItem>
-                <SelectItem value="quarantine">حجر صحي</SelectItem>
+                <SelectItem value="سليم">سليم</SelectItem>
+                <SelectItem value="سليمة">سليمة</SelectItem>
+                <SelectItem value="مريض">مريض</SelectItem>
+                <SelectItem value="مريضة">مريضة</SelectItem>
+                <SelectItem value="تحت العلاج">تحت العلاج</SelectItem>
+                <SelectItem value="حجر صحي">حجر صحي</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -320,9 +345,9 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
       {/* Animals Table */}
       <Card>
         <CardHeader>
-          <CardTitle>قائمة {animalTypes[animalType]}</CardTitle>
+          <CardTitle>قائمة {getAnimalTypeLabel(animalType)}</CardTitle>
           <CardDescription>
-            إجمالي {filteredAnimals.length} من {animalTypes[animalType]}
+            إجمالي {filteredAnimals.length} من {getAnimalTypeLabel(animalType)}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -331,14 +356,19 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-right">رقم الأذن</TableHead>
-                  <TableHead className="text-right">تاريخ الميلاد</TableHead>
                   <TableHead className="text-right">الوزن الحالي</TableHead>
                   <TableHead className="text-right">الحالة الصحية</TableHead>
-                  <TableHead className="text-right">حالة الحيوان</TableHead>
                   <TableHead className="text-right">الحظيرة</TableHead>
-                  {animalType !== "newborn" && (
-                    <TableHead className="text-right">سعر الشراء</TableHead>
+                  {animalType === "female" && (
+                    <TableHead className="text-right">حالة الحمل</TableHead>
                   )}
+                  {animalType === "newborn" && (
+                    <TableHead className="text-right">الأم</TableHead>
+                  )}
+                  {animalType !== "newborn" && (
+                    <TableHead className="text-right">السعر الحالي</TableHead>
+                  )}
+                  <TableHead className="text-right">المورد</TableHead>
                   <TableHead className="text-right">الإجراءات</TableHead>
                 </TableRow>
               </TableHeader>
@@ -346,36 +376,51 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                 {filteredAnimals.map((animal) => (
                   <TableRow key={animal.id}>
                     <TableCell className="font-medium text-right">
-                      {animal.tagId}
+                      {animal.earTagId}
+                      {animal.isIsolated && (
+                        <Badge variant="outline" className="mr-2 bg-orange-50 text-orange-700">
+                          عزل
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell className="text-right">
-                      {formatArabicDate(animal.birthDate)}
+                      {farmHelpers.formatWeight(animal.weight)}
                     </TableCell>
                     <TableCell className="text-right">
-                      {formatWeight(animal.currentWeightKg)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Badge
-                        className={getHealthStatusColor(animal.healthStatus)}
-                      >
-                        {healthStatus[animal.healthStatus]}
+                      <Badge className={getHealthStatusColor(animal.healthStatus)}>
+                        {animal.healthStatus}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Badge className={getStatusColor(animal.status)}>
-                        {animalStatus[animal.status]}
+                      <Badge variant="outline" className="flex items-center w-fit">
+                        <MapPin className="h-3 w-3 ml-1" />
+                        {animal.barnId}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right">
-                      {animal.barnId}
-                    </TableCell>
-                    {animalType !== "newborn" && (
+                    {animalType === "female" && (
                       <TableCell className="text-right">
-                        {animal.purchase?.priceEGP
-                          ? formatEGP(animal.purchase.priceEGP)
-                          : "-"}
+                        {animal.isPregnant ? (
+                          <Badge className="bg-pink-100 text-pink-800">
+                            حامل
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline">غير حامل</Badge>
+                        )}
                       </TableCell>
                     )}
+                    {animalType === "newborn" && (
+                      <TableCell className="text-right">
+                        {animal.motherId || "-"}
+                      </TableCell>
+                    )}
+                    {animalType !== "newborn" && (
+                      <TableCell className="text-right">
+                        {farmHelpers.formatCurrency(animal.currentPrice || animal.purchasePrice)}
+                      </TableCell>
+                    )}
+                    <TableCell className="text-right">
+                      {animal.supplier || "-"}
+                    </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center gap-1 justify-end">
                         <Button
@@ -409,7 +454,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                 {filteredAnimals.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={animalType !== "newborn" ? 8 : 7}
+                      colSpan={animalType === "newborn" ? 7 : 8}
                       className="text-center py-8"
                     >
                       لا توجد نتائج مطابقة للبحث
@@ -428,6 +473,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
         onClose={() => setIsAddModalOpen(false)}
         onSave={handleSave}
         mode="add"
+        animalType={animalType}
       />
 
       <AnimalFormModal
@@ -439,6 +485,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
         onSave={handleSave}
         animal={selectedAnimal}
         mode="edit"
+        animalType={animalType}
       />
 
       <WeightRecordModal
