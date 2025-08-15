@@ -42,9 +42,54 @@ interface AnimalsPageProps {
 }
 
 export default function AnimalsPage({ animalType }: AnimalsPageProps) {
+  const [animals, setAnimals] = useState<Animal[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [healthFilter, setHealthFilter] = useState<string>("all");
+
+  // Modal states
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isWeightModalOpen, setIsWeightModalOpen] = useState(false);
+  const [selectedAnimal, setSelectedAnimal] = useState<Animal | null>(null);
+
+  useEffect(() => {
+    loadAnimals();
+  }, [animalType]);
+
+  const loadAnimals = async () => {
+    try {
+      const snapshot = await db.collection('animals').where('type', '==', animalType).get();
+      const animalsData = snapshot.docs.map(doc => doc.data() as Animal);
+      setAnimals(animalsData);
+    } catch (error) {
+      console.error('Error loading animals:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = (animal: Animal) => {
+    setSelectedAnimal(animal);
+    setIsEditModalOpen(true);
+  };
+
+  const handleWeightRecord = (animal: Animal) => {
+    setSelectedAnimal(animal);
+    setIsWeightModalOpen(true);
+  };
+
+  const handleDelete = async (animal: Animal) => {
+    if (window.confirm(`هل أنت متأك�� من حذف الحيوان ${animal.tagId}؟`)) {
+      try {
+        await db.collection('animals').doc(animal.id).delete();
+        loadAnimals();
+      } catch (error) {
+        console.error('Error deleting animal:', error);
+      }
+    }
+  };
 
   const filteredAnimals = mockAnimals
     .filter(animal => animal.type === animalType)
@@ -83,7 +128,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
             إدارة {animalTypes[animalType]}
           </h1>
           <p className="text-muted-foreground">
-            عرض وإدارة {animalTypes[animalType]} ��ي المزرعة
+            عرض وإدارة {animalTypes[animalType]} في المزرعة
           </p>
         </div>
         <div className="flex items-center space-x-3 space-x-reverse">
@@ -172,7 +217,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                 <SelectValue placeholder="حالة الحيوان" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">جميع الحالات</SelectItem>
+                <SelectItem value="all">جميع الحا��ات</SelectItem>
                 <SelectItem value="active">نشط</SelectItem>
                 <SelectItem value="sold">مُباع</SelectItem>
                 <SelectItem value="dead">نافق</SelectItem>
