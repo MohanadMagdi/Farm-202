@@ -35,75 +35,7 @@ import {
   Scale
 } from "lucide-react";
 
-interface Animal {
-  id: string;
-  tagId: string;
-  type: 'male' | 'female' | 'newborn';
-  birthDate: Date;
-  currentWeight: number;
-  birthWeight?: number;
-  sex: 'male' | 'female';
-  motherId?: string;
-  fatherId?: string;
-  healthStatus: keyof typeof healthStatus;
-  barnId: string;
-  status: keyof typeof animalStatus;
-  purchasePrice?: number;
-  purchaseDate?: Date;
-  supplier?: string;
-}
-
-// Mock data
-const mockAnimals: Animal[] = [
-  {
-    id: "1",
-    tagId: "M001",
-    type: "male",
-    birthDate: new Date("2023-03-15"),
-    currentWeight: 75.5,
-    birthWeight: 4.2,
-    sex: "male",
-    motherId: "F045",
-    fatherId: "M002",
-    healthStatus: "healthy",
-    barnId: "B001",
-    status: "active",
-    purchasePrice: 3500,
-    purchaseDate: new Date("2023-03-20"),
-    supplier: "مزرعة أحمد محمد"
-  },
-  {
-    id: "2", 
-    tagId: "F047",
-    type: "female",
-    birthDate: new Date("2022-11-08"),
-    currentWeight: 65.2,
-    birthWeight: 3.8,
-    sex: "female",
-    motherId: "F021",
-    fatherId: "M003",
-    healthStatus: "healthy",
-    barnId: "B002",
-    status: "active",
-    purchasePrice: 4200,
-    purchaseDate: new Date("2022-12-01"),
-    supplier: "مزرعة الصفا"
-  },
-  {
-    id: "3",
-    tagId: "N012",
-    type: "newborn",
-    birthDate: new Date("2024-01-10"),
-    currentWeight: 12.3,
-    birthWeight: 3.5,
-    sex: "male",
-    motherId: "F047",
-    fatherId: "M001",
-    healthStatus: "healthy",
-    barnId: "B003",
-    status: "active"
-  }
-];
+// Modal states and data loading
 
 interface AnimalsPageProps {
   animalType: 'male' | 'female' | 'newborn';
@@ -151,7 +83,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
             إدارة {animalTypes[animalType]}
           </h1>
           <p className="text-muted-foreground">
-            عرض وإدارة {animalTypes[animalType]} في المزرعة
+            عرض وإدارة {animalTypes[animalType]} ��ي المزرعة
           </p>
         </div>
         <div className="flex items-center space-x-3 space-x-reverse">
