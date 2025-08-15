@@ -562,7 +562,7 @@ export default function ReportsPage() {
                           >
                             {item.currentStock <= item.minLevel
                               ? "منخفض"
-                              : "طبيع��"}
+                              : "طبيعي"}
                           </Badge>
                         </TableCell>
                       </TableRow>
@@ -617,7 +617,7 @@ export default function ReportsPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>كفاءة التحويل الغذائي</CardTitle>
+                <CardTitle>كفاءة ��لتحويل الغذائي</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
