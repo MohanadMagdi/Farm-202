@@ -373,7 +373,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                       </TableCell>
                     )}
                     <TableCell className="text-right">
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 justify-end">
                         <Button
                           variant="outline"
                           size="sm"
