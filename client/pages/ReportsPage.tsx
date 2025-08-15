@@ -398,7 +398,7 @@ export default function ReportsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2 space-x-reverse">
                   <TrendingUp className="h-5 w-5 text-farm-600" />
-                  <span>أفضل الحيوانا�� أداءً</span>
+                  <span>أفضل الحيوانات أداءً</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
