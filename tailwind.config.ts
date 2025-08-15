@@ -57,11 +57,32 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        farm: {
+          50: "hsl(var(--farm-50))",
+          100: "hsl(var(--farm-100))",
+          200: "hsl(var(--farm-200))",
+          300: "hsl(var(--farm-300))",
+          400: "hsl(var(--farm-400))",
+          500: "hsl(var(--farm-500))",
+          600: "hsl(var(--farm-600))",
+          700: "hsl(var(--farm-700))",
+          800: "hsl(var(--farm-800))",
+          900: "hsl(var(--farm-900))",
+          950: "hsl(var(--farm-950))",
+        },
+        sheep: {
+          cream: "hsl(var(--sheep-cream))",
+          wool: "hsl(var(--sheep-wool))",
+          brown: "hsl(var(--sheep-brown))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      fontFamily: {
+        arabic: ['Cairo', 'Noto Sans Arabic', 'system-ui', 'sans-serif'],
       },
       keyframes: {
         "accordion-down": {
