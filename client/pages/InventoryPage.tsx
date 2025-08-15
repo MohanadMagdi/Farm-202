@@ -368,7 +368,7 @@ export default function InventoryPage() {
               {formatEGP(totalValue)}
             </div>
             <p className="text-xs text-muted-foreground">
-              القيمة الإجمالية الحالية
+              القيمة الإجمالية الحا��ية
             </p>
           </CardContent>
         </Card>
@@ -376,7 +376,7 @@ export default function InventoryPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">
-              تنبيهات المخزون
+              تنب��هات المخزون
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -411,7 +411,7 @@ export default function InventoryPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">
-              الحركة الشهرية
+              الحر��ة الشهرية
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -613,14 +613,29 @@ export default function InventoryPage() {
                               : "-"}
                           </TableCell>
                           <TableCell>
-                            <div className="flex items-center space-x-2 space-x-reverse">
-                              <Button variant="outline" size="sm">
-                                <Eye className="h-3 w-3" />
-                              </Button>
-                              <Button variant="outline" size="sm">
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEditItem(item)}
+                                className="h-8 w-8 p-0"
+                              >
                                 <Edit className="h-3 w-3" />
                               </Button>
-                              <Button variant="outline" size="sm">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleStockMovement(item, "in")}
+                                className="h-8 w-8 p-0 text-green-600 hover:text-green-700"
+                              >
+                                <Plus className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleStockMovement(item, "out")}
+                                className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                              >
                                 <ShoppingCart className="h-3 w-3" />
                               </Button>
                             </div>
@@ -665,8 +680,8 @@ export default function InventoryPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {mockStockMovements.map((movement) => {
-                      const item = mockInventoryItems.find(
+                    {stockMovements.map((movement) => {
+                      const item = inventoryItems.find(
                         (i) => i.id === movement.inventoryItemId,
                       );
 
@@ -711,6 +726,23 @@ export default function InventoryPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Modals */}
+      <InventoryFormModal
+        isOpen={showInventoryModal}
+        onClose={() => setShowInventoryModal(false)}
+        onSave={handleModalSave}
+        inventoryItem={selectedItem}
+        mode={modalMode}
+      />
+
+      <StockMovementModal
+        isOpen={showStockModal}
+        onClose={() => setShowStockModal(false)}
+        onSave={handleModalSave}
+        inventoryItem={selectedItem || undefined}
+        mode={stockModalMode}
+      />
     </div>
   );
 }
