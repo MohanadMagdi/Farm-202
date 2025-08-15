@@ -31,7 +31,10 @@ export function formatWeight(weight: number | undefined | null): string {
 /**
  * Format date in Arabic
  */
-export function formatArabicDate(date: Date): string {
+export function formatArabicDate(date: Date | undefined | null): string {
+  if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+    return 'غير محدد';
+  }
   return date.toLocaleDateString('ar-EG', {
     year: 'numeric',
     month: 'long',
