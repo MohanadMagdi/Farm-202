@@ -25,14 +25,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  formatEGP,
-  formatArabicNumber,
-  formatArabicDate,
-  inventoryCategories,
-  feedTypes,
-} from "@/lib/arabic-utils";
-import { db, InventoryItem, StockMovement } from "@/lib/firebase-mock";
+import { Progress } from "@/components/ui/progress";
+import { formatArabicDate } from "@/lib/arabic-utils";
+import { dataService, farmHelpers } from "@/lib/data-service";
+import type { WarehouseItem, WarehouseType, StockMovement } from "@shared/types";
 import InventoryFormModal from "@/components/forms/InventoryFormModal";
 import StockMovementModal from "@/components/forms/StockMovementModal";
 import { toast } from "@/hooks/use-toast";
@@ -48,144 +44,43 @@ import {
   Edit,
   ShoppingCart,
   FileText,
+  Clock,
+  Warehouse,
+  Beaker,
+  PillBottle,
+  Stethoscope,
+  Wrench,
+  Settings,
 } from "lucide-react";
 
-interface InventoryItem {
-  id: string;
-  category: keyof typeof inventoryCategories;
-  name: string;
-  sku: string;
-  unit: string;
-  concentratePct?: number;
-  pricePerUnit: number;
-  minLevel: number;
-  currentStock: number;
-  notes?: string;
-  active: boolean;
-  lastRestocked?: Date;
-  supplier?: string;
-}
-
-interface StockMovement {
-  id: string;
-  inventoryItemId: string;
-  direction: "in" | "out";
-  quantity: number;
-  unit: string;
-  reason: string;
-  barnId?: string;
-  requestedBy: string;
-  createdAt: Date;
-  cost?: number;
-}
-
-// Mock data
-const mockInventoryItems: InventoryItem[] = [
-  {
-    id: "1",
-    category: "feed",
-    name: "دريس البرسيم",
-    sku: "FEED-HAY-001",
-    unit: "كيلو",
-    pricePerUnit: 8.5,
-    minLevel: 500,
-    currentStock: 1200,
-    active: true,
-    lastRestocked: new Date("2024-01-15"),
-    supplier: "مزرعة الوادي الأخضر",
-  },
-  {
-    id: "2",
-    category: "feed",
-    name: "تبن القمح",
-    sku: "FEED-STRAW-001",
-    unit: "كيلو",
-    pricePerUnit: 4.2,
-    minLevel: 300,
-    currentStock: 150,
-    active: true,
-    lastRestocked: new Date("2024-01-10"),
-    supplier: "تجار الأعلاف المتحدة",
-  },
-  {
-    id: "3",
-    category: "feed",
-    name: "علف مركز 16%",
-    sku: "FEED-CONC-16",
-    unit: "كيلو",
-    concentratePct: 16,
-    pricePerUnit: 12.8,
-    minLevel: 200,
-    currentStock: 450,
-    active: true,
-    lastRestocked: new Date("2024-01-12"),
-    supplier: "شركة الأعلاف المصرية",
-  },
-  {
-    id: "4",
-    category: "medicine",
-    name: "مضاد حيوي - أموكسيسيلين",
-    sku: "MED-AMX-500",
-    unit: "قرص",
-    pricePerUnit: 2.5,
-    minLevel: 50,
-    currentStock: 120,
-    active: true,
-    lastRestocked: new Date("2024-01-08"),
-    supplier: "صيدلية المزرعة البيطرية",
-  },
-  {
-    id: "5",
-    category: "equipment",
-    name: "ميزان إلكتروني",
-    sku: "EQP-SCALE-001",
-    unit: "قطعة",
-    pricePerUnit: 850,
-    minLevel: 1,
-    currentStock: 3,
-    active: true,
-    lastRestocked: new Date("2023-12-20"),
-    supplier: "معدات المزارع الحديثة",
-  },
-];
-
-const mockStockMovements: StockMovement[] = [
-  {
-    id: "1",
-    inventoryItemId: "1",
-    direction: "out",
-    quantity: 50,
-    unit: "كيلو",
-    reason: "صرف للحظيرة الرئيسية",
-    barnId: "B001",
-    requestedBy: "أحمد محمد",
-    createdAt: new Date("2024-01-16"),
-  },
-  {
-    id: "2",
-    inventoryItemId: "2",
-    direction: "in",
-    quantity: 500,
-    unit: "كيلو",
-    reason: "استلام شحنة جديدة",
-    requestedBy: "مدير المخزن",
-    createdAt: new Date("2024-01-15"),
-    cost: 2100,
-  },
-];
+const warehouseTypes: Record<WarehouseType, { label: string; icon: any; color: string }> = {
+  chemicals: { label: "المواد الكيميائية والأعلاف", icon: Beaker, color: "text-blue-600" },
+  medicines: { label: "الأدوية والمحسنات", icon: PillBottle, color: "text-green-600" },
+  medical_supplies: { label: "المستلزمات الطبية", icon: Stethoscope, color: "text-pink-600" },
+  equipment: { label: "المعدات والأجهزة", icon: Settings, color: "text-purple-600" },
+  maintenance: { label: "الصيانة والإصلاح", icon: Wrench, color: "text-orange-600" },
+};
 
 export default function InventoryPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+  const [warehouseItems, setWarehouseItems] = useState<WarehouseItem[]>([]);
   const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
   const [loading, setLoading] = useState(true);
+  const [analytics, setAnalytics] = useState({
+    totalItems: 0,
+    totalValue: 0,
+    lowStockCount: 0,
+    expiredCount: 0,
+    expiringCount: 0,
+    recentMovements: [] as StockMovement[],
+  });
 
   // Modal states
   const [showInventoryModal, setShowInventoryModal] = useState(false);
   const [showStockModal, setShowStockModal] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [selectedItem, setSelectedItem] = useState<WarehouseItem | null>(null);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [stockModalMode, setStockModalMode] = useState<"in" | "out">("in");
 
@@ -195,19 +90,27 @@ export default function InventoryPage() {
 
   const loadData = async () => {
     try {
-      const [inventorySnapshot, movementsSnapshot] = await Promise.all([
-        db.collection("inventory").get(),
-        db.collection("stockMovements").get(),
+      const [itemsData, movementsData] = await Promise.all([
+        dataService.warehouseItems.getAll(),
+        dataService.stockMovements.getAll(),
       ]);
 
-      setInventoryItems(
-        inventorySnapshot.docs.map((doc) => doc.data() as InventoryItem),
-      );
-      setStockMovements(
-        movementsSnapshot.docs.map((doc) => doc.data() as StockMovement),
-      );
+      setWarehouseItems(itemsData);
+      setStockMovements(movementsData);
+      
+      // Update expiry days
+      await dataService.warehouseItems.updateRemainingDays();
+      
+      // Calculate analytics
+      const warehouseAnalytics = await farmHelpers.getWarehouseAnalytics();
+      setAnalytics(warehouseAnalytics);
     } catch (error) {
-      console.error("Error loading inventory data:", error);
+      console.error("Error loading warehouse data:", error);
+      toast({
+        title: "خطأ في تحميل البيانات",
+        description: "حدث خطأ أثناء تحميل بيانات المخزون",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -219,15 +122,15 @@ export default function InventoryPage() {
     setShowInventoryModal(true);
   };
 
-  const handleEditItem = (item: InventoryItem) => {
+  const handleEditItem = (item: WarehouseItem) => {
     setSelectedItem(item);
     setModalMode("edit");
     setShowInventoryModal(true);
   };
 
   const handleStockMovement = (
-    item: InventoryItem,
-    direction: "in" | "out",
+    item: WarehouseItem,
+    direction: "in" | "out"
   ) => {
     setSelectedItem(item);
     setStockModalMode(direction);
@@ -256,7 +159,7 @@ export default function InventoryPage() {
     });
   };
 
-  const requestSupply = (item: InventoryItem) => {
+  const requestSupply = (item: WarehouseItem) => {
     toast({
       title: "طلب توريد",
       description: `تم إرسال طلب توريد للصنف: ${item.name}`,
@@ -268,8 +171,8 @@ export default function InventoryPage() {
       <div className="space-y-6">
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-          <div className="grid gap-4 md:grid-cols-4">
-            {[1, 2, 3, 4].map((i) => (
+          <div className="grid gap-4 md:grid-cols-5">
+            {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="h-32 bg-gray-200 rounded"></div>
             ))}
           </div>
@@ -278,22 +181,29 @@ export default function InventoryPage() {
     );
   }
 
-  const filteredItems = inventoryItems
+  const filteredItems = warehouseItems
     .filter(
       (item) =>
         item.name.includes(searchTerm) ||
-        item.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (item.supplier && item.supplier.includes(searchTerm)),
+        item.category.includes(searchTerm) ||
+        (item.supplier && item.supplier.includes(searchTerm))
     )
-    .filter(
-      (item) => categoryFilter === "all" || item.category === categoryFilter,
-    )
+    .filter((item) => typeFilter === "all" || item.type === typeFilter)
     .filter((item) => {
       if (statusFilter === "all") return true;
-      if (statusFilter === "active") return item.active;
+      if (statusFilter === "active") return item.isActive;
       if (statusFilter === "low_stock")
-        return item.currentStock <= item.minLevel;
+        return item.currentStock <= item.minStockLevel;
       if (statusFilter === "out_of_stock") return item.currentStock === 0;
+      if (statusFilter === "expired")
+        return item.hasExpiry && item.expiryDate && item.expiryDate < new Date();
+      if (statusFilter === "expiring") {
+        if (!item.hasExpiry || !item.expiryDate) return false;
+        const daysUntilExpiry = Math.ceil(
+          (item.expiryDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+        );
+        return daysUntilExpiry > 0 && daysUntilExpiry <= 7;
+      }
       return true;
     });
 
@@ -311,23 +221,49 @@ export default function InventoryPage() {
     return { text: "متوفر", color: "bg-green-100 text-green-800" };
   };
 
-  const lowStockItems = inventoryItems.filter(
-    (item) => db.getCurrentStock(item.id) <= item.minLevel,
+  const getExpiryBadge = (item: WarehouseItem) => {
+    if (!item.hasExpiry || !item.expiryDate) return null;
+    
+    const now = new Date();
+    const daysUntilExpiry = Math.ceil(
+      (item.expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    if (daysUntilExpiry < 0) {
+      return { text: "منتهي الصلاحية", color: "bg-red-100 text-red-800" };
+    } else if (daysUntilExpiry <= 7) {
+      return { text: `ينتهي خلال ${daysUntilExpiry} أيام`, color: "bg-orange-100 text-orange-800" };
+    } else if (daysUntilExpiry <= 30) {
+      return { text: `ينتهي خلال ${daysUntilExpiry} يوم`, color: "bg-yellow-100 text-yellow-800" };
+    }
+    
+    return null;
+  };
+
+  const lowStockItems = warehouseItems.filter(
+    (item) => item.currentStock <= item.minStockLevel
   );
-  const totalValue = inventoryItems.reduce(
-    (sum, item) => sum + db.getCurrentStock(item.id) * item.pricePerUnitEGP,
-    0,
+
+  const expiredItems = warehouseItems.filter(
+    (item) => item.hasExpiry && item.expiryDate && item.expiryDate < new Date()
   );
-  const totalItems = inventoryItems.filter((item) => item.active).length;
+
+  const expiringItems = warehouseItems.filter((item) => {
+    if (!item.hasExpiry || !item.expiryDate) return false;
+    const daysUntilExpiry = Math.ceil(
+      (item.expiryDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+    );
+    return daysUntilExpiry > 0 && daysUntilExpiry <= 7;
+  });
 
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-farm-800">إدارة المخزون</h1>
+          <h1 className="text-3xl font-bold text-farm-800">إدارة المستودعات</h1>
           <p className="text-muted-foreground">
-            إدارة مخزون الأعلاف والأدوية والمعدات
+            إدارة المستودعات الخمسة: الكيماويات، الأدوية، المستلزمات الطبية، المعدات، الصيانة
           </p>
         </div>
         <div className="flex items-center space-x-3 space-x-reverse">
@@ -346,17 +282,49 @@ export default function InventoryPage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      {/* Warehouse Type Stats */}
+      <div className="grid gap-4 md:grid-cols-5">
+        {Object.entries(warehouseTypes).map(([type, config]) => {
+          const typeItems = warehouseItems.filter(item => item.type === type);
+          const totalValue = typeItems.reduce((sum, item) => sum + (item.currentStock * item.unitPrice), 0);
+          const lowStockCount = typeItems.filter(item => item.currentStock <= item.minStockLevel).length;
+          
+          return (
+            <Card key={type} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setTypeFilter(type)}>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center">
+                  <config.icon className={`h-4 w-4 ml-2 ${config.color}`} />
+                  {config.label}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-farm-800">
+                  {typeItems.length}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {farmHelpers.formatCurrency(totalValue)}
+                </div>
+                {lowStockCount > 0 && (
+                  <div className="flex items-center text-xs text-yellow-600 mt-1">
+                    <AlertTriangle className="h-3 w-3 ml-1" />
+                    {lowStockCount} منخفض
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Main Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-5">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              إجمالي الأصناف
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">إجمالي الأصناف</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-farm-800">
-              {formatArabicNumber(totalItems)}
+              {analytics.totalItems}
             </div>
             <p className="text-xs text-muted-foreground">صنف نشط</p>
           </CardContent>
@@ -368,19 +336,15 @@ export default function InventoryPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-farm-800">
-              {formatEGP(totalValue)}
+              {farmHelpers.formatCurrency(analytics.totalValue)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              القيمة الإجمالية الحالية
-            </p>
+            <p className="text-xs text-muted-foreground">القيمة الإجمالية الحالية</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              تنبيهات المخزون
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">تنبيهات المخزون</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center space-x-2 space-x-reverse">
@@ -389,11 +353,9 @@ export default function InventoryPage() {
                   <AlertTriangle className="h-5 w-5 text-yellow-500" />
                   <div>
                     <div className="text-2xl font-bold text-yellow-600">
-                      {formatArabicNumber(lowStockItems.length)}
+                      {analytics.lowStockCount}
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      صنف مخزون منخفض
-                    </p>
+                    <p className="text-xs text-muted-foreground">صنف مخزون منخفض</p>
                   </div>
                 </>
               ) : (
@@ -401,9 +363,7 @@ export default function InventoryPage() {
                   <Package className="h-5 w-5 text-green-500" />
                   <div>
                     <div className="text-2xl font-bold text-green-600">0</div>
-                    <p className="text-xs text-muted-foreground">
-                      لا توجد تنبيهات
-                    </p>
+                    <p className="text-xs text-muted-foreground">لا توجد تنبيهات</p>
                   </div>
                 </>
               )}
@@ -413,64 +373,130 @@ export default function InventoryPage() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              الحركة الشهرية
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">انتهاء الصلاحية</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-1">
+              <div className="flex justify-between text-sm">
+                <span>منتهية:</span>
+                <span className="font-semibold text-red-600">{analytics.expiredCount}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>تنتهي قريباً:</span>
+                <span className="font-semibold text-orange-600">{analytics.expiringCount}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">الحركة الشهرية</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-farm-800">
-              {formatArabicNumber(mockStockMovements.length)}
+              {stockMovements.length}
             </div>
             <div className="flex items-center space-x-1 space-x-reverse text-xs text-muted-foreground">
               <TrendingUp className="h-3 w-3 text-green-500" />
-              <span>+12% من الشهر الماضي</span>
+              <span>حركة نشطة</span>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Alerts for Low Stock */}
-      {lowStockItems.length > 0 && (
-        <Card className="border-yellow-200 bg-yellow-50">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2 space-x-reverse text-yellow-800">
-              <AlertTriangle className="h-5 w-5" />
-              <span>تنبيهات المخزون المنخفض</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {lowStockItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between p-2 bg-white rounded"
-                >
-                  <span className="font-medium">{item.name}</span>
-                  <div className="flex items-center space-x-2 space-x-reverse">
-                    <span className="text-sm text-muted-foreground">
-                      المخزون الحالي:{" "}
-                      {formatArabicNumber(db.getCurrentStock(item.id))}{" "}
-                      {item.unit}
-                    </span>
-                    <Badge
-                      variant="outline"
-                      className="bg-yellow-100 text-yellow-800"
-                    >
-                      الحد الأدنى: {formatArabicNumber(item.minLevel)}
-                    </Badge>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => requestSupply(item)}
-                    >
-                      طلب توريد
-                    </Button>
-                  </div>
+      {/* Alerts for Low Stock & Expiry */}
+      {(lowStockItems.length > 0 || expiredItems.length > 0 || expiringItems.length > 0) && (
+        <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-3">
+          {lowStockItems.length > 0 && (
+            <Card className="border-yellow-200 bg-yellow-50">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2 space-x-reverse text-yellow-800">
+                  <AlertTriangle className="h-5 w-5" />
+                  <span>مخزون منخفض</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="max-h-48 overflow-y-auto">
+                <div className="space-y-2">
+                  {lowStockItems.slice(0, 5).map((item) => (
+                    <div key={item.id} className="flex items-center justify-between p-2 bg-white rounded text-sm">
+                      <span className="font-medium">{item.name}</span>
+                      <div className="flex items-center space-x-2 space-x-reverse">
+                        <span className="text-muted-foreground">
+                          {item.currentStock} {item.unit}
+                        </span>
+                        <Button size="sm" variant="outline" onClick={() => requestSupply(item)}>
+                          طلب توريد
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  {lowStockItems.length > 5 && (
+                    <p className="text-xs text-center text-muted-foreground">
+                      و {lowStockItems.length - 5} أصناف أخرى
+                    </p>
+                  )}
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          )}
+
+          {expiredItems.length > 0 && (
+            <Card className="border-red-200 bg-red-50">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2 space-x-reverse text-red-800">
+                  <Clock className="h-5 w-5" />
+                  <span>منتهية الصلاحية</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="max-h-48 overflow-y-auto">
+                <div className="space-y-2">
+                  {expiredItems.slice(0, 5).map((item) => (
+                    <div key={item.id} className="flex items-center justify-between p-2 bg-white rounded text-sm">
+                      <span className="font-medium">{item.name}</span>
+                      <span className="text-red-600 text-xs">
+                        انتهت منذ {Math.abs(Math.ceil((item.expiryDate!.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)))} يوم
+                      </span>
+                    </div>
+                  ))}
+                  {expiredItems.length > 5 && (
+                    <p className="text-xs text-center text-muted-foreground">
+                      و {expiredItems.length - 5} أصناف أخرى
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {expiringItems.length > 0 && (
+            <Card className="border-orange-200 bg-orange-50">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2 space-x-reverse text-orange-800">
+                  <Clock className="h-5 w-5" />
+                  <span>تنتهي قريباً</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="max-h-48 overflow-y-auto">
+                <div className="space-y-2">
+                  {expiringItems.slice(0, 5).map((item) => (
+                    <div key={item.id} className="flex items-center justify-between p-2 bg-white rounded text-sm">
+                      <span className="font-medium">{item.name}</span>
+                      <span className="text-orange-600 text-xs">
+                        {Math.ceil((item.expiryDate!.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} أيام
+                      </span>
+                    </div>
+                  ))}
+                  {expiringItems.length > 5 && (
+                    <p className="text-xs text-center text-muted-foreground">
+                      و {expiringItems.length - 5} أصناف أخرى
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       )}
 
       <Tabs defaultValue="items" className="w-full" dir="rtl">
@@ -491,7 +517,7 @@ export default function InventoryPage() {
                   <div className="relative">
                     <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="البحث باسم الصنف أو رقم SKU أو المورد..."
+                      placeholder="البحث باسم الصنف أو الفئة أو المورد..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pr-10"
@@ -499,22 +525,17 @@ export default function InventoryPage() {
                   </div>
                 </div>
 
-                <Select
-                  value={categoryFilter}
-                  onValueChange={setCategoryFilter}
-                >
-                  <SelectTrigger className="w-full md:w-48">
-                    <SelectValue placeholder="الفئة" />
+                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                  <SelectTrigger className="w-full md:w-64">
+                    <SelectValue placeholder="نوع المستودع" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">جميع الفئات</SelectItem>
-                    <SelectItem value="feed">أعلاف</SelectItem>
-                    <SelectItem value="medicine">أدوية</SelectItem>
-                    <SelectItem value="medical_supply">
-                      مستلزمات طبية
-                    </SelectItem>
-                    <SelectItem value="equipment">معدات</SelectItem>
-                    <SelectItem value="maintenance">صيانة</SelectItem>
+                    <SelectItem value="all">جميع المستودعات</SelectItem>
+                    {Object.entries(warehouseTypes).map(([type, config]) => (
+                      <SelectItem key={type} value={type}>
+                        {config.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
 
@@ -527,6 +548,8 @@ export default function InventoryPage() {
                     <SelectItem value="active">نشط</SelectItem>
                     <SelectItem value="low_stock">مخزون منخفض</SelectItem>
                     <SelectItem value="out_of_stock">نفد المخزون</SelectItem>
+                    <SelectItem value="expired">منتهي الصلاحية</SelectItem>
+                    <SelectItem value="expiring">ينتهي قريباً</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -537,101 +560,68 @@ export default function InventoryPage() {
           <Card>
             <CardHeader>
               <CardTitle>قائمة الأصناف</CardTitle>
-              <CardDescription>
-                إجمالي {filteredItems.length} صنف
-              </CardDescription>
+              <CardDescription>إجمالي {filteredItems.length} صنف</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="rounded-md border">
                 <Table dir="rtl">
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-right w-1/6">
-                        اسم الصنف
-                      </TableHead>
-                      <TableHead className="text-right w-1/12">الفئة</TableHead>
-                      <TableHead className="text-right w-1/8">
-                        المخزون الحالي
-                      </TableHead>
-                      <TableHead className="text-right w-1/12">
-                        الحد الأدنى
-                      </TableHead>
-                      <TableHead className="text-right w-1/8">
-                        سعر الوحدة
-                      </TableHead>
-                      <TableHead className="text-right w-1/12">
-                        الحالة
-                      </TableHead>
-                      <TableHead className="text-right w-1/8">
-                        آخر توريد
-                      </TableHead>
-                      <TableHead className="text-right w-1/6">
-                        الإجراءات
-                      </TableHead>
+                      <TableHead className="text-right">اسم الصنف</TableHead>
+                      <TableHead className="text-right">المستودع</TableHead>
+                      <TableHead className="text-right">المخزون الحالي</TableHead>
+                      <TableHead className="text-right">الحد الأدنى</TableHead>
+                      <TableHead className="text-right">سعر الوحدة</TableHead>
+                      <TableHead className="text-right">الحالة</TableHead>
+                      <TableHead className="text-right">انتهاء الصلاحية</TableHead>
+                      <TableHead className="text-right">الإجراءات</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredItems.map((item) => {
-                      const currentStock = db.getCurrentStock(item.id);
-                      const stockBadge = getStockBadge(
-                        currentStock,
-                        item.minLevel,
-                      );
+                      const stockBadge = getStockBadge(item.currentStock, item.minStockLevel);
+                      const expiryBadge = getExpiryBadge(item);
+                      const warehouseConfig = warehouseTypes[item.type];
 
                       return (
                         <TableRow key={item.id}>
                           <TableCell>
                             <div>
                               <div className="font-medium">{item.name}</div>
-                              <div className="text-sm text-muted-foreground">
-                                {item.sku}
-                              </div>
-                              {item.concentratePct && (
-                                <Badge
-                                  variant="outline"
-                                  className="text-xs mt-1"
-                                >
-                                  {formatArabicNumber(item.concentratePct)}%
-                                  بروتين
-                                </Badge>
-                              )}
+                              <div className="text-sm text-muted-foreground">{item.category}</div>
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline">
-                              {inventoryCategories[item.category]}
+                            <Badge variant="outline" className="flex items-center w-fit">
+                              <warehouseConfig.icon className={`h-3 w-3 ml-1 ${warehouseConfig.color}`} />
+                              {warehouseConfig.label}
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            <div
-                              className={getStockStatusColor(
-                                currentStock,
-                                item.minLevel,
-                              )}
-                            >
-                              <span className="font-medium">
-                                {formatArabicNumber(currentStock)}
-                              </span>
-                              <span className="text-sm text-muted-foreground mr-1">
-                                {item.unit}
-                              </span>
+                            <div className={getStockStatusColor(item.currentStock, item.minStockLevel)}>
+                              <span className="font-medium">{item.currentStock}</span>
+                              <span className="text-sm text-muted-foreground mr-1">{item.unit}</span>
                             </div>
                           </TableCell>
                           <TableCell>
-                            {formatArabicNumber(item.minLevel)} {item.unit}
+                            {item.minStockLevel} {item.unit}
                           </TableCell>
                           <TableCell>
-                            {formatEGP(item.pricePerUnitEGP)} / {item.unit}
+                            {farmHelpers.formatCurrency(item.unitPrice)} / {item.unit}
                           </TableCell>
                           <TableCell>
-                            <Badge className={stockBadge.color}>
-                              {stockBadge.text}
-                            </Badge>
+                            <Badge className={stockBadge.color}>{stockBadge.text}</Badge>
                           </TableCell>
                           <TableCell>
-                            {item.timestamps?.updatedAt
-                              ? formatArabicDate(item.timestamps.updatedAt)
-                              : "-"}
+                            {expiryBadge ? (
+                              <Badge className={expiryBadge.color}>{expiryBadge.text}</Badge>
+                            ) : item.hasExpiry ? (
+                              <span className="text-sm text-muted-foreground">
+                                {item.expiryDate ? formatArabicDate(item.expiryDate) : "غير محدد"}
+                              </span>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">لا ينتهي</span>
+                            )}
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center gap-1 justify-end">
@@ -682,9 +672,7 @@ export default function InventoryPage() {
           <Card>
             <CardHeader>
               <CardTitle>حركة المخزون</CardTitle>
-              <CardDescription>
-                سجل بحركات الداخل والخارج للمخزون
-              </CardDescription>
+              <CardDescription>سجل بحركات الداخل والخارج للمخزون</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="rounded-md border">
@@ -702,46 +690,35 @@ export default function InventoryPage() {
                   </TableHeader>
                   <TableBody>
                     {stockMovements.map((movement) => {
-                      const item = inventoryItems.find(
-                        (i) => i.id === movement.inventoryItemId,
-                      );
+                      const item = warehouseItems.find((i) => i.id === movement.itemId);
 
                       return (
                         <TableRow key={movement.id}>
                           <TableCell className="text-right">
-                            {formatArabicDate(movement.createdAt)}
+                            {formatArabicDate(movement.date)}
                           </TableCell>
                           <TableCell className="text-right">
                             {item?.name || "غير معروف"}
                           </TableCell>
                           <TableCell className="text-right">
                             <Badge
-                              variant={
-                                movement.direction === "in"
-                                  ? "default"
-                                  : "secondary"
-                              }
+                              variant={movement.type === "in" ? "default" : "secondary"}
                               className={
-                                movement.direction === "in"
+                                movement.type === "in"
                                   ? "bg-green-100 text-green-800"
                                   : "bg-red-100 text-red-800"
                               }
                             >
-                              {movement.direction === "in" ? "وارد" : "صادر"}
+                              {movement.type === "in" ? "وارد" : "صادر"}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
-                            {formatArabicNumber(movement.quantity)}{" "}
-                            {movement.unit}
+                            {movement.quantity} {item?.unit || ""}
                           </TableCell>
+                          <TableCell className="text-right">{movement.reason}</TableCell>
+                          <TableCell className="text-right">{movement.recordedBy}</TableCell>
                           <TableCell className="text-right">
-                            {movement.reason}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {movement.requestedBy}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {movement.cost ? formatEGP(movement.cost) : "-"}
+                            {farmHelpers.formatCurrency(movement.totalCost)}
                           </TableCell>
                         </TableRow>
                       );
@@ -759,7 +736,7 @@ export default function InventoryPage() {
         isOpen={showInventoryModal}
         onClose={() => setShowInventoryModal(false)}
         onSave={handleModalSave}
-        inventoryItem={selectedItem}
+        warehouseItem={selectedItem}
         mode={modalMode}
       />
 
@@ -767,7 +744,7 @@ export default function InventoryPage() {
         isOpen={showStockModal}
         onClose={() => setShowStockModal(false)}
         onSave={handleModalSave}
-        inventoryItem={selectedItem || undefined}
+        warehouseItem={selectedItem || undefined}
         mode={stockModalMode}
       />
     </div>
