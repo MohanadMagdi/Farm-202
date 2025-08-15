@@ -1,9 +1,12 @@
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { formatEGP, formatWeight, formatArabicNumber, animalTypes } from "@/lib/arabic-utils";
+import { db, Animal, Barn, InventoryItem } from "@/lib/firebase-mock";
 import {
   CircleDot,
   TrendingUp,
