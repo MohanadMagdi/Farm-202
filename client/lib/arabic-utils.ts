@@ -5,7 +5,10 @@
 /**
  * Format currency in Egyptian Pounds (EGP)
  */
-export function formatEGP(amount: number): string {
+export function formatEGP(amount: number | undefined | null): string {
+  if (amount == null || isNaN(amount)) {
+    return '0 جنيه';
+  }
   return `${amount.toLocaleString('ar-EG', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2
