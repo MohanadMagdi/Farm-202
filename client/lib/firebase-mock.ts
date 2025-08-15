@@ -1,12 +1,25 @@
 /**
- * Firebase Mockup Database System
- * Simulates Firebase Firestore for local development and testing
+ * Firebase Hybrid System
+ * Uses real Firebase in production, mock data in development/testing
  */
 
 import { formatArabicDate } from "./arabic-utils";
+import type { 
+  Animal, 
+  Barn, 
+  WarehouseItem, 
+  StockMovement, 
+  FeedingRecord, 
+  WeightRecord,
+  HealthRecord,
+  BarnMovement,
+  FeedingSchedule,
+  AnimalCategory,
+  WarehouseType
+} from '@shared/types';
 
-// Types matching Firestore document structure
-export interface Animal {
+// Legacy types for backward compatibility
+export interface LegacyAnimal {
   id: string;
   tagId: string;
   type: "male" | "female" | "newborn";
@@ -25,125 +38,10 @@ export interface Animal {
   barnId: string;
   status: "active" | "sold" | "dead";
   metrics: {
-    adg: number; // Average Daily Gain
+    adg: number;
     totalGainKg: number;
     feedConsumedKg: number;
   };
-  timestamps: {
-    createdAt: Date;
-    updatedAt: Date;
-  };
-}
-
-export interface Barn {
-  id: string;
-  name: string;
-  type: "male" | "female" | "newborn" | "mixed";
-  capacity: number;
-  location: string;
-  notes?: string;
-  active: boolean;
-  timestamps: {
-    createdAt: Date;
-    updatedAt: Date;
-  };
-}
-
-export interface InventoryItem {
-  id: string;
-  category:
-    | "feed"
-    | "medicine"
-    | "medical_supply"
-    | "equipment"
-    | "maintenance";
-  name: string;
-  sku: string;
-  unit: string;
-  concentratePct?: number;
-  pricePerUnitEGP: number;
-  minLevel: number;
-  notes?: string;
-  active: boolean;
-  timestamps: {
-    createdAt: Date;
-    updatedAt: Date;
-  };
-}
-
-export interface StockBatch {
-  id: string;
-  inventoryItemId: string;
-  qtyIn: number;
-  qtyRemaining: number;
-  receivedAt: Date;
-  supplier: string;
-  costEGP: number;
-  expiryDate?: Date;
-}
-
-export interface StockMovement {
-  id: string;
-  direction: "in" | "out";
-  inventoryItemId: string;
-  batchId?: string;
-  qty: number;
-  unit: string;
-  reason: "purchase" | "issue_to_barn" | "adjustment" | "return";
-  barnId?: string;
-  requestedBy: string;
-  approvedBy?: string;
-  createdAt: Date;
-}
-
-export interface FeedingSchedule {
-  id: string;
-  barnId: string;
-  date: Date;
-  sessionsPerDay: number;
-  entries: Array<{
-    time: string;
-    feedItemId: string;
-    qtyKgBarnTotal: number;
-  }>;
-}
-
-export interface FeedingRecord {
-  id: string;
-  barnId: string;
-  animalId?: string;
-  time: Date;
-  feedItemId: string;
-  qtyKg: number;
-  recordedBy: string;
-}
-
-export interface HealthRecord {
-  id: string;
-  animalId: string;
-  type: "vaccine" | "treatment" | "diagnosis";
-  drugId?: string;
-  dose?: string;
-  date: Date;
-  notes?: string;
-  vetId: string;
-}
-
-export interface User {
-  id: string;
-  uid: string; // Firebase Auth UID
-  name: string;
-  email: string;
-  role:
-    | "owner"
-    | "manager"
-    | "vet"
-    | "inventory"
-    | "barn_manager"
-    | "accountant"
-    | "sales";
-  active: boolean;
-  claimsSynced: boolean;
   timestamps: {
     createdAt: Date;
     updatedAt: Date;
@@ -155,13 +53,13 @@ class MockFirestore {
   private data: {
     animals: Animal[];
     barns: Barn[];
-    inventory: InventoryItem[];
-    stockBatches: StockBatch[];
+    warehouseItems: WarehouseItem[];
     stockMovements: StockMovement[];
-    feedingSchedules: FeedingSchedule[];
     feedingRecords: FeedingRecord[];
+    weightRecords: WeightRecord[];
     healthRecords: HealthRecord[];
-    users: User[];
+    barnMovements: BarnMovement[];
+    feedingSchedules: FeedingSchedule[];
   };
 
   constructor() {
@@ -175,110 +73,81 @@ class MockFirestore {
       animals: [
         {
           id: "anim_001",
-          tagId: "M001",
-          type: "male",
-          birthDate: new Date("2023-03-15"),
-          birthWeightKg: 4.2,
-          currentWeightKg: 75.5,
-          sex: "male",
-          motherId: "anim_005",
-          fatherId: "anim_002",
-          purchase: {
-            date: new Date("2023-03-20"),
-            supplier: "مزرعة أحمد محمد",
-            priceEGP: 3500,
-          },
-          healthStatus: "healthy",
+          earTagId: "M001",
+          category: "male" as AnimalCategory,
+          sex: "male" as const,
+          weight: 75.5,
+          supplier: "مزرعة أحمد محمد",
+          purchaseDate: new Date("2023-03-20"),
+          purchasePrice: 3500,
+          currentPrice: 8500,
           barnId: "barn_001",
-          status: "active",
-          metrics: {
-            adg: 0.35,
-            totalGainKg: 71.3,
-            feedConsumedKg: 1250,
-          },
-          timestamps: {
-            createdAt: new Date("2023-03-15"),
-            updatedAt: now,
-          },
+          healthStatus: "سليم",
+          isIsolated: false,
+          createdAt: new Date("2023-03-15"),
+          updatedAt: now,
+          createdBy: "user_001",
+          updatedBy: "user_001"
         },
         {
           id: "anim_002",
-          tagId: "M002",
-          type: "male",
-          birthDate: new Date("2022-08-10"),
-          birthWeightKg: 4.5,
-          currentWeightKg: 95.2,
-          sex: "male",
-          purchase: {
-            date: new Date("2022-08-15"),
-            supplier: "مزرعة النور",
-            priceEGP: 4200,
-          },
-          healthStatus: "healthy",
+          earTagId: "M002",
+          category: "male" as AnimalCategory,
+          sex: "male" as const,
+          weight: 95.2,
+          supplier: "مزرعة النور",
+          purchaseDate: new Date("2022-08-15"),
+          purchasePrice: 4200,
+          currentPrice: 12000,
           barnId: "barn_001",
-          status: "active",
-          metrics: {
-            adg: 0.42,
-            totalGainKg: 90.7,
-            feedConsumedKg: 1850,
-          },
-          timestamps: {
-            createdAt: new Date("2022-08-10"),
-            updatedAt: now,
-          },
+          healthStatus: "سليم",
+          isIsolated: false,
+          createdAt: new Date("2022-08-10"),
+          updatedAt: now,
+          createdBy: "user_001",
+          updatedBy: "user_001"
         },
         {
           id: "anim_003",
-          tagId: "F047",
-          type: "female",
-          birthDate: new Date("2022-11-08"),
-          birthWeightKg: 3.8,
-          currentWeightKg: 65.2,
-          sex: "female",
-          motherId: "anim_006",
-          fatherId: "anim_002",
-          purchase: {
-            date: new Date("2022-12-01"),
-            supplier: "مزرعة الصفا",
-            priceEGP: 4200,
-          },
-          healthStatus: "healthy",
+          earTagId: "F047",
+          category: "female" as AnimalCategory,
+          sex: "female" as const,
+          weight: 65.2,
+          supplier: "مزرعة الصفا",
+          purchaseDate: new Date("2022-12-01"),
+          purchasePrice: 4200,
+          currentPrice: 6800,
           barnId: "barn_002",
-          status: "active",
-          metrics: {
-            adg: 0.28,
-            totalGainKg: 61.4,
-            feedConsumedKg: 1150,
-          },
-          timestamps: {
-            createdAt: new Date("2022-11-08"),
-            updatedAt: now,
-          },
+          healthStatus: "سليمة",
+          isIsolated: false,
+          isPregnant: true,
+          aiDate: new Date("2024-01-15"),
+          expectedBirthDate: new Date("2024-06-15"),
+          offspringCount: 2,
+          createdAt: new Date("2022-11-08"),
+          updatedAt: now,
+          createdBy: "user_001",
+          updatedBy: "user_001"
         },
         {
           id: "anim_004",
-          tagId: "N012",
-          type: "newborn",
-          birthDate: new Date("2024-01-10"),
-          birthWeightKg: 3.5,
-          currentWeightKg: 12.3,
-          sex: "male",
-          motherId: "anim_003",
-          fatherId: "anim_001",
-          healthStatus: "healthy",
+          earTagId: "N012",
+          category: "newborn" as AnimalCategory,
+          sex: "male" as const,
+          weight: 12.3,
           barnId: "barn_003",
-          status: "active",
-          metrics: {
-            adg: 0.25,
-            totalGainKg: 8.8,
-            feedConsumedKg: 45,
-          },
-          timestamps: {
-            createdAt: new Date("2024-01-10"),
-            updatedAt: now,
-          },
-        },
-      ],
+          healthStatus: "سليم",
+          isIsolated: false,
+          motherId: "anim_003",
+          birthDate: new Date("2024-01-10"),
+          createdAt: new Date("2024-01-10"),
+          updatedAt: now,
+          createdBy: "user_001",
+          updatedBy: "user_001",
+          purchaseDate: new Date("2024-01-10"),
+          purchasePrice: 0
+        }
+      ] as Animal[],
 
       barns: [
         {
@@ -287,12 +156,10 @@ class MockFirestore {
           type: "male",
           capacity: 50,
           location: "الجانب الشرقي",
-          notes: "حظيرة مجهزة بأنظمة تهوية حديثة",
-          active: true,
-          timestamps: {
-            createdAt: new Date("2023-01-01"),
-            updatedAt: now,
-          },
+          description: "حظيرة مجهزة بأنظمة تهوية حديثة",
+          isActive: true,
+          createdAt: new Date("2023-01-01"),
+          updatedAt: now
         },
         {
           id: "barn_002",
@@ -300,12 +167,10 @@ class MockFirestore {
           type: "female",
           capacity: 60,
           location: "الجانب الغربي",
-          notes: "مخصصة للإناث الحوامل والمرضعات",
-          active: true,
-          timestamps: {
-            createdAt: new Date("2023-01-01"),
-            updatedAt: now,
-          },
+          description: "مخصصة للإناث الحوامل والمرضعات",
+          isActive: true,
+          createdAt: new Date("2023-01-01"),
+          updatedAt: now
         },
         {
           id: "barn_003",
@@ -313,200 +178,198 @@ class MockFirestore {
           type: "newborn",
           capacity: 30,
           location: "المنطقة الوسطى",
-          notes: "مجهزة بأنظمة تدفئة للصغار",
-          active: true,
-          timestamps: {
-            createdAt: new Date("2023-01-01"),
-            updatedAt: now,
-          },
-        },
-      ],
+          description: "مجهزة بأنظمة تدفئة للصغار",
+          isActive: true,
+          createdAt: new Date("2023-01-01"),
+          updatedAt: now
+        }
+      ] as Barn[],
 
-      inventory: [
+      warehouseItems: [
         {
-          id: "inv_001",
-          category: "feed",
+          id: "wh_001",
           name: "دريس البرسيم",
-          sku: "FEED-HAY-001",
+          type: "chemicals" as WarehouseType,
+          category: "أعلاف",
           unit: "كيلو",
-          pricePerUnitEGP: 8.5,
-          minLevel: 500,
-          active: true,
-          timestamps: {
-            createdAt: new Date("2023-01-01"),
-            updatedAt: now,
-          },
-        },
-        {
-          id: "inv_002",
-          category: "feed",
-          name: "تبن القمح",
-          sku: "FEED-STRAW-001",
-          unit: "كيلو",
-          pricePerUnitEGP: 4.2,
-          minLevel: 300,
-          active: true,
-          timestamps: {
-            createdAt: new Date("2023-01-01"),
-            updatedAt: now,
-          },
-        },
-        {
-          id: "inv_003",
-          category: "feed",
-          name: "علف مركز 16%",
-          sku: "FEED-CONC-16",
-          unit: "كيلو",
-          concentratePct: 16,
-          pricePerUnitEGP: 12.8,
-          minLevel: 200,
-          active: true,
-          timestamps: {
-            createdAt: new Date("2023-01-01"),
-            updatedAt: now,
-          },
-        },
-      ],
-
-      stockBatches: [
-        {
-          id: "batch_001",
-          inventoryItemId: "inv_001",
-          qtyIn: 1000,
-          qtyRemaining: 650,
-          receivedAt: new Date("2024-01-15"),
+          currentStock: 650,
+          minStockLevel: 500,
+          maxStockLevel: 2000,
+          unitPrice: 8.5,
+          hasExpiry: false,
+          location: "المستودع الرئيسي",
           supplier: "مزرعة الوادي الأخضر",
-          costEGP: 8500,
+          isActive: true,
+          createdAt: new Date("2023-01-01"),
+          updatedAt: now
         },
         {
-          id: "batch_002",
-          inventoryItemId: "inv_002",
-          qtyIn: 500,
-          qtyRemaining: 200,
-          receivedAt: new Date("2024-01-10"),
+          id: "wh_002",
+          name: "تبن القمح",
+          type: "chemicals" as WarehouseType,
+          category: "أعلاف",
+          unit: "كيلو",
+          currentStock: 200,
+          minStockLevel: 300,
+          maxStockLevel: 1500,
+          unitPrice: 4.2,
+          hasExpiry: false,
+          location: "المستودع الرئيسي",
           supplier: "تجار الأعلاف المتحدة",
-          costEGP: 2100,
+          isActive: true,
+          createdAt: new Date("2023-01-01"),
+          updatedAt: now
         },
-      ],
+        {
+          id: "wh_003",
+          name: "علف مركز 16%",
+          type: "chemicals" as WarehouseType,
+          category: "أعلاف مركزة",
+          unit: "كيلو",
+          currentStock: 180,
+          minStockLevel: 200,
+          maxStockLevel: 1000,
+          unitPrice: 12.8,
+          hasExpiry: true,
+          expiryDate: new Date("2024-06-30"),
+          originalExpiryDays: 180,
+          remainingDays: 120,
+          location: "المستودع الرئيسي",
+          supplier: "شركة الأعلاف المتطورة",
+          isActive: true,
+          createdAt: new Date("2023-01-01"),
+          updatedAt: now
+        },
+        {
+          id: "wh_004",
+          name: "مضاد حيوي - أوكسي تتراسيكلين",
+          type: "medicines" as WarehouseType,
+          category: "أدوية",
+          unit: "قارورة",
+          currentStock: 15,
+          minStockLevel: 10,
+          maxStockLevel: 50,
+          unitPrice: 45.0,
+          hasExpiry: true,
+          expiryDate: new Date("2024-03-15"),
+          originalExpiryDays: 365,
+          remainingDays: 45,
+          location: "صيدلية المزرعة",
+          supplier: "شركة الأدوية البيطرية",
+          isActive: true,
+          createdAt: new Date("2023-01-01"),
+          updatedAt: now
+        }
+      ] as WarehouseItem[],
 
       stockMovements: [
         {
           id: "mov_001",
-          direction: "out",
-          inventoryItemId: "inv_001",
-          batchId: "batch_001",
-          qty: 50,
-          unit: "كيلو",
-          reason: "issue_to_barn",
-          barnId: "barn_001",
-          requestedBy: "أحمد محمد",
-          createdAt: new Date("2024-01-16"),
+          itemId: "wh_001",
+          type: "out" as const,
+          quantity: 50,
+          unitPrice: 8.5,
+          totalCost: 425,
+          date: new Date("2024-01-16"),
+          reason: "تغذية الحظيرة الرئيسية",
+          recordedBy: "user_002",
+          notes: "توزيع علف الصباح"
         },
-      ],
-
-      feedingSchedules: [
         {
-          id: "sched_001",
-          barnId: "barn_001",
-          date: new Date(),
-          sessionsPerDay: 3,
-          entries: [
-            {
-              time: "07:00",
-              feedItemId: "inv_001",
-              qtyKgBarnTotal: 25,
-            },
-            {
-              time: "13:00",
-              feedItemId: "inv_002",
-              qtyKgBarnTotal: 15,
-            },
-            {
-              time: "18:00",
-              feedItemId: "inv_003",
-              qtyKgBarnTotal: 10,
-            },
-          ],
-        },
-      ],
+          id: "mov_002", 
+          itemId: "wh_002",
+          type: "in" as const,
+          quantity: 500,
+          unitPrice: 4.2,
+          totalCost: 2100,
+          date: new Date("2024-01-10"),
+          reason: "مشتريات جديدة",
+          recordedBy: "user_001",
+          billNumber: "INV-2024-001",
+          notes: "دفعة جديدة من التبن"
+        }
+      ] as StockMovement[],
 
       feedingRecords: [
         {
           id: "feed_001",
           barnId: "barn_001",
+          feedType: "دريس البرسيم",
+          quantityIssued: 50,
+          animalsCount: 12,
+          feedPerAnimal: 4.17,
+          avgDailyGain: 0.35,
+          feedingEfficiency: 11.9,
+          date: new Date(),
+          time: "07:00",
+          recordedBy: "user_002",
+          notes: "تغذية الصباح"
+        }
+      ] as FeedingRecord[],
+
+      weightRecords: [
+        {
+          id: "weight_001",
           animalId: "anim_001",
-          time: new Date(),
-          feedItemId: "inv_001",
-          qtyKg: 2.5,
-          recordedBy: "مشرف الحظيرة",
-        },
-      ],
+          weight: 75.5,
+          date: new Date(),
+          recordedBy: "user_001",
+          notes: "وزن أسبوعي"
+        }
+      ] as WeightRecord[],
 
       healthRecords: [
         {
           id: "health_001",
           animalId: "anim_001",
-          type: "vaccine",
+          type: "vaccination",
+          description: "تطعيم ضد الحمى القلاعية",
+          medicineUsed: "لقاح الحمى القلاعية",
+          dosage: "2 مل",
+          cost: 25,
           date: new Date("2024-01-15"),
-          notes: "تطعيم ضد الحمى القلاعية",
-          vetId: "vet_001",
-        },
-      ],
+          recordedBy: "user_003"
+        }
+      ] as HealthRecord[],
 
-      users: [
+      barnMovements: [
         {
-          id: "user_001",
-          uid: "firebase_uid_001",
-          name: "أحمد محمد",
-          email: "ahmed@farm.com",
-          role: "owner",
-          active: true,
-          claimsSynced: true,
-          timestamps: {
-            createdAt: new Date("2023-01-01"),
-            updatedAt: now,
-          },
-        },
+          id: "barn_mov_001",
+          animalId: "anim_001",
+          fromBarnId: "barn_003",
+          toBarnId: "barn_001",
+          date: new Date("2023-06-01"),
+          reason: "نقل بعد الفطام",
+          recordedBy: "user_001"
+        }
+      ] as BarnMovement[],
+
+      feedingSchedules: [
         {
-          id: "user_002",
-          uid: "firebase_uid_002",
-          name: "فاطمة علي",
-          email: "fatima@farm.com",
-          role: "manager",
-          active: true,
-          claimsSynced: true,
-          timestamps: {
-            createdAt: new Date("2023-01-01"),
-            updatedAt: now,
-          },
-        },
-        {
-          id: "user_003",
-          uid: "firebase_uid_003",
-          name: "د. محمود البيطري",
-          email: "mahmoud@farm.com",
-          role: "vet",
-          active: true,
-          claimsSynced: true,
-          timestamps: {
-            createdAt: new Date("2023-01-01"),
-            updatedAt: now,
-          },
-        },
-      ],
+          id: "sched_001",
+          barnId: "barn_001",
+          feedType: "دريس البرسيم",
+          quantity: 50,
+          timesPerDay: 3,
+          scheduledTime: "07:00,13:00,18:00",
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: now
+        }
+      ] as FeedingSchedule[]
     };
   }
 
-  // Collection methods
+  // Collection methods compatible with Firestore
   collection(name: string) {
     return {
       get: () => {
         return Promise.resolve({
-          docs:
-            (this.data as any)[name]?.map((item: any) => ({
-              id: item.id,
-              data: () => item,
-            })) || [],
+          docs: (this.data as any)[name]?.map((item: any) => ({
+            id: item.id,
+            data: () => item,
+            exists: true
+          })) || []
         });
       },
       add: (doc: any) => {
@@ -514,50 +377,54 @@ class MockFirestore {
         const newDoc = {
           ...doc,
           id,
-          timestamps: {
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
+          createdAt: new Date(),
+          updatedAt: new Date()
         };
         (this.data as any)[name].push(newDoc);
         return Promise.resolve({ id });
       },
       doc: (id: string) => ({
         get: () => {
-          const item = (this.data as any)[name]?.find(
-            (item: any) => item.id === id,
-          );
+          const item = (this.data as any)[name]?.find((item: any) => item.id === id);
           return Promise.resolve({
             exists: !!item,
             id,
-            data: () => item,
+            data: () => item
           });
         },
+        set: (doc: any) => {
+          const index = (this.data as any)[name]?.findIndex((item: any) => item.id === id);
+          const newDoc = {
+            ...doc,
+            id,
+            updatedAt: new Date()
+          };
+          
+          if (index !== -1) {
+            (this.data as any)[name][index] = newDoc;
+          } else {
+            (this.data as any)[name].push(newDoc);
+          }
+          return Promise.resolve();
+        },
         update: (updates: any) => {
-          const index = (this.data as any)[name]?.findIndex(
-            (item: any) => item.id === id,
-          );
+          const index = (this.data as any)[name]?.findIndex((item: any) => item.id === id);
           if (index !== -1) {
             (this.data as any)[name][index] = {
               ...(this.data as any)[name][index],
               ...updates,
-              timestamps: {
-                ...(this.data as any)[name][index].timestamps,
-                updatedAt: new Date(),
-              },
+              updatedAt: new Date()
             };
           }
           return Promise.resolve();
         },
         delete: () => {
-          const index = (this.data as any)[name]?.findIndex(
-            (item: any) => item.id === id,
-          );
+          const index = (this.data as any)[name]?.findIndex((item: any) => item.id === id);
           if (index !== -1) {
             (this.data as any)[name].splice(index, 1);
           }
           return Promise.resolve();
-        },
+        }
       }),
       where: (field: string, operator: string, value: any) => ({
         get: () => {
@@ -565,22 +432,60 @@ class MockFirestore {
 
           switch (operator) {
             case "==":
-              filtered = filtered.filter((item: any) => item[field] === value);
+              filtered = filtered.filter((item: any) => {
+                const fieldValue = field.includes('.') 
+                  ? field.split('.').reduce((obj, key) => obj?.[key], item)
+                  : item[field];
+                return fieldValue === value;
+              });
               break;
             case "!=":
-              filtered = filtered.filter((item: any) => item[field] !== value);
+              filtered = filtered.filter((item: any) => {
+                const fieldValue = field.includes('.') 
+                  ? field.split('.').reduce((obj, key) => obj?.[key], item)
+                  : item[field];
+                return fieldValue !== value;
+              });
               break;
             case ">":
-              filtered = filtered.filter((item: any) => item[field] > value);
+              filtered = filtered.filter((item: any) => {
+                const fieldValue = field.includes('.') 
+                  ? field.split('.').reduce((obj, key) => obj?.[key], item)
+                  : item[field];
+                return fieldValue > value;
+              });
               break;
             case ">=":
-              filtered = filtered.filter((item: any) => item[field] >= value);
+              filtered = filtered.filter((item: any) => {
+                const fieldValue = field.includes('.') 
+                  ? field.split('.').reduce((obj, key) => obj?.[key], item)
+                  : item[field];
+                return fieldValue >= value;
+              });
               break;
             case "<":
-              filtered = filtered.filter((item: any) => item[field] < value);
+              filtered = filtered.filter((item: any) => {
+                const fieldValue = field.includes('.') 
+                  ? field.split('.').reduce((obj, key) => obj?.[key], item)
+                  : item[field];
+                return fieldValue < value;
+              });
               break;
             case "<=":
-              filtered = filtered.filter((item: any) => item[field] <= value);
+              filtered = filtered.filter((item: any) => {
+                const fieldValue = field.includes('.') 
+                  ? field.split('.').reduce((obj, key) => obj?.[key], item)
+                  : item[field];
+                return fieldValue <= value;
+              });
+              break;
+            case "array-contains":
+              filtered = filtered.filter((item: any) => {
+                const fieldValue = field.includes('.') 
+                  ? field.split('.').reduce((obj, key) => obj?.[key], item)
+                  : item[field];
+                return Array.isArray(fieldValue) && fieldValue.includes(value);
+              });
               break;
           }
 
@@ -588,38 +493,45 @@ class MockFirestore {
             docs: filtered.map((item: any) => ({
               id: item.id,
               data: () => item,
-            })),
+              exists: true
+            }))
           });
-        },
-      }),
+        }
+      })
     };
   }
 
   // Helper methods
-  getCurrentStock(inventoryItemId: string): number {
-    const batches = this.data.stockBatches.filter(
-      (b) => b.inventoryItemId === inventoryItemId,
-    );
-    return batches.reduce((sum, batch) => sum + batch.qtyRemaining, 0);
+  getCurrentStock(itemId: string): number {
+    const item = this.data.warehouseItems.find(item => item.id === itemId);
+    return item?.currentStock || 0;
   }
 
   getBarnOccupancy(barnId: string): number {
-    return this.data.animals.filter(
-      (a) => a.barnId === barnId && a.status === "active",
+    return this.data.animals.filter(animal => 
+      animal.barnId === barnId
     ).length;
   }
 
   calculateADG(animalId: string): number {
-    const animal = this.data.animals.find((a) => a.id === animalId);
+    const animal = this.data.animals.find(a => a.id === animalId);
     if (!animal) return 0;
 
+    const birthDate = animal.birthDate || animal.purchaseDate;
     const daysSinceBirth = Math.floor(
-      (new Date().getTime() - animal.birthDate.getTime()) /
-        (1000 * 60 * 60 * 24),
+      (new Date().getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24)
     );
-    return daysSinceBirth > 0
-      ? (animal.currentWeightKg - animal.birthWeightKg) / daysSinceBirth
+    
+    // Assuming birth weight was around 3.5kg for sheep
+    const estimatedBirthWeight = 3.5;
+    return daysSinceBirth > 0 
+      ? (animal.weight - estimatedBirthWeight) / daysSinceBirth 
       : 0;
+  }
+
+  // Get data directly (for non-Firebase operations)
+  getData() {
+    return this.data;
   }
 }
 
