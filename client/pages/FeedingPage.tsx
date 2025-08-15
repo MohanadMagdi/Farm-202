@@ -380,8 +380,8 @@ export default function FeedingPage() {
 
                       return (
                         <TableRow key={schedule.id}>
-                          <TableCell>{barn?.name || schedule.barnId}</TableCell>
-                          <TableCell>
+                          <TableCell className="text-right">{barn?.name || schedule.barnId}</TableCell>
+                          <TableCell className="text-right">
                             {formatArabicNumber(schedule.sessionsPerDay)}
                           </TableCell>
                           <TableCell>
@@ -397,8 +397,8 @@ export default function FeedingPage() {
                               ))}
                             </div>
                           </TableCell>
-                          <TableCell>{formatWeight(totalQty)}</TableCell>
-                          <TableCell>
+                          <TableCell className="text-right">{formatWeight(totalQty)}</TableCell>
+                          <TableCell className="text-right">
                             <Badge
                               className={
                                 completed
@@ -485,16 +485,16 @@ export default function FeedingPage() {
 
                       return (
                         <TableRow key={record.id}>
-                          <TableCell>
+                          <TableCell className="text-right">
                             {record.time.toLocaleTimeString("ar-EG", {
                               hour: "2-digit",
                               minute: "2-digit",
                             })}
                           </TableCell>
-                          <TableCell>{barn?.name || record.barnId}</TableCell>
-                          <TableCell>{feedItem?.name || "غير معروف"}</TableCell>
-                          <TableCell>{formatWeight(record.qtyKg)}</TableCell>
-                          <TableCell>{record.recordedBy}</TableCell>
+                          <TableCell className="text-right">{barn?.name || record.barnId}</TableCell>
+                          <TableCell className="text-right">{feedItem?.name || "غير معروف"}</TableCell>
+                          <TableCell className="text-right">{formatWeight(record.qtyKg)}</TableCell>
+                          <TableCell className="text-right">{record.recordedBy}</TableCell>
                           <TableCell>
                             <div className="flex items-center gap-1">
                               <Button
@@ -565,7 +565,7 @@ export default function FeedingPage() {
                                 (r) => r.feedItemId === item.id,
                               ).length,
                             )}{" "}
-                            وجبة
+                            وجب��
                           </div>
                         </div>
                       </div>
