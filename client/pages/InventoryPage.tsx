@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -32,6 +32,10 @@ import {
   inventoryCategories,
   feedTypes,
 } from "@/lib/arabic-utils";
+import { db, InventoryItem, StockMovement } from "@/lib/firebase-mock";
+import InventoryFormModal from "@/components/forms/InventoryFormModal";
+import StockMovementModal from "@/components/forms/StockMovementModal";
+import { toast } from "@/hooks/use-toast";
 import {
   Search,
   Plus,
@@ -174,8 +178,104 @@ export default function InventoryPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+  const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredItems = mockInventoryItems
+  // Modal states
+  const [showInventoryModal, setShowInventoryModal] = useState(false);
+  const [showStockModal, setShowStockModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [modalMode, setModalMode] = useState<"add" | "edit">("add");
+  const [stockModalMode, setStockModalMode] = useState<"in" | "out">("in");
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const [inventorySnapshot, movementsSnapshot] = await Promise.all([
+        db.collection("inventory").get(),
+        db.collection("stockMovements").get(),
+      ]);
+
+      setInventoryItems(
+        inventorySnapshot.docs.map((doc) => doc.data() as InventoryItem),
+      );
+      setStockMovements(
+        movementsSnapshot.docs.map((doc) => doc.data() as StockMovement),
+      );
+    } catch (error) {
+      console.error("Error loading inventory data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddItem = () => {
+    setSelectedItem(null);
+    setModalMode("add");
+    setShowInventoryModal(true);
+  };
+
+  const handleEditItem = (item: InventoryItem) => {
+    setSelectedItem(item);
+    setModalMode("edit");
+    setShowInventoryModal(true);
+  };
+
+  const handleStockMovement = (item: InventoryItem, direction: "in" | "out") => {
+    setSelectedItem(item);
+    setStockModalMode(direction);
+    setShowStockModal(true);
+  };
+
+  const handleModalSave = () => {
+    loadData();
+    toast({
+      title: "تم الحفظ بنجاح",
+      description: "تم حفظ البيانات بنجاح",
+    });
+  };
+
+  const exportReport = () => {
+    toast({
+      title: "تصدير التقرير",
+      description: "سيتم تنفيذ التصدير قريباً",
+    });
+  };
+
+  const createDispatchOrder = () => {
+    toast({
+      title: "إذن صرف",
+      description: "سيتم إنشاء إذن الصرف قريباً",
+    });
+  };
+
+  const requestSupply = (item: InventoryItem) => {
+    toast({
+      title: "طلب توريد",
+      description: `تم إرسال طلب توريد للصنف: ${item.name}`,
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="grid gap-4 md:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-32 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const filteredItems = inventoryItems
     .filter(
       (item) =>
         item.name.includes(searchTerm) ||
@@ -222,7 +322,7 @@ export default function InventoryPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-farm-800">إدارة المخزون</h1>
+          <h1 className="text-3xl font-bold text-farm-800">إدارة ��لمخزون</h1>
           <p className="text-muted-foreground">
             إدارة مخزون الأعلاف والأدوية والمعدات
           </p>
