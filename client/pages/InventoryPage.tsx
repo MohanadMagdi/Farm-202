@@ -156,7 +156,7 @@ const mockStockMovements: StockMovement[] = [
     direction: "out",
     quantity: 50,
     unit: "كيلو",
-    reason: "صرف ��لحظيرة الرئيسية",
+    reason: "صرف للحظيرة الرئيسية",
     barnId: "B001",
     requestedBy: "أحمد محمد",
     createdAt: new Date("2024-01-16"),
@@ -249,7 +249,7 @@ export default function InventoryPage() {
   const createDispatchOrder = () => {
     toast({
       title: "إذن صرف",
-      description: "سيتم إنشاء إذن الصرف قريباً",
+      description: "سيتم إنشا�� إذن الصرف قريباً",
     });
   };
 
@@ -399,7 +399,7 @@ export default function InventoryPage() {
                   <div>
                     <div className="text-2xl font-bold text-green-600">0</div>
                     <p className="text-xs text-muted-foreground">
-                      لا توجد تنبيهات
+                      ��ا توجد تنبيهات
                     </p>
                   </div>
                 </>
@@ -612,8 +612,8 @@ export default function InventoryPage() {
                               ? formatArabicDate(item.timestamps.updatedAt)
                               : "-"}
                           </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1">
+                          <TableCell className="text-right">
+                            <div className="flex items-center gap-1 justify-end">
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -660,7 +660,7 @@ export default function InventoryPage() {
         <TabsContent value="movements" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>حركة المخزون</CardTitle>
+              <CardTitle>حركة المخز��ن</CardTitle>
               <CardDescription>
                 سجل بحركات الداخل والخارج للمخزون
               </CardDescription>
