@@ -37,6 +37,7 @@ import {
   StockMovement,
   FeedingRecord,
 } from "@/lib/firebase-mock";
+import { toast } from "@/hooks/use-toast";
 import {
   Download,
   FileText,
@@ -70,6 +71,20 @@ export default function ReportsPage() {
   const [loading, setLoading] = useState(true);
   const [reportPeriod, setReportPeriod] = useState("month");
   const [selectedCategory, setSelectedCategory] = useState("all");
+
+  const exportPDF = () => {
+    toast({
+      title: "تصدير PDF",
+      description: "سيتم تنفيذ التصدير قريباً",
+    });
+  };
+
+  const exportExcel = () => {
+    toast({
+      title: "تصدير Excel",
+      description: "سيتم تنفيذ التصدير قريباً",
+    });
+  };
 
   useEffect(() => {
     loadReportData();
@@ -229,11 +244,11 @@ export default function ReportsPage() {
               <SelectItem value="year">سنوي</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={exportPDF}>
             <Download className="h-4 w-4 ml-2" />
             تصدير PDF
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={exportExcel}>
             <FileText className="h-4 w-4 ml-2" />
             تصدير Excel
           </Button>
@@ -366,7 +381,7 @@ export default function ReportsPage() {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>متوسط معدل النمو اليومي</span>
+                  <span>متوسط معدل ��لنمو اليومي</span>
                   <span className="font-semibold">
                     {(
                       activeAnimals.reduce((sum, a) => sum + a.metrics.adg, 0) /
