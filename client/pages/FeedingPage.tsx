@@ -37,6 +37,8 @@ import {
   InventoryItem,
   Barn,
 } from "@/lib/firebase-mock";
+import FeedingFormModal from "@/components/forms/FeedingFormModal";
+import { toast } from "@/hooks/use-toast";
 import {
   Plus,
   Clock,
@@ -62,6 +64,12 @@ export default function FeedingPage() {
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0],
   );
+
+  // Modal states
+  const [showFeedingModal, setShowFeedingModal] = useState(false);
+  const [selectedFeedingRecord, setSelectedFeedingRecord] = useState<FeedingRecord | null>(null);
+  const [modalMode, setModalMode] = useState<"add" | "edit">("add");
+  const [preselectedBarnId, setPreselectedBarnId] = useState<string>();
 
   useEffect(() => {
     loadData();
@@ -96,6 +104,35 @@ export default function FeedingPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAddFeeding = (barnId?: string) => {
+    setSelectedFeedingRecord(null);
+    setModalMode("add");
+    setPreselectedBarnId(barnId);
+    setShowFeedingModal(true);
+  };
+
+  const handleEditFeeding = (record: FeedingRecord) => {
+    setSelectedFeedingRecord(record);
+    setModalMode("edit");
+    setPreselectedBarnId(undefined);
+    setShowFeedingModal(true);
+  };
+
+  const handleModalSave = () => {
+    loadData();
+    toast({
+      title: "تم الحفظ بنجاح",
+      description: "تم حفظ بيانات التغذية بنجاح",
+    });
+  };
+
+  const exportReport = () => {
+    toast({
+      title: "تصدير التقرير",
+      description: "سيتم تنفيذ التصدير قريباً",
+    });
   };
 
   if (loading) {
@@ -182,11 +219,11 @@ export default function FeedingPage() {
             onChange={(e) => setSelectedDate(e.target.value)}
             className="w-auto"
           />
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={exportReport}>
             <Download className="h-4 w-4 ml-2" />
             تصدير تقرير
           </Button>
-          <Button>
+          <Button onClick={() => handleAddFeeding()}>
             <Plus className="h-4 w-4 ml-2" />
             إضافة جدول تغذية
           </Button>
@@ -289,7 +326,7 @@ export default function FeedingPage() {
                       {feeding.feed} - {formatWeight(feeding.qty)}
                     </div>
                   </div>
-                  <Button size="sm">تسجيل</Button>
+                  <Button size="sm" onClick={() => handleAddFeeding()}>تسجيل</Button>
                 </div>
               ))}
             </div>
