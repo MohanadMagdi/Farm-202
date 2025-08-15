@@ -156,7 +156,7 @@ const mockStockMovements: StockMovement[] = [
     direction: "out",
     quantity: 50,
     unit: "كيلو",
-    reason: "صرف للحظيرة الرئيسية",
+    reason: "صرف ��لحظيرة الرئيسية",
     barnId: "B001",
     requestedBy: "أحمد محمد",
     createdAt: new Date("2024-01-16"),
@@ -687,11 +687,11 @@ export default function InventoryPage() {
 
                       return (
                         <TableRow key={movement.id}>
-                          <TableCell>
+                          <TableCell className="text-right">
                             {formatArabicDate(movement.createdAt)}
                           </TableCell>
-                          <TableCell>{item?.name || "غير معروف"}</TableCell>
-                          <TableCell>
+                          <TableCell className="text-right">{item?.name || "غير معروف"}</TableCell>
+                          <TableCell className="text-right">
                             <Badge
                               variant={
                                 movement.direction === "in"
@@ -707,13 +707,13 @@ export default function InventoryPage() {
                               {movement.direction === "in" ? "وارد" : "صادر"}
                             </Badge>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-right">
                             {formatArabicNumber(movement.quantity)}{" "}
                             {movement.unit}
                           </TableCell>
-                          <TableCell>{movement.reason}</TableCell>
-                          <TableCell>{movement.requestedBy}</TableCell>
-                          <TableCell>
+                          <TableCell className="text-right">{movement.reason}</TableCell>
+                          <TableCell className="text-right">{movement.requestedBy}</TableCell>
+                          <TableCell className="text-right">
                             {movement.cost ? formatEGP(movement.cost) : "-"}
                           </TableCell>
                         </TableRow>
