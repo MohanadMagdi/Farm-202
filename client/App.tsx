@@ -14,6 +14,7 @@ import AnimalsPage from "./pages/AnimalsPage";
 import AnimalsOverviewPage from "./pages/AnimalsOverviewPage";
 import BarnsPage from "./pages/BarnsPage";
 import InventoryPage from "./pages/InventoryPage";
+import FeedingPage from "./pages/FeedingPage";
 
 const queryClient = new QueryClient();
 
