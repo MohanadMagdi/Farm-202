@@ -30,12 +30,7 @@ const NewbornsPage = () => <AnimalsPage animalType="newborn" />;
 
 const BarnsManagement = () => <BarnsPage />;
 
-const InventoryPage = () => (
-  <PlaceholderPage 
-    title="المخزون" 
-    description="إدارة مخزون الأعلاف والأدوية والمعدات"
-  />
-);
+const InventoryManagement = () => <InventoryPage />;
 
 const FeedingPage = () => (
   <PlaceholderPage 
