@@ -18,12 +18,7 @@ import InventoryPage from "./pages/InventoryPage";
 const queryClient = new QueryClient();
 
 // Animal page components
-const AllAnimalsPage = () => (
-  <PlaceholderPage
-    title="إدارة الحيوانات"
-    description="عرض وإدارة جميع الحيوانات في المزرعة"
-  />
-);
+const AllAnimalsPage = () => <AnimalsOverviewPage />;
 
 const MalesPage = () => <AnimalsPage animalType="male" />;
 const FemalesPage = () => <AnimalsPage animalType="female" />;
