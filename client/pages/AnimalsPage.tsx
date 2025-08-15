@@ -291,7 +291,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
 
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full md:w-48">
-                <SelectValue placeholder="حا��ة الحيوان" />
+                <SelectValue placeholder="حالة الحيوان" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">جميع الحالات</SelectItem>
