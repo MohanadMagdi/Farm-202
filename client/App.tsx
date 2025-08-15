@@ -11,6 +11,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import PlaceholderPage from "@/components/PlaceholderPage";
 import AnimalsPage from "./pages/AnimalsPage";
+import AnimalsOverviewPage from "./pages/AnimalsOverviewPage";
 import BarnsPage from "./pages/BarnsPage";
 import InventoryPage from "./pages/InventoryPage";
 
