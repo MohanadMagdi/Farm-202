@@ -331,6 +331,35 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Modals */}
+      <AnimalFormModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSave={loadAnimals}
+        mode="add"
+      />
+
+      <AnimalFormModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedAnimal(null);
+        }}
+        onSave={loadAnimals}
+        animal={selectedAnimal}
+        mode="edit"
+      />
+
+      <WeightRecordModal
+        isOpen={isWeightModalOpen}
+        onClose={() => {
+          setIsWeightModalOpen(false);
+          setSelectedAnimal(null);
+        }}
+        onSave={loadAnimals}
+        preselectedAnimalId={selectedAnimal?.id}
+      />
     </div>
   );
 }
