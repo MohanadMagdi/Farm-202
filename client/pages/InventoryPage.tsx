@@ -105,7 +105,7 @@ const mockInventoryItems: InventoryItem[] = [
     currentStock: 150,
     active: true,
     lastRestocked: new Date("2024-01-10"),
-    supplier: "تجار الأعلاف ال��تحدة",
+    supplier: "تجار الأعلاف المتحدة",
   },
   {
     id: "3",
@@ -322,9 +322,9 @@ export default function InventoryPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-farm-800">إدارة ��لمخزون</h1>
+          <h1 className="text-3xl font-bold text-farm-800">إدارة المخزون</h1>
           <p className="text-muted-foreground">
-            إدارة مخزون ال��علاف والأدوية والمعدات
+            إدارة مخزون الأعلاف والأدوية والمعدات
           </p>
         </div>
         <div className="flex items-center space-x-3 space-x-reverse">
@@ -368,7 +368,7 @@ export default function InventoryPage() {
               {formatEGP(totalValue)}
             </div>
             <p className="text-xs text-muted-foreground">
-              القيمة الإجمالية الحا��ية
+              القيمة الإجمالية الحالية
             </p>
           </CardContent>
         </Card>
@@ -376,7 +376,7 @@ export default function InventoryPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">
-              تنب��هات المخزون
+              تنبيهات المخزون
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -411,7 +411,7 @@ export default function InventoryPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">
-              الحر��ة الشهرية
+              الحركة الشهرية
             </CardTitle>
           </CardHeader>
           <CardContent>
