@@ -21,6 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatEGP, formatWeight, formatArabicDate, animalTypes, healthStatus, animalStatus } from "@/lib/arabic-utils";
+import { db, Animal } from "@/lib/firebase-mock";
 import {
   Search,
   Plus,
@@ -30,7 +31,8 @@ import {
   Edit,
   Trash2,
   Activity,
-  MapPin
+  MapPin,
+  Scale
 } from "lucide-react";
 
 interface Animal {
