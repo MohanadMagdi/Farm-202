@@ -334,7 +334,7 @@ export default function FeedingPage() {
         </Card>
       )}
 
-      <Tabs defaultValue="schedules" className="w-full">
+      <Tabs defaultValue="schedules" className="w-full" dir="rtl">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="schedules">جداول التغذية</TabsTrigger>
           <TabsTrigger value="records">سجلات التغذية</TabsTrigger>
@@ -579,7 +579,7 @@ export default function FeedingPage() {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2 space-x-reverse">
                   <Calendar className="h-5 w-5 text-farm-600" />
-                  <span>معدل التغذية الأس������وعي</span>
+                  <span>معدل التغذية الأس����وعي</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
