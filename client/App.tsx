@@ -12,6 +12,7 @@ import NotFound from "./pages/NotFound";
 import PlaceholderPage from "@/components/PlaceholderPage";
 import AnimalsPage from "./pages/AnimalsPage";
 import BarnsPage from "./pages/BarnsPage";
+import InventoryPage from "./pages/InventoryPage";
 
 const queryClient = new QueryClient();
 
@@ -53,7 +54,7 @@ const ReportsPage = () => (
 const UsersPage = () => (
   <PlaceholderPage 
     title="إدارة المستخدمين" 
-    description="إدارة مستخدمي الن��ام والصلاحيات"
+    description="إدارة مستخدمي النظام والصلاحيات"
   />
 );
 
