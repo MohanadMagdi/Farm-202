@@ -32,12 +32,7 @@ const InventoryManagement = () => <InventoryPage />;
 
 const FeedingManagement = () => <FeedingPage />;
 
-const ReportsPage = () => (
-  <PlaceholderPage 
-    title="التقارير" 
-    description="تقارير المزرعة والإحصائيات"
-  />
-);
+const ReportsManagement = () => <ReportsPage />;
 
 const UsersPage = () => (
   <PlaceholderPage 
