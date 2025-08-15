@@ -177,7 +177,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
           <CardContent>
             <div className="text-2xl font-bold text-farm-800">
               {filteredAnimals.length > 0 
-                ? formatWeight(filteredAnimals.reduce((sum, animal) => sum + animal.currentWeight, 0) / filteredAnimals.length)
+                ? formatWeight(filteredAnimals.reduce((sum, animal) => sum + animal.currentWeightKg, 0) / filteredAnimals.length)
                 : "0 كيلو"
               }
             </div>
