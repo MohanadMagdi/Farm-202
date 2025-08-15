@@ -27,12 +27,7 @@ const MalesPage = () => <AnimalsPage animalType="male" />;
 const FemalesPage = () => <AnimalsPage animalType="female" />;
 const NewbornsPage = () => <AnimalsPage animalType="newborn" />;
 
-const BarnsPage = () => (
-  <PlaceholderPage 
-    title="الحظائر" 
-    description="إدارة حظائر المزرعة"
-  />
-);
+const BarnsManagement = () => <BarnsPage />;
 
 const InventoryPage = () => (
   <PlaceholderPage 
@@ -43,7 +38,7 @@ const InventoryPage = () => (
 
 const FeedingPage = () => (
   <PlaceholderPage 
-    title="التغذ��ة" 
+    title="التغذية" 
     description="جداول التغذية وتسجيل الوجبات"
   />
 );
