@@ -345,34 +345,34 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
               <TableBody>
                 {filteredAnimals.map((animal) => (
                   <TableRow key={animal.id}>
-                    <TableCell className="font-medium">
+                    <TableCell className="font-medium text-right">
                       {animal.tagId}
                     </TableCell>
-                    <TableCell>{formatArabicDate(animal.birthDate)}</TableCell>
-                    <TableCell>
+                    <TableCell className="text-right">{formatArabicDate(animal.birthDate)}</TableCell>
+                    <TableCell className="text-right">
                       {formatWeight(animal.currentWeightKg)}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-right">
                       <Badge
                         className={getHealthStatusColor(animal.healthStatus)}
                       >
                         {healthStatus[animal.healthStatus]}
                       </Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-right">
                       <Badge className={getStatusColor(animal.status)}>
                         {animalStatus[animal.status]}
                       </Badge>
                     </TableCell>
-                    <TableCell>{animal.barnId}</TableCell>
+                    <TableCell className="text-right">{animal.barnId}</TableCell>
                     {animalType !== "newborn" && (
-                      <TableCell>
+                      <TableCell className="text-right">
                         {animal.purchase?.priceEGP
                           ? formatEGP(animal.purchase.priceEGP)
                           : "-"}
                       </TableCell>
                     )}
-                    <TableCell>
+                    <TableCell className="text-right">
                       <div className="flex items-center gap-1">
                         <Button
                           variant="outline"
