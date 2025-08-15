@@ -29,12 +29,7 @@ const BarnsManagement = () => <BarnsPage />;
 
 const InventoryManagement = () => <InventoryPage />;
 
-const FeedingPage = () => (
-  <PlaceholderPage 
-    title="التغذية" 
-    description="جداول التغذية وتسجيل الوجبات"
-  />
-);
+const FeedingManagement = () => <FeedingPage />;
 
 const ReportsPage = () => (
   <PlaceholderPage 
