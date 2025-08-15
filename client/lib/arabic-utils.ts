@@ -42,7 +42,10 @@ export function formatArabicDate(date: Date): string {
 /**
  * Format numbers in Arabic numerals
  */
-export function formatArabicNumber(num: number): string {
+export function formatArabicNumber(num: number | undefined | null): string {
+  if (num == null || isNaN(num)) {
+    return '0';
+  }
   return num.toLocaleString('ar-EG');
 }
 
