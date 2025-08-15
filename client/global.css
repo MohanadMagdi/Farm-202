@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -54,6 +56,24 @@
     --sidebar-border: 220 13% 91%;
 
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Farm theme colors - Earth tones with green accents */
+    --farm-50: 78 46% 95%;
+    --farm-100: 78 46% 85%;
+    --farm-200: 78 46% 75%;
+    --farm-300: 78 46% 65%;
+    --farm-400: 78 46% 55%;
+    --farm-500: 78 46% 45%;
+    --farm-600: 78 46% 35%;
+    --farm-700: 78 46% 25%;
+    --farm-800: 78 46% 15%;
+    --farm-900: 78 46% 10%;
+    --farm-950: 78 46% 5%;
+
+    /* Sheep-specific colors */
+    --sheep-cream: 60 20% 95%;
+    --sheep-wool: 60 15% 88%;
+    --sheep-brown: 25 25% 45%;
   }
 
   .dark {
@@ -92,6 +112,23 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Dark mode farm colors */
+    --farm-50: 78 30% 10%;
+    --farm-100: 78 30% 15%;
+    --farm-200: 78 30% 20%;
+    --farm-300: 78 30% 30%;
+    --farm-400: 78 30% 40%;
+    --farm-500: 78 30% 50%;
+    --farm-600: 78 30% 60%;
+    --farm-700: 78 30% 70%;
+    --farm-800: 78 30% 80%;
+    --farm-900: 78 30% 90%;
+    --farm-950: 78 30% 95%;
+
+    --sheep-cream: 60 10% 20%;
+    --sheep-wool: 60 8% 25%;
+    --sheep-brown: 25 15% 55%;
   }
 }
 
@@ -101,6 +138,19 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-arabic;
+  }
+
+  [dir="rtl"] {
+    direction: rtl;
+  }
+
+  .rtl {
+    direction: rtl;
+  }
+
+  /* Arabic number formatting */
+  .arabic-numbers {
+    font-variant-numeric: lining-nums;
   }
 }
