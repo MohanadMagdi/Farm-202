@@ -9,7 +9,7 @@ import {
   Utensils,
   FileText,
   Settings,
-  Sheep,
+  CircleDot,
   Baby,
   UserCheck
 } from "lucide-react";
@@ -23,7 +23,7 @@ const navigation = [
   {
     name: "الحيوانات",
     href: "/animals",
-    icon: Sheep,
+    icon: CircleDot,
     children: [
       { name: "الذكور", href: "/animals/males" },
       { name: "الإناث", href: "/animals/females" },
@@ -70,7 +70,7 @@ export default function Layout({ children }: LayoutProps) {
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center">
           <div className="flex items-center space-x-4 space-x-reverse">
-            <Sheep className="h-8 w-8 text-farm-600" />
+            <CircleDot className="h-8 w-8 text-farm-600" />
             <div>
               <h1 className="text-xl font-bold text-farm-800">مزرعة الأغنام</h1>
               <p className="text-sm text-muted-foreground">نظام إدارة المزرعة</p>
