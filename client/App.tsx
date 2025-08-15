@@ -10,37 +10,21 @@ import Layout from "@/components/Layout";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import PlaceholderPage from "@/components/PlaceholderPage";
+import AnimalsPage from "./pages/AnimalsPage";
 
 const queryClient = new QueryClient();
 
-// Placeholder page components
-const AnimalsPage = () => (
-  <PlaceholderPage 
-    title="إدارة الحيوانات" 
+// Animal page components
+const AllAnimalsPage = () => (
+  <PlaceholderPage
+    title="إدارة الحيوانات"
     description="عرض وإدارة جميع الحيوانات في المزرعة"
   />
 );
 
-const MalesPage = () => (
-  <PlaceholderPage 
-    title="الذكور" 
-    description="إدارة الذكور في المزرعة"
-  />
-);
-
-const FemalesPage = () => (
-  <PlaceholderPage 
-    title="الإناث" 
-    description="إدارة الإناث في المزرعة"
-  />
-);
-
-const NewbornsPage = () => (
-  <PlaceholderPage 
-    title="الصغار" 
-    description="إدارة الصغار في المزرعة"
-  />
-);
+const MalesPage = () => <AnimalsPage animalType="male" />;
+const FemalesPage = () => <AnimalsPage animalType="female" />;
+const NewbornsPage = () => <AnimalsPage animalType="newborn" />;
 
 const BarnsPage = () => (
   <PlaceholderPage 
