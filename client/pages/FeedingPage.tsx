@@ -37,6 +37,8 @@ import {
   InventoryItem,
   Barn,
 } from "@/lib/firebase-mock";
+import FeedingFormModal from "@/components/forms/FeedingFormModal";
+import { toast } from "@/hooks/use-toast";
 import {
   Plus,
   Clock,
@@ -62,6 +64,13 @@ export default function FeedingPage() {
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0],
   );
+
+  // Modal states
+  const [showFeedingModal, setShowFeedingModal] = useState(false);
+  const [selectedFeedingRecord, setSelectedFeedingRecord] =
+    useState<FeedingRecord | null>(null);
+  const [modalMode, setModalMode] = useState<"add" | "edit">("add");
+  const [preselectedBarnId, setPreselectedBarnId] = useState<string>();
 
   useEffect(() => {
     loadData();
@@ -96,6 +105,35 @@ export default function FeedingPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAddFeeding = (barnId?: string) => {
+    setSelectedFeedingRecord(null);
+    setModalMode("add");
+    setPreselectedBarnId(barnId);
+    setShowFeedingModal(true);
+  };
+
+  const handleEditFeeding = (record: FeedingRecord) => {
+    setSelectedFeedingRecord(record);
+    setModalMode("edit");
+    setPreselectedBarnId(undefined);
+    setShowFeedingModal(true);
+  };
+
+  const handleModalSave = () => {
+    loadData();
+    toast({
+      title: "تم الحفظ بنجاح",
+      description: "تم حفظ بيانات التغذية بنجاح",
+    });
+  };
+
+  const exportReport = () => {
+    toast({
+      title: "تصدير التقرير",
+      description: "سيتم تنفيذ الت��دير قريباً",
+    });
   };
 
   if (loading) {
@@ -182,11 +220,11 @@ export default function FeedingPage() {
             onChange={(e) => setSelectedDate(e.target.value)}
             className="w-auto"
           />
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={exportReport}>
             <Download className="h-4 w-4 ml-2" />
             تصدير تقرير
           </Button>
-          <Button>
+          <Button onClick={() => handleAddFeeding()}>
             <Plus className="h-4 w-4 ml-2" />
             إضافة جدول تغذية
           </Button>
@@ -289,7 +327,9 @@ export default function FeedingPage() {
                       {feeding.feed} - {formatWeight(feeding.qty)}
                     </div>
                   </div>
-                  <Button size="sm">تسجيل</Button>
+                  <Button size="sm" onClick={() => handleAddFeeding()}>
+                    تسجيل
+                  </Button>
                 </div>
               ))}
             </div>
@@ -297,14 +337,14 @@ export default function FeedingPage() {
         </Card>
       )}
 
-      <Tabs defaultValue="schedules" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+      <Tabs defaultValue="schedules" className="w-full" dir="rtl">
+        <TabsList className="grid w-full grid-cols-3" dir="rtl">
           <TabsTrigger value="schedules">جداول التغذية</TabsTrigger>
           <TabsTrigger value="records">سجلات التغذية</TabsTrigger>
           <TabsTrigger value="analytics">التحليلات</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="schedules" className="space-y-4">
+        <TabsContent value="schedules" className="space-y-4" dir="rtl">
           <Card>
             <CardHeader>
               <CardTitle>جداول التغذية اليومية</CardTitle>
@@ -315,7 +355,7 @@ export default function FeedingPage() {
             </CardHeader>
             <CardContent>
               <div className="rounded-md border">
-                <Table>
+                <Table dir="rtl">
                   <TableHeader>
                     <TableRow>
                       <TableHead className="text-right">الحظيرة</TableHead>
@@ -343,12 +383,14 @@ export default function FeedingPage() {
 
                       return (
                         <TableRow key={schedule.id}>
-                          <TableCell>{barn?.name || schedule.barnId}</TableCell>
-                          <TableCell>
+                          <TableCell className="text-right">
+                            {barn?.name || schedule.barnId}
+                          </TableCell>
+                          <TableCell className="text-right">
                             {formatArabicNumber(schedule.sessionsPerDay)}
                           </TableCell>
-                          <TableCell>
-                            <div className="flex flex-wrap gap-1">
+                          <TableCell className="text-right">
+                            <div className="flex flex-wrap gap-1 justify-end">
                               {schedule.entries.map((entry, index) => (
                                 <Badge
                                   key={index}
@@ -360,8 +402,10 @@ export default function FeedingPage() {
                               ))}
                             </div>
                           </TableCell>
-                          <TableCell>{formatWeight(totalQty)}</TableCell>
-                          <TableCell>
+                          <TableCell className="text-right">
+                            {formatWeight(totalQty)}
+                          </TableCell>
+                          <TableCell className="text-right">
                             <Badge
                               className={
                                 completed
@@ -372,15 +416,30 @@ export default function FeedingPage() {
                               {completed ? "مكتمل" : "قيد التنفيذ"}
                             </Badge>
                           </TableCell>
-                          <TableCell>
-                            <div className="flex items-center space-x-2 space-x-reverse">
-                              <Button variant="outline" size="sm">
+                          <TableCell className="text-right">
+                            <div className="flex items-center gap-1 justify-end">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                              >
                                 <Eye className="h-3 w-3" />
                               </Button>
-                              <Button variant="outline" size="sm">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                              >
                                 <Edit className="h-3 w-3" />
                               </Button>
-                              <Button variant="outline" size="sm">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  handleAddFeeding(schedule.barnId)
+                                }
+                                className="h-8 w-8 p-0 text-green-600 hover:text-green-700"
+                              >
                                 <Utensils className="h-3 w-3" />
                               </Button>
                             </div>
@@ -402,7 +461,7 @@ export default function FeedingPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="records" className="space-y-4">
+        <TabsContent value="records" className="space-y-4" dir="rtl">
           <Card>
             <CardHeader>
               <CardTitle>سجلات التغذية المنجزة</CardTitle>
@@ -413,7 +472,7 @@ export default function FeedingPage() {
             </CardHeader>
             <CardContent>
               <div className="rounded-md border">
-                <Table>
+                <Table dir="rtl">
                   <TableHeader>
                     <TableRow>
                       <TableHead className="text-right">الوقت</TableHead>
@@ -435,22 +494,39 @@ export default function FeedingPage() {
 
                       return (
                         <TableRow key={record.id}>
-                          <TableCell>
+                          <TableCell className="text-right">
                             {record.time.toLocaleTimeString("ar-EG", {
                               hour: "2-digit",
                               minute: "2-digit",
                             })}
                           </TableCell>
-                          <TableCell>{barn?.name || record.barnId}</TableCell>
-                          <TableCell>{feedItem?.name || "غير معروف"}</TableCell>
-                          <TableCell>{formatWeight(record.qtyKg)}</TableCell>
-                          <TableCell>{record.recordedBy}</TableCell>
-                          <TableCell>
-                            <div className="flex items-center space-x-2 space-x-reverse">
-                              <Button variant="outline" size="sm">
+                          <TableCell className="text-right">
+                            {barn?.name || record.barnId}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {feedItem?.name || "غير معروف"}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {formatWeight(record.qtyKg)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {record.recordedBy}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center gap-1 justify-end">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                              >
                                 <Eye className="h-3 w-3" />
                               </Button>
-                              <Button variant="outline" size="sm">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEditFeeding(record)}
+                                className="h-8 w-8 p-0"
+                              >
                                 <Edit className="h-3 w-3" />
                               </Button>
                             </div>
@@ -472,7 +548,7 @@ export default function FeedingPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="analytics" className="space-y-4">
+        <TabsContent value="analytics" className="space-y-4" dir="rtl">
           <div className="grid gap-6 md:grid-cols-2">
             <Card>
               <CardHeader>
@@ -520,7 +596,7 @@ export default function FeedingPage() {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2 space-x-reverse">
                   <Calendar className="h-5 w-5 text-farm-600" />
-                  <span>معدل التغذية الأس��وعي</span>
+                  <span>معدل التغذية الأسبوعي</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -554,6 +630,16 @@ export default function FeedingPage() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Feeding Modal */}
+      <FeedingFormModal
+        isOpen={showFeedingModal}
+        onClose={() => setShowFeedingModal(false)}
+        onSave={handleModalSave}
+        feedingRecord={selectedFeedingRecord}
+        mode={modalMode}
+        preselectedBarnId={preselectedBarnId}
+      />
     </div>
   );
 }

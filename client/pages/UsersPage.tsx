@@ -310,7 +310,7 @@ export default function UsersPage() {
                 {Math.round(
                   (activeUsers.length / Math.max(1, users.length)) * 100,
                 )}
-                % من المجم��ع
+                % من المجموع
               </span>
             </div>
           </CardContent>

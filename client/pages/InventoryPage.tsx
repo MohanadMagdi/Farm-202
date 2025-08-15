@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -32,6 +32,10 @@ import {
   inventoryCategories,
   feedTypes,
 } from "@/lib/arabic-utils";
+import { db, InventoryItem, StockMovement } from "@/lib/firebase-mock";
+import InventoryFormModal from "@/components/forms/InventoryFormModal";
+import StockMovementModal from "@/components/forms/StockMovementModal";
+import { toast } from "@/hooks/use-toast";
 import {
   Search,
   Plus,
@@ -101,7 +105,7 @@ const mockInventoryItems: InventoryItem[] = [
     currentStock: 150,
     active: true,
     lastRestocked: new Date("2024-01-10"),
-    supplier: "تجار الأعلاف ال��تحدة",
+    supplier: "تجار الأعلاف المتحدة",
   },
   {
     id: "3",
@@ -174,8 +178,107 @@ export default function InventoryPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+  const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredItems = mockInventoryItems
+  // Modal states
+  const [showInventoryModal, setShowInventoryModal] = useState(false);
+  const [showStockModal, setShowStockModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [modalMode, setModalMode] = useState<"add" | "edit">("add");
+  const [stockModalMode, setStockModalMode] = useState<"in" | "out">("in");
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const [inventorySnapshot, movementsSnapshot] = await Promise.all([
+        db.collection("inventory").get(),
+        db.collection("stockMovements").get(),
+      ]);
+
+      setInventoryItems(
+        inventorySnapshot.docs.map((doc) => doc.data() as InventoryItem),
+      );
+      setStockMovements(
+        movementsSnapshot.docs.map((doc) => doc.data() as StockMovement),
+      );
+    } catch (error) {
+      console.error("Error loading inventory data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddItem = () => {
+    setSelectedItem(null);
+    setModalMode("add");
+    setShowInventoryModal(true);
+  };
+
+  const handleEditItem = (item: InventoryItem) => {
+    setSelectedItem(item);
+    setModalMode("edit");
+    setShowInventoryModal(true);
+  };
+
+  const handleStockMovement = (
+    item: InventoryItem,
+    direction: "in" | "out",
+  ) => {
+    setSelectedItem(item);
+    setStockModalMode(direction);
+    setShowStockModal(true);
+  };
+
+  const handleModalSave = () => {
+    loadData();
+    toast({
+      title: "تم الحفظ بنجاح",
+      description: "تم حفظ البيانات بنجاح",
+    });
+  };
+
+  const exportReport = () => {
+    toast({
+      title: "تصدير التقرير",
+      description: "سيتم تنفيذ التصدير قريباً",
+    });
+  };
+
+  const createDispatchOrder = () => {
+    toast({
+      title: "إذن صرف",
+      description: "سيتم إنشاء إذن الصرف قريباً",
+    });
+  };
+
+  const requestSupply = (item: InventoryItem) => {
+    toast({
+      title: "طلب توريد",
+      description: `تم إرسال طلب توريد للصنف: ${item.name}`,
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="grid gap-4 md:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-32 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const filteredItems = inventoryItems
     .filter(
       (item) =>
         item.name.includes(searchTerm) ||
@@ -208,14 +311,14 @@ export default function InventoryPage() {
     return { text: "متوفر", color: "bg-green-100 text-green-800" };
   };
 
-  const lowStockItems = mockInventoryItems.filter(
-    (item) => item.currentStock <= item.minLevel,
+  const lowStockItems = inventoryItems.filter(
+    (item) => db.getCurrentStock(item.id) <= item.minLevel,
   );
-  const totalValue = mockInventoryItems.reduce(
-    (sum, item) => sum + item.currentStock * item.pricePerUnit,
+  const totalValue = inventoryItems.reduce(
+    (sum, item) => sum + db.getCurrentStock(item.id) * item.pricePerUnitEGP,
     0,
   );
-  const totalItems = mockInventoryItems.filter((item) => item.active).length;
+  const totalItems = inventoryItems.filter((item) => item.active).length;
 
   return (
     <div className="space-y-6">
@@ -228,15 +331,15 @@ export default function InventoryPage() {
           </p>
         </div>
         <div className="flex items-center space-x-3 space-x-reverse">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={exportReport}>
             <Download className="h-4 w-4 ml-2" />
             تصدير تقرير
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={createDispatchOrder}>
             <FileText className="h-4 w-4 ml-2" />
             إذن صرف
           </Button>
-          <Button>
+          <Button onClick={handleAddItem}>
             <Plus className="h-4 w-4 ml-2" />
             إضافة صنف جديد
           </Button>
@@ -345,7 +448,8 @@ export default function InventoryPage() {
                   <span className="font-medium">{item.name}</span>
                   <div className="flex items-center space-x-2 space-x-reverse">
                     <span className="text-sm text-muted-foreground">
-                      المخزون الحالي: {formatArabicNumber(item.currentStock)}{" "}
+                      المخزون الحالي:{" "}
+                      {formatArabicNumber(db.getCurrentStock(item.id))}{" "}
                       {item.unit}
                     </span>
                     <Badge
@@ -354,7 +458,11 @@ export default function InventoryPage() {
                     >
                       الحد الأدنى: {formatArabicNumber(item.minLevel)}
                     </Badge>
-                    <Button size="sm" variant="outline">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => requestSupply(item)}
+                    >
                       طلب توريد
                     </Button>
                   </div>
@@ -365,13 +473,13 @@ export default function InventoryPage() {
         </Card>
       )}
 
-      <Tabs defaultValue="items" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+      <Tabs defaultValue="items" className="w-full" dir="rtl">
+        <TabsList className="grid w-full grid-cols-2" dir="rtl">
           <TabsTrigger value="items">الأصناف</TabsTrigger>
           <TabsTrigger value="movements">حركة المخزون</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="items" className="space-y-4">
+        <TabsContent value="items" className="space-y-4" dir="rtl">
           {/* Filters */}
           <Card>
             <CardHeader>
@@ -435,25 +543,38 @@ export default function InventoryPage() {
             </CardHeader>
             <CardContent>
               <div className="rounded-md border">
-                <Table>
+                <Table dir="rtl">
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-right">اسم الصنف</TableHead>
-                      <TableHead className="text-right">الفئة</TableHead>
-                      <TableHead className="text-right">
+                      <TableHead className="text-right w-1/6">
+                        اسم الصنف
+                      </TableHead>
+                      <TableHead className="text-right w-1/12">الفئة</TableHead>
+                      <TableHead className="text-right w-1/8">
                         المخزون الحالي
                       </TableHead>
-                      <TableHead className="text-right">الحد الأدنى</TableHead>
-                      <TableHead className="text-right">سعر الوحدة</TableHead>
-                      <TableHead className="text-right">الحالة</TableHead>
-                      <TableHead className="text-right">آخر توريد</TableHead>
-                      <TableHead className="text-right">الإجراءات</TableHead>
+                      <TableHead className="text-right w-1/12">
+                        الحد الأدنى
+                      </TableHead>
+                      <TableHead className="text-right w-1/8">
+                        سعر الوحدة
+                      </TableHead>
+                      <TableHead className="text-right w-1/12">
+                        الحالة
+                      </TableHead>
+                      <TableHead className="text-right w-1/8">
+                        آخر توريد
+                      </TableHead>
+                      <TableHead className="text-right w-1/6">
+                        الإجراءات
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredItems.map((item) => {
+                      const currentStock = db.getCurrentStock(item.id);
                       const stockBadge = getStockBadge(
-                        item.currentStock,
+                        currentStock,
                         item.minLevel,
                       );
 
@@ -470,7 +591,8 @@ export default function InventoryPage() {
                                   variant="outline"
                                   className="text-xs mt-1"
                                 >
-                                  {item.concentratePct}% بروتين
+                                  {formatArabicNumber(item.concentratePct)}%
+                                  بروتين
                                 </Badge>
                               )}
                             </div>
@@ -483,12 +605,12 @@ export default function InventoryPage() {
                           <TableCell>
                             <div
                               className={getStockStatusColor(
-                                item.currentStock,
+                                currentStock,
                                 item.minLevel,
                               )}
                             >
                               <span className="font-medium">
-                                {formatArabicNumber(item.currentStock)}
+                                {formatArabicNumber(currentStock)}
                               </span>
                               <span className="text-sm text-muted-foreground mr-1">
                                 {item.unit}
@@ -499,7 +621,7 @@ export default function InventoryPage() {
                             {formatArabicNumber(item.minLevel)} {item.unit}
                           </TableCell>
                           <TableCell>
-                            {formatEGP(item.pricePerUnit)} / {item.unit}
+                            {formatEGP(item.pricePerUnitEGP)} / {item.unit}
                           </TableCell>
                           <TableCell>
                             <Badge className={stockBadge.color}>
@@ -507,19 +629,34 @@ export default function InventoryPage() {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            {item.lastRestocked
-                              ? formatArabicDate(item.lastRestocked)
+                            {item.timestamps?.updatedAt
+                              ? formatArabicDate(item.timestamps.updatedAt)
                               : "-"}
                           </TableCell>
-                          <TableCell>
-                            <div className="flex items-center space-x-2 space-x-reverse">
-                              <Button variant="outline" size="sm">
-                                <Eye className="h-3 w-3" />
-                              </Button>
-                              <Button variant="outline" size="sm">
+                          <TableCell className="text-right">
+                            <div className="flex items-center gap-1 justify-end">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEditItem(item)}
+                                className="h-8 w-8 p-0"
+                              >
                                 <Edit className="h-3 w-3" />
                               </Button>
-                              <Button variant="outline" size="sm">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleStockMovement(item, "in")}
+                                className="h-8 w-8 p-0 text-green-600 hover:text-green-700"
+                              >
+                                <Plus className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleStockMovement(item, "out")}
+                                className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                              >
                                 <ShoppingCart className="h-3 w-3" />
                               </Button>
                             </div>
@@ -541,7 +678,7 @@ export default function InventoryPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="movements" className="space-y-4">
+        <TabsContent value="movements" className="space-y-4" dir="rtl">
           <Card>
             <CardHeader>
               <CardTitle>حركة المخزون</CardTitle>
@@ -551,7 +688,7 @@ export default function InventoryPage() {
             </CardHeader>
             <CardContent>
               <div className="rounded-md border">
-                <Table>
+                <Table dir="rtl">
                   <TableHeader>
                     <TableRow>
                       <TableHead className="text-right">التاريخ</TableHead>
@@ -564,18 +701,20 @@ export default function InventoryPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {mockStockMovements.map((movement) => {
-                      const item = mockInventoryItems.find(
+                    {stockMovements.map((movement) => {
+                      const item = inventoryItems.find(
                         (i) => i.id === movement.inventoryItemId,
                       );
 
                       return (
                         <TableRow key={movement.id}>
-                          <TableCell>
+                          <TableCell className="text-right">
                             {formatArabicDate(movement.createdAt)}
                           </TableCell>
-                          <TableCell>{item?.name || "غير معروف"}</TableCell>
-                          <TableCell>
+                          <TableCell className="text-right">
+                            {item?.name || "غير معروف"}
+                          </TableCell>
+                          <TableCell className="text-right">
                             <Badge
                               variant={
                                 movement.direction === "in"
@@ -591,13 +730,17 @@ export default function InventoryPage() {
                               {movement.direction === "in" ? "وارد" : "صادر"}
                             </Badge>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-right">
                             {formatArabicNumber(movement.quantity)}{" "}
                             {movement.unit}
                           </TableCell>
-                          <TableCell>{movement.reason}</TableCell>
-                          <TableCell>{movement.requestedBy}</TableCell>
-                          <TableCell>
+                          <TableCell className="text-right">
+                            {movement.reason}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {movement.requestedBy}
+                          </TableCell>
+                          <TableCell className="text-right">
                             {movement.cost ? formatEGP(movement.cost) : "-"}
                           </TableCell>
                         </TableRow>
@@ -610,6 +753,23 @@ export default function InventoryPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Modals */}
+      <InventoryFormModal
+        isOpen={showInventoryModal}
+        onClose={() => setShowInventoryModal(false)}
+        onSave={handleModalSave}
+        inventoryItem={selectedItem}
+        mode={modalMode}
+      />
+
+      <StockMovementModal
+        isOpen={showStockModal}
+        onClose={() => setShowStockModal(false)}
+        onSave={handleModalSave}
+        inventoryItem={selectedItem || undefined}
+        mode={stockModalMode}
+      />
     </div>
   );
 }

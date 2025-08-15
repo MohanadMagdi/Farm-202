@@ -193,7 +193,7 @@ export default function WeightRecordModal({
                   </span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">وزن ال��يلاد:</span>
+                  <span className="text-muted-foreground">وزن الميلاد:</span>
                   <span className="font-medium mr-1">
                     {formatWeight(selectedAnimal.birthWeightKg)}
                   </span>

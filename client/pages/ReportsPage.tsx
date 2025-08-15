@@ -37,6 +37,7 @@ import {
   StockMovement,
   FeedingRecord,
 } from "@/lib/firebase-mock";
+import { toast } from "@/hooks/use-toast";
 import {
   Download,
   FileText,
@@ -70,6 +71,20 @@ export default function ReportsPage() {
   const [loading, setLoading] = useState(true);
   const [reportPeriod, setReportPeriod] = useState("month");
   const [selectedCategory, setSelectedCategory] = useState("all");
+
+  const exportPDF = () => {
+    toast({
+      title: "تصدير PDF",
+      description: "سيتم تنفيذ التصدير قريباً",
+    });
+  };
+
+  const exportExcel = () => {
+    toast({
+      title: "تصدير Excel",
+      description: "سيتم تنفيذ التصدير قريباً",
+    });
+  };
 
   useEffect(() => {
     loadReportData();
@@ -229,11 +244,11 @@ export default function ReportsPage() {
               <SelectItem value="year">سنوي</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={exportPDF}>
             <Download className="h-4 w-4 ml-2" />
             تصدير PDF
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={exportExcel}>
             <FileText className="h-4 w-4 ml-2" />
             تصدير Excel
           </Button>
@@ -305,15 +320,15 @@ export default function ReportsPage() {
         </Card>
       </div>
 
-      <Tabs defaultValue="animals" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs defaultValue="animals" className="w-full" dir="rtl">
+        <TabsList className="grid w-full grid-cols-4" dir="rtl">
           <TabsTrigger value="animals">تقرير الحيوانات</TabsTrigger>
           <TabsTrigger value="inventory">تقرير المخزون</TabsTrigger>
           <TabsTrigger value="feeding">تقرير التغذية</TabsTrigger>
           <TabsTrigger value="financial">التقرير المالي</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="animals" className="space-y-4">
+        <TabsContent value="animals" className="space-y-4" dir="rtl">
           <div className="grid gap-6 md:grid-cols-2">
             {/* Animals Summary */}
             <Card>
@@ -366,7 +381,7 @@ export default function ReportsPage() {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>متوسط معدل النمو اليومي</span>
+                  <span>متوسط معدل ��لنمو اليومي</span>
                   <span className="font-semibold">
                     {(
                       activeAnimals.reduce((sum, a) => sum + a.metrics.adg, 0) /
@@ -424,7 +439,7 @@ export default function ReportsPage() {
             </CardHeader>
             <CardContent>
               <div className="rounded-md border">
-                <Table>
+                <Table dir="rtl">
                   <TableHeader>
                     <TableRow>
                       <TableHead className="text-right">رقم الأذن</TableHead>
@@ -452,10 +467,10 @@ export default function ReportsPage() {
 
                       return (
                         <TableRow key={animal.id}>
-                          <TableCell className="font-medium">
+                          <TableCell className="font-medium text-right">
                             {animal.tagId}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-right">
                             <Badge variant="outline">
                               {animal.type === "male"
                                 ? "ذكر"
@@ -464,24 +479,26 @@ export default function ReportsPage() {
                                   : "صغير"}
                             </Badge>
                           </TableCell>
-                          <TableCell>{formatArabicNumber(ageInDays)}</TableCell>
-                          <TableCell>
+                          <TableCell className="text-right">
+                            {formatArabicNumber(ageInDays)}
+                          </TableCell>
+                          <TableCell className="text-right">
                             {formatWeight(animal.currentWeightKg)}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-right">
                             {formatWeight(animal.metrics.totalGainKg)}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-right">
                             {animal.metrics.adg.toFixed(2)} كيلو/يوم
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-right">
                             {animal.feedEfficiency.toFixed(2)}
                           </TableCell>
                           <TableCell
                             className={
                               animal.profitability > 0
-                                ? "text-green-600"
-                                : "text-red-600"
+                                ? "text-green-600 text-right"
+                                : "text-red-600 text-right"
                             }
                           >
                             {formatEGP(animal.profitability)}
@@ -496,7 +513,7 @@ export default function ReportsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="inventory" className="space-y-4">
+        <TabsContent value="inventory" className="space-y-4" dir="rtl">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2 space-x-reverse">
@@ -506,7 +523,7 @@ export default function ReportsPage() {
             </CardHeader>
             <CardContent>
               <div className="rounded-md border">
-                <Table>
+                <Table dir="rtl">
                   <TableHeader>
                     <TableRow>
                       <TableHead className="text-right">اسم الصنف</TableHead>
@@ -526,18 +543,22 @@ export default function ReportsPage() {
                   <TableBody>
                     {inventoryTurnover.map((item) => (
                       <TableRow key={item.id}>
-                        <TableCell className="font-medium">
+                        <TableCell className="font-medium text-right">
                           {item.name}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="text-right">
                           {formatArabicNumber(item.currentStock)} {item.unit}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="text-right">
                           {formatArabicNumber(item.totalOut)} {item.unit}
                         </TableCell>
-                        <TableCell>{item.turnoverRate.toFixed(2)}x</TableCell>
-                        <TableCell>{formatEGP(item.value)}</TableCell>
-                        <TableCell>
+                        <TableCell className="text-right">
+                          {item.turnoverRate.toFixed(2)}x
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {formatEGP(item.value)}
+                        </TableCell>
+                        <TableCell className="text-right">
                           <Badge
                             className={
                               item.currentStock <= item.minLevel
@@ -559,7 +580,7 @@ export default function ReportsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="feeding" className="space-y-4">
+        <TabsContent value="feeding" className="space-y-4" dir="rtl">
           <div className="grid gap-6 md:grid-cols-2">
             <Card>
               <CardHeader>
@@ -602,7 +623,7 @@ export default function ReportsPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>كفاءة التحويل الغذائي</CardTitle>
+                <CardTitle>كفاءة ��لتحويل الغذائي</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -635,7 +656,7 @@ export default function ReportsPage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="financial" className="space-y-4">
+        <TabsContent value="financial" className="space-y-4" dir="rtl">
           <div className="grid gap-6 md:grid-cols-2">
             <Card>
               <CardHeader>

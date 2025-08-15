@@ -35,6 +35,7 @@ import {
   animalStatus,
 } from "@/lib/arabic-utils";
 import { db, Animal } from "@/lib/firebase-mock";
+import { toast } from "@/hooks/use-toast";
 import {
   Search,
   Plus,
@@ -94,6 +95,14 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
   const handleWeightRecord = (animal: Animal) => {
     setSelectedAnimal(animal);
     setIsWeightModalOpen(true);
+  };
+
+  const handleSave = () => {
+    loadAnimals();
+    toast({
+      title: "تم الحفظ بنجاح",
+      description: "تم حفظ بيانات الحيوان بنجاح",
+    });
   };
 
   const handleDelete = async (animal: Animal) => {
@@ -336,46 +345,62 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
               <TableBody>
                 {filteredAnimals.map((animal) => (
                   <TableRow key={animal.id}>
-                    <TableCell className="font-medium">
+                    <TableCell className="font-medium text-right">
                       {animal.tagId}
                     </TableCell>
-                    <TableCell>{formatArabicDate(animal.birthDate)}</TableCell>
-                    <TableCell>
+                    <TableCell className="text-right">
+                      {formatArabicDate(animal.birthDate)}
+                    </TableCell>
+                    <TableCell className="text-right">
                       {formatWeight(animal.currentWeightKg)}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-right">
                       <Badge
                         className={getHealthStatusColor(animal.healthStatus)}
                       >
                         {healthStatus[animal.healthStatus]}
                       </Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-right">
                       <Badge className={getStatusColor(animal.status)}>
                         {animalStatus[animal.status]}
                       </Badge>
                     </TableCell>
-                    <TableCell>{animal.barnId}</TableCell>
+                    <TableCell className="text-right">
+                      {animal.barnId}
+                    </TableCell>
                     {animalType !== "newborn" && (
-                      <TableCell>
+                      <TableCell className="text-right">
                         {animal.purchase?.priceEGP
                           ? formatEGP(animal.purchase.priceEGP)
                           : "-"}
                       </TableCell>
                     )}
-                    <TableCell>
-                      <div className="flex items-center space-x-2 space-x-reverse">
-                        <Button variant="outline" size="sm">
-                          <Eye className="h-3 w-3" />
-                        </Button>
-                        <Button variant="outline" size="sm">
+                    <TableCell className="text-right">
+                      <div className="flex items-center gap-1 justify-end">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(animal)}
+                          className="h-8 w-8 p-0"
+                        >
                           <Edit className="h-3 w-3" />
                         </Button>
-                        <Button variant="outline" size="sm">
-                          <Activity className="h-3 w-3" />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleWeightRecord(animal)}
+                          className="h-8 w-8 p-0 text-green-600 hover:text-green-700"
+                        >
+                          <Scale className="h-3 w-3" />
                         </Button>
-                        <Button variant="outline" size="sm">
-                          <MapPin className="h-3 w-3" />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDelete(animal)}
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
                     </TableCell>
@@ -401,7 +426,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
       <AnimalFormModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onSave={loadAnimals}
+        onSave={handleSave}
         mode="add"
       />
 
@@ -411,7 +436,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
           setIsEditModalOpen(false);
           setSelectedAnimal(null);
         }}
-        onSave={loadAnimals}
+        onSave={handleSave}
         animal={selectedAnimal}
         mode="edit"
       />
@@ -422,7 +447,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
           setIsWeightModalOpen(false);
           setSelectedAnimal(null);
         }}
-        onSave={loadAnimals}
+        onSave={handleSave}
         preselectedAnimalId={selectedAnimal?.id}
       />
     </div>
