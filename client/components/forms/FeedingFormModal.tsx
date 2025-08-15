@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -18,24 +18,30 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatArabicDate, formatWeight } from "@/lib/arabic-utils";
-import { db, FeedingRecord, Barn, InventoryItem, Animal } from "@/lib/firebase-mock";
+import {
+  db,
+  FeedingRecord,
+  Barn,
+  InventoryItem,
+  Animal,
+} from "@/lib/firebase-mock";
 
 interface FeedingFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: () => void;
   feedingRecord?: FeedingRecord | null;
-  mode: 'add' | 'edit';
+  mode: "add" | "edit";
   preselectedBarnId?: string;
 }
 
-export default function FeedingFormModal({ 
-  isOpen, 
-  onClose, 
-  onSave, 
-  feedingRecord, 
+export default function FeedingFormModal({
+  isOpen,
+  onClose,
+  onSave,
+  feedingRecord,
   mode,
-  preselectedBarnId 
+  preselectedBarnId,
 }: FeedingFormModalProps) {
   const [formData, setFormData] = useState({
     barnId: preselectedBarnId || "",
@@ -43,9 +49,9 @@ export default function FeedingFormModal({
     time: new Date().toISOString().slice(0, 16), // Format for datetime-local input
     feedItemId: "",
     qtyKg: "",
-    recordedBy: "مشرف الحظيرة"
+    recordedBy: "مشرف الحظيرة",
   });
-  
+
   const [barns, setBarns] = useState<Barn[]>([]);
   const [feedItems, setFeedItems] = useState<InventoryItem[]>([]);
   const [animals, setAnimals] = useState<Animal[]>([]);
@@ -54,14 +60,14 @@ export default function FeedingFormModal({
   useEffect(() => {
     if (isOpen) {
       loadSelectData();
-      if (mode === 'edit' && feedingRecord) {
+      if (mode === "edit" && feedingRecord) {
         setFormData({
           barnId: feedingRecord.barnId,
           animalId: feedingRecord.animalId || "",
           time: feedingRecord.time.toISOString().slice(0, 16),
           feedItemId: feedingRecord.feedItemId,
           qtyKg: feedingRecord.qtyKg.toString(),
-          recordedBy: feedingRecord.recordedBy
+          recordedBy: feedingRecord.recordedBy,
         });
       } else {
         resetForm();
@@ -71,17 +77,20 @@ export default function FeedingFormModal({
 
   const loadSelectData = async () => {
     try {
-      const [barnsSnapshot, inventorySnapshot, animalsSnapshot] = await Promise.all([
-        db.collection('barns').get(),
-        db.collection('inventory').where('category', '==', 'feed').get(),
-        db.collection('animals').where('status', '==', 'active').get()
-      ]);
-      
-      setBarns(barnsSnapshot.docs.map(doc => doc.data() as Barn));
-      setFeedItems(inventorySnapshot.docs.map(doc => doc.data() as InventoryItem));
-      setAnimals(animalsSnapshot.docs.map(doc => doc.data() as Animal));
+      const [barnsSnapshot, inventorySnapshot, animalsSnapshot] =
+        await Promise.all([
+          db.collection("barns").get(),
+          db.collection("inventory").where("category", "==", "feed").get(),
+          db.collection("animals").where("status", "==", "active").get(),
+        ]);
+
+      setBarns(barnsSnapshot.docs.map((doc) => doc.data() as Barn));
+      setFeedItems(
+        inventorySnapshot.docs.map((doc) => doc.data() as InventoryItem),
+      );
+      setAnimals(animalsSnapshot.docs.map((doc) => doc.data() as Animal));
     } catch (error) {
-      console.error('Error loading select data:', error);
+      console.error("Error loading select data:", error);
     }
   };
 
@@ -92,7 +101,7 @@ export default function FeedingFormModal({
       time: new Date().toISOString().slice(0, 16),
       feedItemId: "",
       qtyKg: "",
-      recordedBy: "مشرف الحظيرة"
+      recordedBy: "مشرف الحظيرة",
     });
   };
 
@@ -105,51 +114,57 @@ export default function FeedingFormModal({
         time: new Date(formData.time),
         feedItemId: formData.feedItemId,
         qtyKg: parseFloat(formData.qtyKg),
-        recordedBy: formData.recordedBy
+        recordedBy: formData.recordedBy,
       };
 
-      if (mode === 'edit' && feedingRecord) {
-        await db.collection('feedingRecords').doc(feedingRecord.id).update(feedingData);
+      if (mode === "edit" && feedingRecord) {
+        await db
+          .collection("feedingRecords")
+          .doc(feedingRecord.id)
+          .update(feedingData);
       } else {
-        await db.collection('feedingRecords').add(feedingData);
-        
+        await db.collection("feedingRecords").add(feedingData);
+
         // Create stock movement for feed consumption
-        await db.collection('stockMovements').add({
-          direction: 'out' as const,
+        await db.collection("stockMovements").add({
+          direction: "out" as const,
           inventoryItemId: formData.feedItemId,
           qty: parseFloat(formData.qtyKg),
-          unit: 'كيلو',
-          reason: 'issue_to_barn' as const,
+          unit: "كيلو",
+          reason: "issue_to_barn" as const,
           barnId: formData.barnId,
           requestedBy: formData.recordedBy,
-          createdAt: new Date(formData.time)
+          createdAt: new Date(formData.time),
         });
       }
 
       onSave();
       onClose();
     } catch (error) {
-      console.error('Error saving feeding record:', error);
+      console.error("Error saving feeding record:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const selectedBarnAnimals = animals.filter(animal => animal.barnId === formData.barnId);
-  const selectedFeedItem = feedItems.find(item => item.id === formData.feedItemId);
+  const selectedBarnAnimals = animals.filter(
+    (animal) => animal.barnId === formData.barnId,
+  );
+  const selectedFeedItem = feedItems.find(
+    (item) => item.id === formData.feedItemId,
+  );
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>
-            {mode === 'add' ? 'تسجيل وجبة تغذية' : 'تعديل تسجيل التغذية'}
+            {mode === "add" ? "تسجيل وجبة تغذية" : "تعديل تسجيل التغذية"}
           </DialogTitle>
           <DialogDescription>
-            {mode === 'add' 
-              ? 'تسجيل وجبة تغذية جديدة للحظيرة أو الحيوان'
-              : 'تعديل بيانات تسجيل التغذية'
-            }
+            {mode === "add"
+              ? "تسجيل وجبة تغذية جديدة للحظيرة أو الحيوان"
+              : "تعديل بيانات تسجيل التغذية"}
           </DialogDescription>
         </DialogHeader>
 
@@ -159,7 +174,9 @@ export default function FeedingFormModal({
             <Label htmlFor="barn">الحظيرة *</Label>
             <Select
               value={formData.barnId}
-              onValueChange={(value) => setFormData({...formData, barnId: value, animalId: ""})}
+              onValueChange={(value) =>
+                setFormData({ ...formData, barnId: value, animalId: "" })
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder="اختر الحظيرة" />
@@ -179,7 +196,9 @@ export default function FeedingFormModal({
             <Label htmlFor="animal">الحيوان (اختياري)</Label>
             <Select
               value={formData.animalId}
-              onValueChange={(value) => setFormData({...formData, animalId: value})}
+              onValueChange={(value) =>
+                setFormData({ ...formData, animalId: value })
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder="اختر حيوان محدد أو اتركه فارغاً للحظيرة كاملة" />
@@ -202,7 +221,9 @@ export default function FeedingFormModal({
               id="time"
               type="datetime-local"
               value={formData.time}
-              onChange={(e) => setFormData({...formData, time: e.target.value})}
+              onChange={(e) =>
+                setFormData({ ...formData, time: e.target.value })
+              }
             />
           </div>
 
@@ -211,7 +232,9 @@ export default function FeedingFormModal({
             <Label htmlFor="feedItem">نوع العلف *</Label>
             <Select
               value={formData.feedItemId}
-              onValueChange={(value) => setFormData({...formData, feedItemId: value})}
+              onValueChange={(value) =>
+                setFormData({ ...formData, feedItemId: value })
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder="اختر نوع العلف" />
@@ -220,8 +243,8 @@ export default function FeedingFormModal({
                 {feedItems.map((item) => {
                   const currentStock = db.getCurrentStock(item.id);
                   return (
-                    <SelectItem 
-                      key={item.id} 
+                    <SelectItem
+                      key={item.id}
                       value={item.id}
                       disabled={currentStock <= 0}
                     >
@@ -235,18 +258,23 @@ export default function FeedingFormModal({
 
           {/* Quantity */}
           <div>
-            <Label htmlFor="quantity">الكمية ({selectedFeedItem?.unit || 'كيلو'}) *</Label>
+            <Label htmlFor="quantity">
+              الكمية ({selectedFeedItem?.unit || "كيلو"}) *
+            </Label>
             <Input
               id="quantity"
               type="number"
               step="0.1"
               value={formData.qtyKg}
-              onChange={(e) => setFormData({...formData, qtyKg: e.target.value})}
+              onChange={(e) =>
+                setFormData({ ...formData, qtyKg: e.target.value })
+              }
               placeholder="مثال: 2.5"
             />
             {selectedFeedItem && (
               <p className="text-xs text-muted-foreground mt-1">
-                المتوفر: {db.getCurrentStock(selectedFeedItem.id)} {selectedFeedItem.unit}
+                المتوفر: {db.getCurrentStock(selectedFeedItem.id)}{" "}
+                {selectedFeedItem.unit}
               </p>
             )}
           </div>
@@ -257,7 +285,9 @@ export default function FeedingFormModal({
             <Input
               id="recordedBy"
               value={formData.recordedBy}
-              onChange={(e) => setFormData({...formData, recordedBy: e.target.value})}
+              onChange={(e) =>
+                setFormData({ ...formData, recordedBy: e.target.value })
+              }
               placeholder="اسم المسؤول"
             />
           </div>
@@ -267,11 +297,20 @@ export default function FeedingFormModal({
           <Button variant="outline" onClick={onClose}>
             إلغاء
           </Button>
-          <Button 
-            onClick={handleSave} 
-            disabled={loading || !formData.barnId || !formData.feedItemId || !formData.qtyKg}
+          <Button
+            onClick={handleSave}
+            disabled={
+              loading ||
+              !formData.barnId ||
+              !formData.feedItemId ||
+              !formData.qtyKg
+            }
           >
-            {loading ? 'جاري الحفظ...' : mode === 'add' ? 'تسجيل الوجبة' : 'حفظ التعديلات'}
+            {loading
+              ? "جاري الحفظ..."
+              : mode === "add"
+                ? "تسجيل الوجبة"
+                : "حفظ التعديلات"}
           </Button>
         </DialogFooter>
       </DialogContent>

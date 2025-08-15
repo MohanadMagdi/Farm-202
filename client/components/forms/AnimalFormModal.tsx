@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -27,14 +27,20 @@ interface AnimalFormModalProps {
   onClose: () => void;
   onSave: () => void;
   animal?: Animal | null;
-  mode: 'add' | 'edit';
+  mode: "add" | "edit";
 }
 
-export default function AnimalFormModal({ isOpen, onClose, onSave, animal, mode }: AnimalFormModalProps) {
+export default function AnimalFormModal({
+  isOpen,
+  onClose,
+  onSave,
+  animal,
+  mode,
+}: AnimalFormModalProps) {
   const [formData, setFormData] = useState({
     tagId: "",
     type: "male" as "male" | "female" | "newborn",
-    birthDate: new Date().toISOString().split('T')[0],
+    birthDate: new Date().toISOString().split("T")[0],
     birthWeightKg: "",
     currentWeightKg: "",
     sex: "male" as "male" | "female",
@@ -43,11 +49,15 @@ export default function AnimalFormModal({ isOpen, onClose, onSave, animal, mode 
     purchaseDate: "",
     purchaseSupplier: "",
     purchasePriceEGP: "",
-    healthStatus: "healthy" as "healthy" | "sick" | "under_treatment" | "quarantine",
+    healthStatus: "healthy" as
+      | "healthy"
+      | "sick"
+      | "under_treatment"
+      | "quarantine",
     barnId: "",
-    status: "active" as "active" | "sold" | "dead"
+    status: "active" as "active" | "sold" | "dead",
   });
-  
+
   const [barns, setBarns] = useState<Barn[]>([]);
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [loading, setLoading] = useState(false);
@@ -55,22 +65,22 @@ export default function AnimalFormModal({ isOpen, onClose, onSave, animal, mode 
   useEffect(() => {
     if (isOpen) {
       loadSelectData();
-      if (mode === 'edit' && animal) {
+      if (mode === "edit" && animal) {
         setFormData({
           tagId: animal.tagId,
           type: animal.type,
-          birthDate: animal.birthDate.toISOString().split('T')[0],
+          birthDate: animal.birthDate.toISOString().split("T")[0],
           birthWeightKg: animal.birthWeightKg.toString(),
           currentWeightKg: animal.currentWeightKg.toString(),
           sex: animal.sex,
           motherId: animal.motherId || "",
           fatherId: animal.fatherId || "",
-          purchaseDate: animal.purchase?.date.toISOString().split('T')[0] || "",
+          purchaseDate: animal.purchase?.date.toISOString().split("T")[0] || "",
           purchaseSupplier: animal.purchase?.supplier || "",
           purchasePriceEGP: animal.purchase?.priceEGP.toString() || "",
           healthStatus: animal.healthStatus,
           barnId: animal.barnId,
-          status: animal.status
+          status: animal.status,
         });
       } else {
         resetForm();
@@ -81,14 +91,14 @@ export default function AnimalFormModal({ isOpen, onClose, onSave, animal, mode 
   const loadSelectData = async () => {
     try {
       const [barnsSnapshot, animalsSnapshot] = await Promise.all([
-        db.collection('barns').get(),
-        db.collection('animals').get()
+        db.collection("barns").get(),
+        db.collection("animals").get(),
       ]);
-      
-      setBarns(barnsSnapshot.docs.map(doc => doc.data() as Barn));
-      setAnimals(animalsSnapshot.docs.map(doc => doc.data() as Animal));
+
+      setBarns(barnsSnapshot.docs.map((doc) => doc.data() as Barn));
+      setAnimals(animalsSnapshot.docs.map((doc) => doc.data() as Animal));
     } catch (error) {
-      console.error('Error loading select data:', error);
+      console.error("Error loading select data:", error);
     }
   };
 
@@ -96,7 +106,7 @@ export default function AnimalFormModal({ isOpen, onClose, onSave, animal, mode 
     setFormData({
       tagId: "",
       type: "male",
-      birthDate: new Date().toISOString().split('T')[0],
+      birthDate: new Date().toISOString().split("T")[0],
       birthWeightKg: "",
       currentWeightKg: "",
       sex: "male",
@@ -107,7 +117,7 @@ export default function AnimalFormModal({ isOpen, onClose, onSave, animal, mode 
       purchasePriceEGP: "",
       healthStatus: "healthy",
       barnId: "",
-      status: "active"
+      status: "active",
     });
   };
 
@@ -128,44 +138,50 @@ export default function AnimalFormModal({ isOpen, onClose, onSave, animal, mode 
         status: formData.status,
         metrics: {
           adg: 0.3, // Default ADG
-          totalGainKg: parseFloat(formData.currentWeightKg) - parseFloat(formData.birthWeightKg),
-          feedConsumedKg: 0
-        }
+          totalGainKg:
+            parseFloat(formData.currentWeightKg) -
+            parseFloat(formData.birthWeightKg),
+          feedConsumedKg: 0,
+        },
       };
 
-      if (formData.purchaseDate && formData.purchaseSupplier && formData.purchasePriceEGP) {
+      if (
+        formData.purchaseDate &&
+        formData.purchaseSupplier &&
+        formData.purchasePriceEGP
+      ) {
         animalData.purchase = {
           date: new Date(formData.purchaseDate),
           supplier: formData.purchaseSupplier,
-          priceEGP: parseFloat(formData.purchasePriceEGP)
+          priceEGP: parseFloat(formData.purchasePriceEGP),
         };
       }
 
-      if (mode === 'edit' && animal) {
-        await db.collection('animals').doc(animal.id).update(animalData);
+      if (mode === "edit" && animal) {
+        await db.collection("animals").doc(animal.id).update(animalData);
       } else {
-        await db.collection('animals').add(animalData);
+        await db.collection("animals").add(animalData);
       }
 
       onSave();
       onClose();
     } catch (error) {
-      console.error('Error saving animal:', error);
+      console.error("Error saving animal:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredBarns = barns.filter(barn => 
-    barn.type === formData.type || barn.type === 'mixed'
+  const filteredBarns = barns.filter(
+    (barn) => barn.type === formData.type || barn.type === "mixed",
   );
 
-  const potentialMothers = animals.filter(a => 
-    a.type === 'female' && a.status === 'active' && a.id !== animal?.id
+  const potentialMothers = animals.filter(
+    (a) => a.type === "female" && a.status === "active" && a.id !== animal?.id,
   );
 
-  const potentialFathers = animals.filter(a => 
-    a.type === 'male' && a.status === 'active' && a.id !== animal?.id
+  const potentialFathers = animals.filter(
+    (a) => a.type === "male" && a.status === "active" && a.id !== animal?.id,
   );
 
   return (
@@ -173,13 +189,12 @@ export default function AnimalFormModal({ isOpen, onClose, onSave, animal, mode 
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {mode === 'add' ? 'إضافة حيوان جديد' : 'تعديل بيانات الحيوان'}
+            {mode === "add" ? "إضافة حيوان جديد" : "تعديل بيانات الحيوان"}
           </DialogTitle>
           <DialogDescription>
-            {mode === 'add' 
-              ? 'إدخال بيانات الحيوان الجديد بالمزرعة'
-              : 'تعديل البيانات الأساسية للحيوان'
-            }
+            {mode === "add"
+              ? "إدخال بيانات الحيوان الجديد بالمزرعة"
+              : "تعديل البيانات الأساسية للحيوان"}
           </DialogDescription>
         </DialogHeader>
 
@@ -191,7 +206,9 @@ export default function AnimalFormModal({ isOpen, onClose, onSave, animal, mode 
               <Input
                 id="tagId"
                 value={formData.tagId}
-                onChange={(e) => setFormData({...formData, tagId: e.target.value})}
+                onChange={(e) =>
+                  setFormData({ ...formData, tagId: e.target.value })
+                }
                 placeholder="مثال: M001"
               />
             </div>
@@ -199,8 +216,15 @@ export default function AnimalFormModal({ isOpen, onClose, onSave, animal, mode 
               <Label htmlFor="type">نوع الحيوان *</Label>
               <Select
                 value={formData.type}
-                onValueChange={(value: "male" | "female" | "newborn") => 
-                  setFormData({...formData, type: value, sex: value === 'newborn' ? formData.sex : value as "male" | "female"})
+                onValueChange={(value: "male" | "female" | "newborn") =>
+                  setFormData({
+                    ...formData,
+                    type: value,
+                    sex:
+                      value === "newborn"
+                        ? formData.sex
+                        : (value as "male" | "female"),
+                  })
                 }
               >
                 <SelectTrigger>
@@ -222,15 +246,19 @@ export default function AnimalFormModal({ isOpen, onClose, onSave, animal, mode 
                 id="birthDate"
                 type="date"
                 value={formData.birthDate}
-                onChange={(e) => setFormData({...formData, birthDate: e.target.value})}
+                onChange={(e) =>
+                  setFormData({ ...formData, birthDate: e.target.value })
+                }
               />
             </div>
-            {formData.type === 'newborn' && (
+            {formData.type === "newborn" && (
               <div>
                 <Label htmlFor="sex">الجنس *</Label>
                 <Select
                   value={formData.sex}
-                  onValueChange={(value: "male" | "female") => setFormData({...formData, sex: value})}
+                  onValueChange={(value: "male" | "female") =>
+                    setFormData({ ...formData, sex: value })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -253,7 +281,9 @@ export default function AnimalFormModal({ isOpen, onClose, onSave, animal, mode 
                 type="number"
                 step="0.1"
                 value={formData.birthWeightKg}
-                onChange={(e) => setFormData({...formData, birthWeightKg: e.target.value})}
+                onChange={(e) =>
+                  setFormData({ ...formData, birthWeightKg: e.target.value })
+                }
                 placeholder="3.5"
               />
             </div>
@@ -264,20 +294,24 @@ export default function AnimalFormModal({ isOpen, onClose, onSave, animal, mode 
                 type="number"
                 step="0.1"
                 value={formData.currentWeightKg}
-                onChange={(e) => setFormData({...formData, currentWeightKg: e.target.value})}
+                onChange={(e) =>
+                  setFormData({ ...formData, currentWeightKg: e.target.value })
+                }
                 placeholder="65.5"
               />
             </div>
           </div>
 
           {/* Parent Information */}
-          {formData.type !== 'male' && (
+          {formData.type !== "male" && (
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="mother">الأم</Label>
                 <Select
                   value={formData.motherId}
-                  onValueChange={(value) => setFormData({...formData, motherId: value})}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, motherId: value })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="اختر الأم" />
@@ -296,7 +330,9 @@ export default function AnimalFormModal({ isOpen, onClose, onSave, animal, mode 
                 <Label htmlFor="father">الأب</Label>
                 <Select
                   value={formData.fatherId}
-                  onValueChange={(value) => setFormData({...formData, fatherId: value})}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, fatherId: value })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="اختر الأب" />
@@ -315,7 +351,7 @@ export default function AnimalFormModal({ isOpen, onClose, onSave, animal, mode 
           )}
 
           {/* Purchase Information */}
-          {formData.type !== 'newborn' && (
+          {formData.type !== "newborn" && (
             <>
               <div className="grid grid-cols-3 gap-4">
                 <div>
@@ -324,7 +360,9 @@ export default function AnimalFormModal({ isOpen, onClose, onSave, animal, mode 
                     id="purchaseDate"
                     type="date"
                     value={formData.purchaseDate}
-                    onChange={(e) => setFormData({...formData, purchaseDate: e.target.value})}
+                    onChange={(e) =>
+                      setFormData({ ...formData, purchaseDate: e.target.value })
+                    }
                   />
                 </div>
                 <div>
@@ -333,7 +371,12 @@ export default function AnimalFormModal({ isOpen, onClose, onSave, animal, mode 
                     id="purchasePrice"
                     type="number"
                     value={formData.purchasePriceEGP}
-                    onChange={(e) => setFormData({...formData, purchasePriceEGP: e.target.value})}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        purchasePriceEGP: e.target.value,
+                      })
+                    }
                     placeholder="3500"
                   />
                 </div>
@@ -341,9 +384,13 @@ export default function AnimalFormModal({ isOpen, onClose, onSave, animal, mode 
                   <Label htmlFor="healthStatus">الحالة الصحية *</Label>
                   <Select
                     value={formData.healthStatus}
-                    onValueChange={(value: "healthy" | "sick" | "under_treatment" | "quarantine") => 
-                      setFormData({...formData, healthStatus: value})
-                    }
+                    onValueChange={(
+                      value:
+                        | "healthy"
+                        | "sick"
+                        | "under_treatment"
+                        | "quarantine",
+                    ) => setFormData({ ...formData, healthStatus: value })}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -351,7 +398,9 @@ export default function AnimalFormModal({ isOpen, onClose, onSave, animal, mode 
                     <SelectContent>
                       <SelectItem value="healthy">سليم</SelectItem>
                       <SelectItem value="sick">مريض</SelectItem>
-                      <SelectItem value="under_treatment">تحت العلاج</SelectItem>
+                      <SelectItem value="under_treatment">
+                        تحت العلاج
+                      </SelectItem>
                       <SelectItem value="quarantine">حجر صحي</SelectItem>
                     </SelectContent>
                   </Select>
@@ -363,7 +412,12 @@ export default function AnimalFormModal({ isOpen, onClose, onSave, animal, mode 
                 <Input
                   id="supplier"
                   value={formData.purchaseSupplier}
-                  onChange={(e) => setFormData({...formData, purchaseSupplier: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      purchaseSupplier: e.target.value,
+                    })
+                  }
                   placeholder="اسم المورد أو المزرعة"
                 />
               </div>
@@ -376,7 +430,9 @@ export default function AnimalFormModal({ isOpen, onClose, onSave, animal, mode 
               <Label htmlFor="barn">الحظيرة *</Label>
               <Select
                 value={formData.barnId}
-                onValueChange={(value) => setFormData({...formData, barnId: value})}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, barnId: value })
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="اختر الحظيرة" />
@@ -394,7 +450,9 @@ export default function AnimalFormModal({ isOpen, onClose, onSave, animal, mode 
               <Label htmlFor="status">حالة الحيوان *</Label>
               <Select
                 value={formData.status}
-                onValueChange={(value: "active" | "sold" | "dead") => setFormData({...formData, status: value})}
+                onValueChange={(value: "active" | "sold" | "dead") =>
+                  setFormData({ ...formData, status: value })
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -414,7 +472,11 @@ export default function AnimalFormModal({ isOpen, onClose, onSave, animal, mode 
             إلغاء
           </Button>
           <Button onClick={handleSave} disabled={loading}>
-            {loading ? 'جاري الحفظ...' : mode === 'add' ? 'إضافة الحيوان' : 'حفظ التعديلات'}
+            {loading
+              ? "جاري الحفظ..."
+              : mode === "add"
+                ? "إضافة الحيوان"
+                : "حفظ التعديلات"}
           </Button>
         </DialogFooter>
       </DialogContent>

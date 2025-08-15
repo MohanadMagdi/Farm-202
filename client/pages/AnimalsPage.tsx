@@ -1,11 +1,17 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import AnimalFormModal from "@/components/forms/AnimalFormModal";
 import WeightRecordModal from "@/components/forms/WeightRecordModal";
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -20,7 +26,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatEGP, formatWeight, formatArabicDate, animalTypes, healthStatus, animalStatus } from "@/lib/arabic-utils";
+import {
+  formatEGP,
+  formatWeight,
+  formatArabicDate,
+  animalTypes,
+  healthStatus,
+  animalStatus,
+} from "@/lib/arabic-utils";
 import { db, Animal } from "@/lib/firebase-mock";
 import {
   Search,
@@ -32,13 +45,13 @@ import {
   Trash2,
   Activity,
   MapPin,
-  Scale
+  Scale,
 } from "lucide-react";
 
 // Modal states and data loading
 
 interface AnimalsPageProps {
-  animalType: 'male' | 'female' | 'newborn';
+  animalType: "male" | "female" | "newborn";
 }
 
 export default function AnimalsPage({ animalType }: AnimalsPageProps) {
@@ -60,11 +73,14 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
 
   const loadAnimals = async () => {
     try {
-      const snapshot = await db.collection('animals').where('type', '==', animalType).get();
-      const animalsData = snapshot.docs.map(doc => doc.data() as Animal);
+      const snapshot = await db
+        .collection("animals")
+        .where("type", "==", animalType)
+        .get();
+      const animalsData = snapshot.docs.map((doc) => doc.data() as Animal);
       setAnimals(animalsData);
     } catch (error) {
-      console.error('Error loading animals:', error);
+      console.error("Error loading animals:", error);
     } finally {
       setLoading(false);
     }
@@ -83,10 +99,10 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
   const handleDelete = async (animal: Animal) => {
     if (window.confirm(`هل أنت متأكد من حذف الحيوان ${animal.tagId}؟`)) {
       try {
-        await db.collection('animals').doc(animal.id).delete();
+        await db.collection("animals").doc(animal.id).delete();
         loadAnimals();
       } catch (error) {
-        console.error('Error deleting animal:', error);
+        console.error("Error deleting animal:", error);
       }
     }
   };
@@ -97,7 +113,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
           <div className="grid gap-4 md:grid-cols-4">
-            {[1, 2, 3, 4].map(i => (
+            {[1, 2, 3, 4].map((i) => (
               <div key={i} className="h-32 bg-gray-200 rounded"></div>
             ))}
           </div>
@@ -107,29 +123,45 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
   }
 
   const filteredAnimals = animals
-    .filter(animal =>
-      animal.tagId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (animal.purchase?.supplier && animal.purchase.supplier.includes(searchTerm))
+    .filter(
+      (animal) =>
+        animal.tagId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (animal.purchase?.supplier &&
+          animal.purchase.supplier.includes(searchTerm)),
     )
-    .filter(animal => statusFilter === "all" || animal.status === statusFilter)
-    .filter(animal => healthFilter === "all" || animal.healthStatus === healthFilter);
+    .filter(
+      (animal) => statusFilter === "all" || animal.status === statusFilter,
+    )
+    .filter(
+      (animal) =>
+        healthFilter === "all" || animal.healthStatus === healthFilter,
+    );
 
   const getHealthStatusColor = (status: keyof typeof healthStatus) => {
     switch (status) {
-      case 'healthy': return 'bg-green-100 text-green-800';
-      case 'sick': return 'bg-red-100 text-red-800';
-      case 'under_treatment': return 'bg-yellow-100 text-yellow-800';
-      case 'quarantine': return 'bg-orange-100 text-orange-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "healthy":
+        return "bg-green-100 text-green-800";
+      case "sick":
+        return "bg-red-100 text-red-800";
+      case "under_treatment":
+        return "bg-yellow-100 text-yellow-800";
+      case "quarantine":
+        return "bg-orange-100 text-orange-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getStatusColor = (status: keyof typeof animalStatus) => {
     switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'sold': return 'bg-blue-100 text-blue-800';
-      case 'dead': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "active":
+        return "bg-green-100 text-green-800";
+      case "sold":
+        return "bg-blue-100 text-blue-800";
+      case "dead":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -152,7 +184,13 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
           </Button>
           <Button onClick={() => setIsAddModalOpen(true)}>
             <Plus className="h-4 w-4 ml-2" />
-            إضافة {animalType === 'male' ? 'ذكر' : animalType === 'female' ? 'أنثى' : 'صغير'} جديد
+            إضافة{" "}
+            {animalType === "male"
+              ? "ذكر"
+              : animalType === "female"
+                ? "أنثى"
+                : "صغير"}{" "}
+            جديد
           </Button>
         </div>
       </div>
@@ -176,9 +214,29 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-farm-800">
-              {filteredAnimals.length > 0 
-                ? formatWeight(filteredAnimals.reduce((sum, animal) => sum + animal.currentWeightKg, 0) / filteredAnimals.length)
-                : "0 كيلو"
+              {filteredAnimals.length > 0
+                ? formatWeight(
+                    filteredAnimals.reduce(
+                      (sum, animal) => sum + animal.currentWeightKg,
+                      0,
+                    ) / filteredAnimals.length,
+                  )
+                : "0 كيلو"}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">
+              الحيوانات السليمة
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+              {
+                filteredAnimals.filter((a) => a.healthStatus === "healthy")
+                  .length
               }
             </div>
           </CardContent>
@@ -186,22 +244,18 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">الحيوانات السليمة</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {filteredAnimals.filter(a => a.healthStatus === 'healthy').length}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">القيمة التقديرية</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              القيمة التقديرية
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-farm-800">
-              {formatEGP(filteredAnimals.reduce((sum, animal) => sum + (animal.purchase?.priceEGP || 0), 0))}
+              {formatEGP(
+                filteredAnimals.reduce(
+                  (sum, animal) => sum + (animal.purchase?.priceEGP || 0),
+                  0,
+                ),
+              )}
             </div>
           </CardContent>
         </Card>
@@ -225,7 +279,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                 />
               </div>
             </div>
-            
+
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full md:w-48">
                 <SelectValue placeholder="حالة الحيوان" />
@@ -273,7 +327,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                   <TableHead className="text-right">الحالة الصحية</TableHead>
                   <TableHead className="text-right">حالة الحيوان</TableHead>
                   <TableHead className="text-right">الحظيرة</TableHead>
-                  {animalType !== 'newborn' && (
+                  {animalType !== "newborn" && (
                     <TableHead className="text-right">سعر الشراء</TableHead>
                   )}
                   <TableHead className="text-right">الإجراءات</TableHead>
@@ -282,11 +336,17 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
               <TableBody>
                 {filteredAnimals.map((animal) => (
                   <TableRow key={animal.id}>
-                    <TableCell className="font-medium">{animal.tagId}</TableCell>
+                    <TableCell className="font-medium">
+                      {animal.tagId}
+                    </TableCell>
                     <TableCell>{formatArabicDate(animal.birthDate)}</TableCell>
-                    <TableCell>{formatWeight(animal.currentWeightKg)}</TableCell>
                     <TableCell>
-                      <Badge className={getHealthStatusColor(animal.healthStatus)}>
+                      {formatWeight(animal.currentWeightKg)}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        className={getHealthStatusColor(animal.healthStatus)}
+                      >
                         {healthStatus[animal.healthStatus]}
                       </Badge>
                     </TableCell>
@@ -296,9 +356,11 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                       </Badge>
                     </TableCell>
                     <TableCell>{animal.barnId}</TableCell>
-                    {animalType !== 'newborn' && (
+                    {animalType !== "newborn" && (
                       <TableCell>
-                        {animal.purchase?.priceEGP ? formatEGP(animal.purchase.priceEGP) : '-'}
+                        {animal.purchase?.priceEGP
+                          ? formatEGP(animal.purchase.priceEGP)
+                          : "-"}
                       </TableCell>
                     )}
                     <TableCell>
@@ -321,7 +383,10 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                 ))}
                 {filteredAnimals.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={animalType !== 'newborn' ? 8 : 7} className="text-center py-8">
+                    <TableCell
+                      colSpan={animalType !== "newborn" ? 8 : 7}
+                      className="text-center py-8"
+                    >
                       لا توجد نتائج مطابقة للبحث
                     </TableCell>
                   </TableRow>

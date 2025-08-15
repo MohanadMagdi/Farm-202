@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -28,20 +28,20 @@ interface WeightRecordModalProps {
   preselectedAnimalId?: string;
 }
 
-export default function WeightRecordModal({ 
-  isOpen, 
-  onClose, 
-  onSave, 
-  preselectedAnimalId 
+export default function WeightRecordModal({
+  isOpen,
+  onClose,
+  onSave,
+  preselectedAnimalId,
 }: WeightRecordModalProps) {
   const [formData, setFormData] = useState({
     animalId: preselectedAnimalId || "",
     newWeight: "",
-    recordDate: new Date().toISOString().split('T')[0],
+    recordDate: new Date().toISOString().split("T")[0],
     recordedBy: "مشرف المزرعة",
-    notes: ""
+    notes: "",
   });
-  
+
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [selectedAnimal, setSelectedAnimal] = useState<Animal | null>(null);
   const [loading, setLoading] = useState(false);
@@ -50,14 +50,14 @@ export default function WeightRecordModal({
     if (isOpen) {
       loadAnimals();
       if (preselectedAnimalId) {
-        setFormData(prev => ({ ...prev, animalId: preselectedAnimalId }));
+        setFormData((prev) => ({ ...prev, animalId: preselectedAnimalId }));
       }
     }
   }, [isOpen, preselectedAnimalId]);
 
   useEffect(() => {
     if (formData.animalId) {
-      const animal = animals.find(a => a.id === formData.animalId);
+      const animal = animals.find((a) => a.id === formData.animalId);
       setSelectedAnimal(animal || null);
     } else {
       setSelectedAnimal(null);
@@ -66,11 +66,14 @@ export default function WeightRecordModal({
 
   const loadAnimals = async () => {
     try {
-      const snapshot = await db.collection('animals').where('status', '==', 'active').get();
-      const animalsData = snapshot.docs.map(doc => doc.data() as Animal);
+      const snapshot = await db
+        .collection("animals")
+        .where("status", "==", "active")
+        .get();
+      const animalsData = snapshot.docs.map((doc) => doc.data() as Animal);
       setAnimals(animalsData);
     } catch (error) {
-      console.error('Error loading animals:', error);
+      console.error("Error loading animals:", error);
     }
   };
 
@@ -78,9 +81,9 @@ export default function WeightRecordModal({
     setFormData({
       animalId: preselectedAnimalId || "",
       newWeight: "",
-      recordDate: new Date().toISOString().split('T')[0],
+      recordDate: new Date().toISOString().split("T")[0],
       recordedBy: "مشرف المزرعة",
-      notes: ""
+      notes: "",
     });
     setSelectedAnimal(null);
   };
@@ -92,20 +95,23 @@ export default function WeightRecordModal({
 
   const calculateNewADG = () => {
     if (!selectedAnimal || !formData.newWeight) return 0;
-    
+
     const daysSinceBirth = Math.floor(
-      (new Date(formData.recordDate).getTime() - selectedAnimal.birthDate.getTime()) / (1000 * 60 * 60 * 24)
+      (new Date(formData.recordDate).getTime() -
+        selectedAnimal.birthDate.getTime()) /
+        (1000 * 60 * 60 * 24),
     );
-    
+
     if (daysSinceBirth <= 0) return 0;
-    
-    const totalGain = parseFloat(formData.newWeight) - selectedAnimal.birthWeightKg;
+
+    const totalGain =
+      parseFloat(formData.newWeight) - selectedAnimal.birthWeightKg;
     return totalGain / daysSinceBirth;
   };
 
   const handleSave = async () => {
     if (!selectedAnimal || !formData.newWeight) return;
-    
+
     setLoading(true);
     try {
       const newWeight = parseFloat(formData.newWeight);
@@ -114,26 +120,26 @@ export default function WeightRecordModal({
       const newTotalGain = newWeight - selectedAnimal.birthWeightKg;
 
       // Update animal weight and metrics
-      await db.collection('animals').doc(selectedAnimal.id).update({
+      await db.collection("animals").doc(selectedAnimal.id).update({
         currentWeightKg: newWeight,
-        'metrics.adg': newADG,
-        'metrics.totalGainKg': newTotalGain
+        "metrics.adg": newADG,
+        "metrics.totalGainKg": newTotalGain,
       });
 
       // Create a weight record (this would be a separate collection in a real app)
-      await db.collection('healthRecords').add({
+      await db.collection("healthRecords").add({
         animalId: selectedAnimal.id,
-        type: 'diagnosis' as const,
+        type: "diagnosis" as const,
         date: new Date(formData.recordDate),
-        notes: `تسجيل وزن: ${newWeight} كيلو (زيادة: ${weightGain > 0 ? '+' : ''}${weightGain.toFixed(1)} كيلو)${formData.notes ? ` - ${formData.notes}` : ''}`,
-        vetId: formData.recordedBy
+        notes: `تسجيل وزن: ${newWeight} كيلو (زيادة: ${weightGain > 0 ? "+" : ""}${weightGain.toFixed(1)} كيلو)${formData.notes ? ` - ${formData.notes}` : ""}`,
+        vetId: formData.recordedBy,
       });
 
       onSave();
       onClose();
       resetForm();
     } catch (error) {
-      console.error('Error saving weight record:', error);
+      console.error("Error saving weight record:", error);
     } finally {
       setLoading(false);
     }
@@ -158,7 +164,9 @@ export default function WeightRecordModal({
             <Label htmlFor="animal">الحيوان *</Label>
             <Select
               value={formData.animalId}
-              onValueChange={(value) => setFormData({...formData, animalId: value})}
+              onValueChange={(value) =>
+                setFormData({ ...formData, animalId: value })
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder="اختر الحيوان" />
@@ -180,19 +188,27 @@ export default function WeightRecordModal({
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div>
                   <span className="text-muted-foreground">الوزن الحالي:</span>
-                  <span className="font-medium mr-1">{formatWeight(selectedAnimal.currentWeightKg)}</span>
+                  <span className="font-medium mr-1">
+                    {formatWeight(selectedAnimal.currentWeightKg)}
+                  </span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">وزن ال��يلاد:</span>
-                  <span className="font-medium mr-1">{formatWeight(selectedAnimal.birthWeightKg)}</span>
+                  <span className="font-medium mr-1">
+                    {formatWeight(selectedAnimal.birthWeightKg)}
+                  </span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">معدل النمو:</span>
-                  <span className="font-medium mr-1">{selectedAnimal.metrics.adg.toFixed(2)} كيلو/يوم</span>
+                  <span className="font-medium mr-1">
+                    {selectedAnimal.metrics.adg.toFixed(2)} كيلو/يوم
+                  </span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">إجمالي النمو:</span>
-                  <span className="font-medium mr-1">{formatWeight(selectedAnimal.metrics.totalGainKg)}</span>
+                  <span className="font-medium mr-1">
+                    {formatWeight(selectedAnimal.metrics.totalGainKg)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -206,7 +222,9 @@ export default function WeightRecordModal({
               type="number"
               step="0.1"
               value={formData.newWeight}
-              onChange={(e) => setFormData({...formData, newWeight: e.target.value})}
+              onChange={(e) =>
+                setFormData({ ...formData, newWeight: e.target.value })
+              }
               placeholder="65.5"
             />
           </div>
@@ -217,14 +235,23 @@ export default function WeightRecordModal({
               <h4 className="font-medium mb-2">تحليل الوزن الجديد</h4>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div>
-                  <span className="text-muted-foreground">التغيير في الوزن:</span>
-                  <span className={`font-medium mr-1 ${weightGain >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {weightGain > 0 ? '+' : ''}{weightGain.toFixed(1)} كيلو
+                  <span className="text-muted-foreground">
+                    التغيير في الوزن:
+                  </span>
+                  <span
+                    className={`font-medium mr-1 ${weightGain >= 0 ? "text-green-600" : "text-red-600"}`}
+                  >
+                    {weightGain > 0 ? "+" : ""}
+                    {weightGain.toFixed(1)} كيلو
                   </span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">معدل النمو الجديد:</span>
-                  <span className="font-medium mr-1">{newADG.toFixed(2)} كيلو/يوم</span>
+                  <span className="text-muted-foreground">
+                    معدل النمو الجديد:
+                  </span>
+                  <span className="font-medium mr-1">
+                    {newADG.toFixed(2)} كيلو/يوم
+                  </span>
                 </div>
               </div>
             </div>
@@ -237,7 +264,9 @@ export default function WeightRecordModal({
               id="recordDate"
               type="date"
               value={formData.recordDate}
-              onChange={(e) => setFormData({...formData, recordDate: e.target.value})}
+              onChange={(e) =>
+                setFormData({ ...formData, recordDate: e.target.value })
+              }
             />
           </div>
 
@@ -247,7 +276,9 @@ export default function WeightRecordModal({
             <Input
               id="recordedBy"
               value={formData.recordedBy}
-              onChange={(e) => setFormData({...formData, recordedBy: e.target.value})}
+              onChange={(e) =>
+                setFormData({ ...formData, recordedBy: e.target.value })
+              }
               placeholder="اسم المسؤول"
             />
           </div>
@@ -258,7 +289,9 @@ export default function WeightRecordModal({
             <Textarea
               id="notes"
               value={formData.notes}
-              onChange={(e) => setFormData({...formData, notes: e.target.value})}
+              onChange={(e) =>
+                setFormData({ ...formData, notes: e.target.value })
+              }
               placeholder="أي ملاحظات إضافية حول القياس..."
               rows={3}
             />
@@ -266,14 +299,20 @@ export default function WeightRecordModal({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => { onClose(); resetForm(); }}>
+          <Button
+            variant="outline"
+            onClick={() => {
+              onClose();
+              resetForm();
+            }}
+          >
             إلغاء
           </Button>
-          <Button 
-            onClick={handleSave} 
+          <Button
+            onClick={handleSave}
             disabled={loading || !formData.animalId || !formData.newWeight}
           >
-            {loading ? 'جاري الحفظ...' : 'تسجيل الوزن'}
+            {loading ? "جاري الحفظ..." : "تسجيل الوزن"}
           </Button>
         </DialogFooter>
       </DialogContent>

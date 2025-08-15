@@ -1,5 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Construction } from "lucide-react";
 
 interface PlaceholderPageProps {
@@ -7,7 +13,10 @@ interface PlaceholderPageProps {
   description: string;
 }
 
-export default function PlaceholderPage({ title, description }: PlaceholderPageProps) {
+export default function PlaceholderPage({
+  title,
+  description,
+}: PlaceholderPageProps) {
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
       <Card className="w-full max-w-md text-center">
@@ -16,13 +25,12 @@ export default function PlaceholderPage({ title, description }: PlaceholderPageP
             <Construction className="h-8 w-8 text-farm-600" />
           </div>
           <CardTitle className="text-xl">{title}</CardTitle>
-          <CardDescription className="text-base">
-            {description}
-          </CardDescription>
+          <CardDescription className="text-base">{description}</CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-4">
-            هذه الصفحة قيد التطوير. يمكنك متابعة المحادثة لإضافة المحتوى المطلوب.
+            هذه الصفحة قيد التطوير. يمكنك متابعة المحادثة لإضافة المحتوى
+            المطلوب.
           </p>
           <Button variant="outline" onClick={() => window.history.back()}>
             العودة للخلف

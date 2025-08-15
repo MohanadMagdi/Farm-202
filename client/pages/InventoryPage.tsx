@@ -1,10 +1,16 @@
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -19,7 +25,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatEGP, formatArabicNumber, formatArabicDate, inventoryCategories, feedTypes } from "@/lib/arabic-utils";
+import {
+  formatEGP,
+  formatArabicNumber,
+  formatArabicDate,
+  inventoryCategories,
+  feedTypes,
+} from "@/lib/arabic-utils";
 import {
   Search,
   Plus,
@@ -31,7 +43,7 @@ import {
   Eye,
   Edit,
   ShoppingCart,
-  FileText
+  FileText,
 } from "lucide-react";
 
 interface InventoryItem {
@@ -53,7 +65,7 @@ interface InventoryItem {
 interface StockMovement {
   id: string;
   inventoryItemId: string;
-  direction: 'in' | 'out';
+  direction: "in" | "out";
   quantity: number;
   unit: string;
   reason: string;
@@ -76,10 +88,10 @@ const mockInventoryItems: InventoryItem[] = [
     currentStock: 1200,
     active: true,
     lastRestocked: new Date("2024-01-15"),
-    supplier: "مزرعة الوادي الأخضر"
+    supplier: "مزرعة الوادي الأخضر",
   },
   {
-    id: "2", 
+    id: "2",
     category: "feed",
     name: "تبن القمح",
     sku: "FEED-STRAW-001",
@@ -89,11 +101,11 @@ const mockInventoryItems: InventoryItem[] = [
     currentStock: 150,
     active: true,
     lastRestocked: new Date("2024-01-10"),
-    supplier: "تجار الأعلاف ال��تحدة"
+    supplier: "تجار الأعلاف ال��تحدة",
   },
   {
     id: "3",
-    category: "feed", 
+    category: "feed",
     name: "علف مركز 16%",
     sku: "FEED-CONC-16",
     unit: "كيلو",
@@ -103,7 +115,7 @@ const mockInventoryItems: InventoryItem[] = [
     currentStock: 450,
     active: true,
     lastRestocked: new Date("2024-01-12"),
-    supplier: "شركة الأعلاف المصرية"
+    supplier: "شركة الأعلاف المصرية",
   },
   {
     id: "4",
@@ -116,7 +128,7 @@ const mockInventoryItems: InventoryItem[] = [
     currentStock: 120,
     active: true,
     lastRestocked: new Date("2024-01-08"),
-    supplier: "صيدلية المزرعة البيطرية"
+    supplier: "صيدلية المزرعة البيطرية",
   },
   {
     id: "5",
@@ -129,8 +141,8 @@ const mockInventoryItems: InventoryItem[] = [
     currentStock: 3,
     active: true,
     lastRestocked: new Date("2023-12-20"),
-    supplier: "معدات المزارع الحديثة"
-  }
+    supplier: "معدات المزارع الحديثة",
+  },
 ];
 
 const mockStockMovements: StockMovement[] = [
@@ -147,14 +159,14 @@ const mockStockMovements: StockMovement[] = [
   },
   {
     id: "2",
-    inventoryItemId: "2", 
+    inventoryItemId: "2",
     direction: "in",
     quantity: 500,
     unit: "كيلو",
     reason: "استلام شحنة جديدة",
     requestedBy: "مدير المخزن",
     createdAt: new Date("2024-01-15"),
-    cost: 2100
+    cost: 2100,
   },
 ];
 
@@ -164,16 +176,20 @@ export default function InventoryPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const filteredItems = mockInventoryItems
-    .filter(item => 
-      item.name.includes(searchTerm) ||
-      item.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.supplier && item.supplier.includes(searchTerm))
+    .filter(
+      (item) =>
+        item.name.includes(searchTerm) ||
+        item.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.supplier && item.supplier.includes(searchTerm)),
     )
-    .filter(item => categoryFilter === "all" || item.category === categoryFilter)
-    .filter(item => {
+    .filter(
+      (item) => categoryFilter === "all" || item.category === categoryFilter,
+    )
+    .filter((item) => {
       if (statusFilter === "all") return true;
       if (statusFilter === "active") return item.active;
-      if (statusFilter === "low_stock") return item.currentStock <= item.minLevel;
+      if (statusFilter === "low_stock")
+        return item.currentStock <= item.minLevel;
       if (statusFilter === "out_of_stock") return item.currentStock === 0;
       return true;
     });
@@ -185,14 +201,21 @@ export default function InventoryPage() {
   };
 
   const getStockBadge = (current: number, min: number) => {
-    if (current === 0) return { text: "نفد المخزون", color: "bg-red-100 text-red-800" };
-    if (current <= min) return { text: "مخزون منخفض", color: "bg-yellow-100 text-yellow-800" };
+    if (current === 0)
+      return { text: "نفد المخزون", color: "bg-red-100 text-red-800" };
+    if (current <= min)
+      return { text: "مخزون منخفض", color: "bg-yellow-100 text-yellow-800" };
     return { text: "متوفر", color: "bg-green-100 text-green-800" };
   };
 
-  const lowStockItems = mockInventoryItems.filter(item => item.currentStock <= item.minLevel);
-  const totalValue = mockInventoryItems.reduce((sum, item) => sum + (item.currentStock * item.pricePerUnit), 0);
-  const totalItems = mockInventoryItems.filter(item => item.active).length;
+  const lowStockItems = mockInventoryItems.filter(
+    (item) => item.currentStock <= item.minLevel,
+  );
+  const totalValue = mockInventoryItems.reduce(
+    (sum, item) => sum + item.currentStock * item.pricePerUnit,
+    0,
+  );
+  const totalItems = mockInventoryItems.filter((item) => item.active).length;
 
   return (
     <div className="space-y-6">
@@ -224,15 +247,15 @@ export default function InventoryPage() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">إجمالي الأصناف</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              إجمالي الأصناف
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-farm-800">
               {formatArabicNumber(totalItems)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              صنف نشط
-            </p>
+            <p className="text-xs text-muted-foreground">صنف نشط</p>
           </CardContent>
         </Card>
 
@@ -252,7 +275,9 @@ export default function InventoryPage() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">تنبيهات المخزون</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              تنبيهات المخزون
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center space-x-2 space-x-reverse">
@@ -285,7 +310,9 @@ export default function InventoryPage() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">الحركة الشهرية</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              الحركة الشهرية
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-farm-800">
@@ -311,13 +338,20 @@ export default function InventoryPage() {
           <CardContent>
             <div className="space-y-2">
               {lowStockItems.map((item) => (
-                <div key={item.id} className="flex items-center justify-between p-2 bg-white rounded">
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between p-2 bg-white rounded"
+                >
                   <span className="font-medium">{item.name}</span>
                   <div className="flex items-center space-x-2 space-x-reverse">
                     <span className="text-sm text-muted-foreground">
-                      المخزون الحالي: {formatArabicNumber(item.currentStock)} {item.unit}
+                      المخزون الحالي: {formatArabicNumber(item.currentStock)}{" "}
+                      {item.unit}
                     </span>
-                    <Badge variant="outline" className="bg-yellow-100 text-yellow-800">
+                    <Badge
+                      variant="outline"
+                      className="bg-yellow-100 text-yellow-800"
+                    >
                       الحد الأدنى: {formatArabicNumber(item.minLevel)}
                     </Badge>
                     <Button size="sm" variant="outline">
@@ -336,7 +370,7 @@ export default function InventoryPage() {
           <TabsTrigger value="items">الأصناف</TabsTrigger>
           <TabsTrigger value="movements">حركة المخزون</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="items" className="space-y-4">
           {/* Filters */}
           <Card>
@@ -356,8 +390,11 @@ export default function InventoryPage() {
                     />
                   </div>
                 </div>
-                
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+
+                <Select
+                  value={categoryFilter}
+                  onValueChange={setCategoryFilter}
+                >
                   <SelectTrigger className="w-full md:w-48">
                     <SelectValue placeholder="الفئة" />
                   </SelectTrigger>
@@ -365,7 +402,9 @@ export default function InventoryPage() {
                     <SelectItem value="all">جميع الفئات</SelectItem>
                     <SelectItem value="feed">أعلاف</SelectItem>
                     <SelectItem value="medicine">أدوية</SelectItem>
-                    <SelectItem value="medical_supply">مستلزمات طبية</SelectItem>
+                    <SelectItem value="medical_supply">
+                      مستلزمات طبية
+                    </SelectItem>
                     <SelectItem value="equipment">معدات</SelectItem>
                     <SelectItem value="maintenance">صيانة</SelectItem>
                   </SelectContent>
@@ -401,7 +440,9 @@ export default function InventoryPage() {
                     <TableRow>
                       <TableHead className="text-right">اسم الصنف</TableHead>
                       <TableHead className="text-right">الفئة</TableHead>
-                      <TableHead className="text-right">المخزون الحالي</TableHead>
+                      <TableHead className="text-right">
+                        المخزون الحالي
+                      </TableHead>
                       <TableHead className="text-right">الحد الأدنى</TableHead>
                       <TableHead className="text-right">سعر الوحدة</TableHead>
                       <TableHead className="text-right">الحالة</TableHead>
@@ -411,16 +452,24 @@ export default function InventoryPage() {
                   </TableHeader>
                   <TableBody>
                     {filteredItems.map((item) => {
-                      const stockBadge = getStockBadge(item.currentStock, item.minLevel);
-                      
+                      const stockBadge = getStockBadge(
+                        item.currentStock,
+                        item.minLevel,
+                      );
+
                       return (
                         <TableRow key={item.id}>
                           <TableCell>
                             <div>
                               <div className="font-medium">{item.name}</div>
-                              <div className="text-sm text-muted-foreground">{item.sku}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {item.sku}
+                              </div>
                               {item.concentratePct && (
-                                <Badge variant="outline" className="text-xs mt-1">
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs mt-1"
+                                >
                                   {item.concentratePct}% بروتين
                                 </Badge>
                               )}
@@ -432,7 +481,12 @@ export default function InventoryPage() {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            <div className={getStockStatusColor(item.currentStock, item.minLevel)}>
+                            <div
+                              className={getStockStatusColor(
+                                item.currentStock,
+                                item.minLevel,
+                              )}
+                            >
                               <span className="font-medium">
                                 {formatArabicNumber(item.currentStock)}
                               </span>
@@ -453,7 +507,9 @@ export default function InventoryPage() {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            {item.lastRestocked ? formatArabicDate(item.lastRestocked) : '-'}
+                            {item.lastRestocked
+                              ? formatArabicDate(item.lastRestocked)
+                              : "-"}
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center space-x-2 space-x-reverse">
@@ -509,27 +565,40 @@ export default function InventoryPage() {
                   </TableHeader>
                   <TableBody>
                     {mockStockMovements.map((movement) => {
-                      const item = mockInventoryItems.find(i => i.id === movement.inventoryItemId);
-                      
+                      const item = mockInventoryItems.find(
+                        (i) => i.id === movement.inventoryItemId,
+                      );
+
                       return (
                         <TableRow key={movement.id}>
-                          <TableCell>{formatArabicDate(movement.createdAt)}</TableCell>
-                          <TableCell>{item?.name || 'غير معروف'}</TableCell>
                           <TableCell>
-                            <Badge 
-                              variant={movement.direction === 'in' ? 'default' : 'secondary'}
-                              className={movement.direction === 'in' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}
+                            {formatArabicDate(movement.createdAt)}
+                          </TableCell>
+                          <TableCell>{item?.name || "غير معروف"}</TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={
+                                movement.direction === "in"
+                                  ? "default"
+                                  : "secondary"
+                              }
+                              className={
+                                movement.direction === "in"
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-red-100 text-red-800"
+                              }
                             >
-                              {movement.direction === 'in' ? 'وارد' : 'صادر'}
+                              {movement.direction === "in" ? "وارد" : "صادر"}
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            {formatArabicNumber(movement.quantity)} {movement.unit}
+                            {formatArabicNumber(movement.quantity)}{" "}
+                            {movement.unit}
                           </TableCell>
                           <TableCell>{movement.reason}</TableCell>
                           <TableCell>{movement.requestedBy}</TableCell>
                           <TableCell>
-                            {movement.cost ? formatEGP(movement.cost) : '-'}
+                            {movement.cost ? formatEGP(movement.cost) : "-"}
                           </TableCell>
                         </TableRow>
                       );

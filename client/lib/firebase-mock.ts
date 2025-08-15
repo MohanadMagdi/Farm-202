@@ -3,17 +3,17 @@
  * Simulates Firebase Firestore for local development and testing
  */
 
-import { formatArabicDate } from './arabic-utils';
+import { formatArabicDate } from "./arabic-utils";
 
 // Types matching Firestore document structure
 export interface Animal {
   id: string;
   tagId: string;
-  type: 'male' | 'female' | 'newborn';
+  type: "male" | "female" | "newborn";
   birthDate: Date;
   birthWeightKg: number;
   currentWeightKg: number;
-  sex: 'male' | 'female';
+  sex: "male" | "female";
   motherId?: string;
   fatherId?: string;
   purchase?: {
@@ -21,9 +21,9 @@ export interface Animal {
     supplier: string;
     priceEGP: number;
   };
-  healthStatus: 'healthy' | 'sick' | 'under_treatment' | 'quarantine';
+  healthStatus: "healthy" | "sick" | "under_treatment" | "quarantine";
   barnId: string;
-  status: 'active' | 'sold' | 'dead';
+  status: "active" | "sold" | "dead";
   metrics: {
     adg: number; // Average Daily Gain
     totalGainKg: number;
@@ -38,7 +38,7 @@ export interface Animal {
 export interface Barn {
   id: string;
   name: string;
-  type: 'male' | 'female' | 'newborn' | 'mixed';
+  type: "male" | "female" | "newborn" | "mixed";
   capacity: number;
   location: string;
   notes?: string;
@@ -51,7 +51,12 @@ export interface Barn {
 
 export interface InventoryItem {
   id: string;
-  category: 'feed' | 'medicine' | 'medical_supply' | 'equipment' | 'maintenance';
+  category:
+    | "feed"
+    | "medicine"
+    | "medical_supply"
+    | "equipment"
+    | "maintenance";
   name: string;
   sku: string;
   unit: string;
@@ -79,12 +84,12 @@ export interface StockBatch {
 
 export interface StockMovement {
   id: string;
-  direction: 'in' | 'out';
+  direction: "in" | "out";
   inventoryItemId: string;
   batchId?: string;
   qty: number;
   unit: string;
-  reason: 'purchase' | 'issue_to_barn' | 'adjustment' | 'return';
+  reason: "purchase" | "issue_to_barn" | "adjustment" | "return";
   barnId?: string;
   requestedBy: string;
   approvedBy?: string;
@@ -116,7 +121,7 @@ export interface FeedingRecord {
 export interface HealthRecord {
   id: string;
   animalId: string;
-  type: 'vaccine' | 'treatment' | 'diagnosis';
+  type: "vaccine" | "treatment" | "diagnosis";
   drugId?: string;
   dose?: string;
   date: Date;
@@ -129,7 +134,14 @@ export interface User {
   uid: string; // Firebase Auth UID
   name: string;
   email: string;
-  role: 'owner' | 'manager' | 'vet' | 'inventory' | 'barn_manager' | 'accountant' | 'sales';
+  role:
+    | "owner"
+    | "manager"
+    | "vet"
+    | "inventory"
+    | "barn_manager"
+    | "accountant"
+    | "sales";
   active: boolean;
   claimsSynced: boolean;
   timestamps: {
@@ -158,7 +170,7 @@ class MockFirestore {
 
   private initializeData() {
     const now = new Date();
-    
+
     return {
       animals: [
         {
@@ -174,7 +186,7 @@ class MockFirestore {
           purchase: {
             date: new Date("2023-03-20"),
             supplier: "مزرعة أحمد محمد",
-            priceEGP: 3500
+            priceEGP: 3500,
           },
           healthStatus: "healthy",
           barnId: "barn_001",
@@ -182,12 +194,12 @@ class MockFirestore {
           metrics: {
             adg: 0.35,
             totalGainKg: 71.3,
-            feedConsumedKg: 1250
+            feedConsumedKg: 1250,
           },
           timestamps: {
             createdAt: new Date("2023-03-15"),
-            updatedAt: now
-          }
+            updatedAt: now,
+          },
         },
         {
           id: "anim_002",
@@ -200,7 +212,7 @@ class MockFirestore {
           purchase: {
             date: new Date("2022-08-15"),
             supplier: "مزرعة النور",
-            priceEGP: 4200
+            priceEGP: 4200,
           },
           healthStatus: "healthy",
           barnId: "barn_001",
@@ -208,12 +220,12 @@ class MockFirestore {
           metrics: {
             adg: 0.42,
             totalGainKg: 90.7,
-            feedConsumedKg: 1850
+            feedConsumedKg: 1850,
           },
           timestamps: {
             createdAt: new Date("2022-08-10"),
-            updatedAt: now
-          }
+            updatedAt: now,
+          },
         },
         {
           id: "anim_003",
@@ -228,7 +240,7 @@ class MockFirestore {
           purchase: {
             date: new Date("2022-12-01"),
             supplier: "مزرعة الصفا",
-            priceEGP: 4200
+            priceEGP: 4200,
           },
           healthStatus: "healthy",
           barnId: "barn_002",
@@ -236,12 +248,12 @@ class MockFirestore {
           metrics: {
             adg: 0.28,
             totalGainKg: 61.4,
-            feedConsumedKg: 1150
+            feedConsumedKg: 1150,
           },
           timestamps: {
             createdAt: new Date("2022-11-08"),
-            updatedAt: now
-          }
+            updatedAt: now,
+          },
         },
         {
           id: "anim_004",
@@ -259,15 +271,15 @@ class MockFirestore {
           metrics: {
             adg: 0.25,
             totalGainKg: 8.8,
-            feedConsumedKg: 45
+            feedConsumedKg: 45,
           },
           timestamps: {
             createdAt: new Date("2024-01-10"),
-            updatedAt: now
-          }
-        }
+            updatedAt: now,
+          },
+        },
       ],
-      
+
       barns: [
         {
           id: "barn_001",
@@ -279,8 +291,8 @@ class MockFirestore {
           active: true,
           timestamps: {
             createdAt: new Date("2023-01-01"),
-            updatedAt: now
-          }
+            updatedAt: now,
+          },
         },
         {
           id: "barn_002",
@@ -292,8 +304,8 @@ class MockFirestore {
           active: true,
           timestamps: {
             createdAt: new Date("2023-01-01"),
-            updatedAt: now
-          }
+            updatedAt: now,
+          },
         },
         {
           id: "barn_003",
@@ -305,9 +317,9 @@ class MockFirestore {
           active: true,
           timestamps: {
             createdAt: new Date("2023-01-01"),
-            updatedAt: now
-          }
-        }
+            updatedAt: now,
+          },
+        },
       ],
 
       inventory: [
@@ -322,8 +334,8 @@ class MockFirestore {
           active: true,
           timestamps: {
             createdAt: new Date("2023-01-01"),
-            updatedAt: now
-          }
+            updatedAt: now,
+          },
         },
         {
           id: "inv_002",
@@ -336,8 +348,8 @@ class MockFirestore {
           active: true,
           timestamps: {
             createdAt: new Date("2023-01-01"),
-            updatedAt: now
-          }
+            updatedAt: now,
+          },
         },
         {
           id: "inv_003",
@@ -351,9 +363,9 @@ class MockFirestore {
           active: true,
           timestamps: {
             createdAt: new Date("2023-01-01"),
-            updatedAt: now
-          }
-        }
+            updatedAt: now,
+          },
+        },
       ],
 
       stockBatches: [
@@ -364,7 +376,7 @@ class MockFirestore {
           qtyRemaining: 650,
           receivedAt: new Date("2024-01-15"),
           supplier: "مزرعة الوادي الأخضر",
-          costEGP: 8500
+          costEGP: 8500,
         },
         {
           id: "batch_002",
@@ -373,8 +385,8 @@ class MockFirestore {
           qtyRemaining: 200,
           receivedAt: new Date("2024-01-10"),
           supplier: "تجار الأعلاف المتحدة",
-          costEGP: 2100
-        }
+          costEGP: 2100,
+        },
       ],
 
       stockMovements: [
@@ -388,8 +400,8 @@ class MockFirestore {
           reason: "issue_to_barn",
           barnId: "barn_001",
           requestedBy: "أحمد محمد",
-          createdAt: new Date("2024-01-16")
-        }
+          createdAt: new Date("2024-01-16"),
+        },
       ],
 
       feedingSchedules: [
@@ -402,20 +414,20 @@ class MockFirestore {
             {
               time: "07:00",
               feedItemId: "inv_001",
-              qtyKgBarnTotal: 25
+              qtyKgBarnTotal: 25,
             },
             {
               time: "13:00",
               feedItemId: "inv_002",
-              qtyKgBarnTotal: 15
+              qtyKgBarnTotal: 15,
             },
             {
               time: "18:00",
               feedItemId: "inv_003",
-              qtyKgBarnTotal: 10
-            }
-          ]
-        }
+              qtyKgBarnTotal: 10,
+            },
+          ],
+        },
       ],
 
       feedingRecords: [
@@ -426,8 +438,8 @@ class MockFirestore {
           time: new Date(),
           feedItemId: "inv_001",
           qtyKg: 2.5,
-          recordedBy: "مشرف الحظيرة"
-        }
+          recordedBy: "مشرف الحظيرة",
+        },
       ],
 
       healthRecords: [
@@ -437,8 +449,8 @@ class MockFirestore {
           type: "vaccine",
           date: new Date("2024-01-15"),
           notes: "تطعيم ضد الحمى القلاعية",
-          vetId: "vet_001"
-        }
+          vetId: "vet_001",
+        },
       ],
 
       users: [
@@ -452,8 +464,8 @@ class MockFirestore {
           claimsSynced: true,
           timestamps: {
             createdAt: new Date("2023-01-01"),
-            updatedAt: now
-          }
+            updatedAt: now,
+          },
         },
         {
           id: "user_002",
@@ -465,8 +477,8 @@ class MockFirestore {
           claimsSynced: true,
           timestamps: {
             createdAt: new Date("2023-01-01"),
-            updatedAt: now
-          }
+            updatedAt: now,
+          },
         },
         {
           id: "user_003",
@@ -478,10 +490,10 @@ class MockFirestore {
           claimsSynced: true,
           timestamps: {
             createdAt: new Date("2023-01-01"),
-            updatedAt: now
-          }
-        }
-      ]
+            updatedAt: now,
+          },
+        },
+      ],
     };
   }
 
@@ -490,10 +502,11 @@ class MockFirestore {
     return {
       get: () => {
         return Promise.resolve({
-          docs: (this.data as any)[name]?.map((item: any) => ({
-            id: item.id,
-            data: () => item
-          })) || []
+          docs:
+            (this.data as any)[name]?.map((item: any) => ({
+              id: item.id,
+              data: () => item,
+            })) || [],
         });
       },
       add: (doc: any) => {
@@ -503,95 +516,110 @@ class MockFirestore {
           id,
           timestamps: {
             createdAt: new Date(),
-            updatedAt: new Date()
-          }
+            updatedAt: new Date(),
+          },
         };
         (this.data as any)[name].push(newDoc);
         return Promise.resolve({ id });
       },
       doc: (id: string) => ({
         get: () => {
-          const item = (this.data as any)[name]?.find((item: any) => item.id === id);
+          const item = (this.data as any)[name]?.find(
+            (item: any) => item.id === id,
+          );
           return Promise.resolve({
             exists: !!item,
             id,
-            data: () => item
+            data: () => item,
           });
         },
         update: (updates: any) => {
-          const index = (this.data as any)[name]?.findIndex((item: any) => item.id === id);
+          const index = (this.data as any)[name]?.findIndex(
+            (item: any) => item.id === id,
+          );
           if (index !== -1) {
             (this.data as any)[name][index] = {
               ...(this.data as any)[name][index],
               ...updates,
               timestamps: {
                 ...(this.data as any)[name][index].timestamps,
-                updatedAt: new Date()
-              }
+                updatedAt: new Date(),
+              },
             };
           }
           return Promise.resolve();
         },
         delete: () => {
-          const index = (this.data as any)[name]?.findIndex((item: any) => item.id === id);
+          const index = (this.data as any)[name]?.findIndex(
+            (item: any) => item.id === id,
+          );
           if (index !== -1) {
             (this.data as any)[name].splice(index, 1);
           }
           return Promise.resolve();
-        }
+        },
       }),
       where: (field: string, operator: string, value: any) => ({
         get: () => {
           let filtered = (this.data as any)[name] || [];
-          
+
           switch (operator) {
-            case '==':
+            case "==":
               filtered = filtered.filter((item: any) => item[field] === value);
               break;
-            case '!=':
+            case "!=":
               filtered = filtered.filter((item: any) => item[field] !== value);
               break;
-            case '>':
+            case ">":
               filtered = filtered.filter((item: any) => item[field] > value);
               break;
-            case '>=':
+            case ">=":
               filtered = filtered.filter((item: any) => item[field] >= value);
               break;
-            case '<':
+            case "<":
               filtered = filtered.filter((item: any) => item[field] < value);
               break;
-            case '<=':
+            case "<=":
               filtered = filtered.filter((item: any) => item[field] <= value);
               break;
           }
-          
+
           return Promise.resolve({
             docs: filtered.map((item: any) => ({
               id: item.id,
-              data: () => item
-            }))
+              data: () => item,
+            })),
           });
-        }
-      })
+        },
+      }),
     };
   }
 
   // Helper methods
   getCurrentStock(inventoryItemId: string): number {
-    const batches = this.data.stockBatches.filter(b => b.inventoryItemId === inventoryItemId);
+    const batches = this.data.stockBatches.filter(
+      (b) => b.inventoryItemId === inventoryItemId,
+    );
     return batches.reduce((sum, batch) => sum + batch.qtyRemaining, 0);
   }
 
   getBarnOccupancy(barnId: string): number {
-    return this.data.animals.filter(a => a.barnId === barnId && a.status === 'active').length;
+    return this.data.animals.filter(
+      (a) => a.barnId === barnId && a.status === "active",
+    ).length;
   }
 
   calculateADG(animalId: string): number {
-    const animal = this.data.animals.find(a => a.id === animalId);
+    const animal = this.data.animals.find((a) => a.id === animalId);
     if (!animal) return 0;
-    
-    const daysSinceBirth = Math.floor((new Date().getTime() - animal.birthDate.getTime()) / (1000 * 60 * 60 * 24));
-    return daysSinceBirth > 0 ? (animal.currentWeightKg - animal.birthWeightKg) / daysSinceBirth : 0;
+
+    const daysSinceBirth = Math.floor(
+      (new Date().getTime() - animal.birthDate.getTime()) /
+        (1000 * 60 * 60 * 24),
+    );
+    return daysSinceBirth > 0
+      ? (animal.currentWeightKg - animal.birthWeightKg) / daysSinceBirth
+      : 0;
   }
 }
 

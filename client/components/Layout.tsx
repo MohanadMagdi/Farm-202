@@ -11,7 +11,7 @@ import {
   Settings,
   CircleDot,
   Baby,
-  UserCheck
+  UserCheck,
 } from "lucide-react";
 
 const navigation = [
@@ -73,7 +73,9 @@ export default function Layout({ children }: LayoutProps) {
             <CircleDot className="h-8 w-8 text-farm-600" />
             <div>
               <h1 className="text-xl font-bold text-farm-800">مزرعة الأغنام</h1>
-              <p className="text-sm text-muted-foreground">نظام إدارة المزرعة</p>
+              <p className="text-sm text-muted-foreground">
+                نظام إدارة المزرعة
+              </p>
             </div>
           </div>
           <div className="flex-1" />
@@ -90,9 +92,13 @@ export default function Layout({ children }: LayoutProps) {
         <aside className="w-64 border-l bg-card">
           <nav className="space-y-2 p-4">
             {navigation.map((item) => {
-              const isActive = location.pathname === item.href || 
-                             (item.children && item.children.some(child => location.pathname === child.href));
-              
+              const isActive =
+                location.pathname === item.href ||
+                (item.children &&
+                  item.children.some(
+                    (child) => location.pathname === child.href,
+                  ));
+
               return (
                 <div key={item.name}>
                   <Link
@@ -101,13 +107,13 @@ export default function Layout({ children }: LayoutProps) {
                       "flex items-center space-x-3 space-x-reverse rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                       isActive
                         ? "bg-farm-100 text-farm-800"
-                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
                     )}
                   >
                     <item.icon className="h-5 w-5" />
                     <span>{item.name}</span>
                   </Link>
-                  
+
                   {/* Sub-navigation */}
                   {item.children && (
                     <div className="mr-8 mt-2 space-y-1">
@@ -119,7 +125,7 @@ export default function Layout({ children }: LayoutProps) {
                             "block rounded-lg px-3 py-2 text-sm transition-colors",
                             location.pathname === child.href
                               ? "bg-farm-50 text-farm-700 font-medium"
-                              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
                           )}
                         >
                           {child.name}
@@ -135,9 +141,7 @@ export default function Layout({ children }: LayoutProps) {
 
         {/* Main content */}
         <main className="flex-1 overflow-x-hidden">
-          <div className="container mx-auto p-6">
-            {children}
-          </div>
+          <div className="container mx-auto p-6">{children}</div>
         </main>
       </div>
     </div>

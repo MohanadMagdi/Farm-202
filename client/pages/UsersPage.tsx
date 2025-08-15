@@ -1,9 +1,15 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -43,7 +49,7 @@ import {
   Unlock,
   UserPlus,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
 } from "lucide-react";
 
 const roleLabels = {
@@ -53,7 +59,7 @@ const roleLabels = {
   inventory: "مدير المخزون",
   barn_manager: "مشرف الحظائر",
   accountant: "محاسب",
-  sales: "مدير المبيعات"
+  sales: "مدير المبيعات",
 };
 
 const rolePermissions = {
@@ -63,7 +69,7 @@ const rolePermissions = {
   inventory: ["إدارة المخزون", "حركة المخزون", "التقارير"],
   barn_manager: ["إدارة الحظائر", "جداول التغذية", "نقل الحيوانات"],
   accountant: ["قراءة التقارير المالية", "تصدير البيانات"],
-  sales: ["إدارة المبيعات", "قراءة معلومات الحيوانات"]
+  sales: ["إدارة المبيعات", "قراءة معلومات الحيوانات"],
 };
 
 export default function UsersPage() {
@@ -76,7 +82,7 @@ export default function UsersPage() {
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
-    role: "barn_manager" as keyof typeof roleLabels
+    role: "barn_manager" as keyof typeof roleLabels,
   });
 
   useEffect(() => {
@@ -85,11 +91,11 @@ export default function UsersPage() {
 
   const loadUsers = async () => {
     try {
-      const snapshot = await db.collection('users').get();
-      const usersData = snapshot.docs.map(doc => doc.data() as User);
+      const snapshot = await db.collection("users").get();
+      const usersData = snapshot.docs.map((doc) => doc.data() as User);
       setUsers(usersData);
     } catch (error) {
-      console.error('Error loading users:', error);
+      console.error("Error loading users:", error);
     } finally {
       setLoading(false);
     }
@@ -101,36 +107,39 @@ export default function UsersPage() {
         ...newUser,
         uid: `firebase_uid_${Date.now()}`,
         active: true,
-        claimsSynced: false
+        claimsSynced: false,
       };
-      
-      await db.collection('users').add(userDoc);
+
+      await db.collection("users").add(userDoc);
       setIsAddUserDialogOpen(false);
       setNewUser({ name: "", email: "", role: "barn_manager" });
       loadUsers();
     } catch (error) {
-      console.error('Error adding user:', error);
+      console.error("Error adding user:", error);
     }
   };
 
-  const handleToggleUserStatus = async (userId: string, currentStatus: boolean) => {
+  const handleToggleUserStatus = async (
+    userId: string,
+    currentStatus: boolean,
+  ) => {
     try {
-      await db.collection('users').doc(userId).update({
-        active: !currentStatus
+      await db.collection("users").doc(userId).update({
+        active: !currentStatus,
       });
       loadUsers();
     } catch (error) {
-      console.error('Error updating user status:', error);
+      console.error("Error updating user status:", error);
     }
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (window.confirm('هل أنت متأكد من حذف هذا المستخدم؟')) {
+    if (window.confirm("هل أنت متأكد من حذف هذا المستخدم؟")) {
       try {
-        await db.collection('users').doc(userId).delete();
+        await db.collection("users").doc(userId).delete();
         loadUsers();
       } catch (error) {
-        console.error('Error deleting user:', error);
+        console.error("Error deleting user:", error);
       }
     }
   };
@@ -141,7 +150,7 @@ export default function UsersPage() {
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
           <div className="grid gap-4 md:grid-cols-4">
-            {[1, 2, 3, 4].map(i => (
+            {[1, 2, 3, 4].map((i) => (
               <div key={i} className="h-32 bg-gray-200 rounded"></div>
             ))}
           </div>
@@ -151,23 +160,24 @@ export default function UsersPage() {
   }
 
   const filteredUsers = users
-    .filter(user => 
-      user.name.includes(searchTerm) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    .filter(
+      (user) =>
+        user.name.includes(searchTerm) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase()),
     )
-    .filter(user => roleFilter === "all" || user.role === roleFilter)
-    .filter(user => {
+    .filter((user) => roleFilter === "all" || user.role === roleFilter)
+    .filter((user) => {
       if (statusFilter === "all") return true;
       if (statusFilter === "active") return user.active;
       if (statusFilter === "inactive") return !user.active;
       return true;
     });
 
-  const activeUsers = users.filter(u => u.active);
-  const roleDistribution = Object.keys(roleLabels).map(role => ({
+  const activeUsers = users.filter((u) => u.active);
+  const roleDistribution = Object.keys(roleLabels).map((role) => ({
     role: role as keyof typeof roleLabels,
-    count: users.filter(u => u.role === role).length,
-    label: roleLabels[role as keyof typeof roleLabels]
+    count: users.filter((u) => u.role === role).length,
+    label: roleLabels[role as keyof typeof roleLabels],
   }));
 
   return (
@@ -185,7 +195,10 @@ export default function UsersPage() {
             <Settings className="h-4 w-4 ml-2" />
             إعدادات الأدوار
           </Button>
-          <Dialog open={isAddUserDialogOpen} onOpenChange={setIsAddUserDialogOpen}>
+          <Dialog
+            open={isAddUserDialogOpen}
+            onOpenChange={setIsAddUserDialogOpen}
+          >
             <DialogTrigger asChild>
               <Button>
                 <Plus className="h-4 w-4 ml-2" />
@@ -207,7 +220,9 @@ export default function UsersPage() {
                   <Input
                     id="name"
                     value={newUser.name}
-                    onChange={(e) => setNewUser({...newUser, name: e.target.value})}
+                    onChange={(e) =>
+                      setNewUser({ ...newUser, name: e.target.value })
+                    }
                     className="col-span-3"
                   />
                 </div>
@@ -219,7 +234,9 @@ export default function UsersPage() {
                     id="email"
                     type="email"
                     value={newUser.email}
-                    onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                    onChange={(e) =>
+                      setNewUser({ ...newUser, email: e.target.value })
+                    }
                     className="col-span-3"
                   />
                 </div>
@@ -229,7 +246,12 @@ export default function UsersPage() {
                   </Label>
                   <Select
                     value={newUser.role}
-                    onValueChange={(value) => setNewUser({...newUser, role: value as keyof typeof roleLabels})}
+                    onValueChange={(value) =>
+                      setNewUser({
+                        ...newUser,
+                        role: value as keyof typeof roleLabels,
+                      })
+                    }
                   >
                     <SelectTrigger className="col-span-3">
                       <SelectValue placeholder="اختر الدور" />
@@ -258,7 +280,9 @@ export default function UsersPage() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">إجمالي المستخدمين</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              إجمالي المستخدمين
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-farm-800">
@@ -272,7 +296,9 @@ export default function UsersPage() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">المستخدمين النشطين</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              المستخدمين النشطين
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
@@ -280,22 +306,29 @@ export default function UsersPage() {
             </div>
             <div className="flex items-center space-x-1 space-x-reverse text-xs text-muted-foreground">
               <CheckCircle className="h-3 w-3 text-green-500" />
-              <span>{Math.round((activeUsers.length / Math.max(1, users.length)) * 100)}% من المجم��ع</span>
+              <span>
+                {Math.round(
+                  (activeUsers.length / Math.max(1, users.length)) * 100,
+                )}
+                % من المجم��ع
+              </span>
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">الأدوار المختلفة</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              الأدوار المختلفة
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-farm-800">
-              {formatArabicNumber(roleDistribution.filter(r => r.count > 0).length)}
+              {formatArabicNumber(
+                roleDistribution.filter((r) => r.count > 0).length,
+              )}
             </div>
-            <p className="text-xs text-muted-foreground">
-              دور مختلف
-            </p>
+            <p className="text-xs text-muted-foreground">دور مختلف</p>
           </CardContent>
         </Card>
 
@@ -305,12 +338,14 @@ export default function UsersPage() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center space-x-2 space-x-reverse">
-              {users.filter(u => !u.claimsSynced).length > 0 ? (
+              {users.filter((u) => !u.claimsSynced).length > 0 ? (
                 <>
                   <AlertTriangle className="h-5 w-5 text-yellow-500" />
                   <div>
                     <div className="text-2xl font-bold text-yellow-600">
-                      {formatArabicNumber(users.filter(u => !u.claimsSynced).length)}
+                      {formatArabicNumber(
+                        users.filter((u) => !u.claimsSynced).length,
+                      )}
                     </div>
                     <p className="text-xs text-muted-foreground">
                       يحتاج مزامنة
@@ -344,7 +379,10 @@ export default function UsersPage() {
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
             {roleDistribution.map((role) => (
-              <div key={role.role} className="flex items-center justify-between p-3 border rounded">
+              <div
+                key={role.role}
+                className="flex items-center justify-between p-3 border rounded"
+              >
                 <div>
                   <div className="font-medium">{role.label}</div>
                   <div className="text-sm text-muted-foreground">
@@ -379,7 +417,7 @@ export default function UsersPage() {
                 />
               </div>
             </div>
-            
+
             <Select value={roleFilter} onValueChange={setRoleFilter}>
               <SelectTrigger className="w-full md:w-48">
                 <SelectValue placeholder="الدور" />
@@ -422,7 +460,9 @@ export default function UsersPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-right">الاسم</TableHead>
-                  <TableHead className="text-right">البريد الإلكتروني</TableHead>
+                  <TableHead className="text-right">
+                    البريد الإلكتروني
+                  </TableHead>
                   <TableHead className="text-right">الدور</TableHead>
                   <TableHead className="text-right">الحالة</TableHead>
                   <TableHead className="text-right">تاريخ الإنشاء</TableHead>
@@ -441,30 +481,35 @@ export default function UsersPage() {
                     </TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">
-                        {roleLabels[user.role]}
-                      </Badge>
+                      <Badge variant="outline">{roleLabels[user.role]}</Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col space-y-1">
-                        <Badge 
+                        <Badge
                           className={
-                            user.active 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-red-100 text-red-800'
+                            user.active
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
                           }
                         >
-                          {user.active ? 'نشط' : 'غير نشط'}
+                          {user.active ? "نشط" : "غير نشط"}
                         </Badge>
                         {!user.claimsSynced && (
-                          <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800">
+                          <Badge
+                            variant="outline"
+                            className="text-xs bg-yellow-100 text-yellow-800"
+                          >
                             يحتاج مزامنة
                           </Badge>
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>{formatArabicDate(user.timestamps.createdAt)}</TableCell>
-                    <TableCell>{formatArabicDate(user.timestamps.updatedAt)}</TableCell>
+                    <TableCell>
+                      {formatArabicDate(user.timestamps.createdAt)}
+                    </TableCell>
+                    <TableCell>
+                      {formatArabicDate(user.timestamps.updatedAt)}
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2 space-x-reverse">
                         <Button variant="outline" size="sm">
@@ -473,16 +518,22 @@ export default function UsersPage() {
                         <Button variant="outline" size="sm">
                           <Edit className="h-3 w-3" />
                         </Button>
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="sm"
-                          onClick={() => handleToggleUserStatus(user.id, user.active)}
+                          onClick={() =>
+                            handleToggleUserStatus(user.id, user.active)
+                          }
                         >
-                          {user.active ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
+                          {user.active ? (
+                            <Lock className="h-3 w-3" />
+                          ) : (
+                            <Unlock className="h-3 w-3" />
+                          )}
                         </Button>
-                        {user.role !== 'owner' && (
-                          <Button 
-                            variant="outline" 
+                        {user.role !== "owner" && (
+                          <Button
+                            variant="outline"
                             size="sm"
                             onClick={() => handleDeleteUser(user.id)}
                           >
@@ -521,15 +572,24 @@ export default function UsersPage() {
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="font-medium">{label}</h4>
                   <Badge variant="outline">
-                    {formatArabicNumber(users.filter(u => u.role === role).length)} مستخدم
+                    {formatArabicNumber(
+                      users.filter((u) => u.role === role).length,
+                    )}{" "}
+                    مستخدم
                   </Badge>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {rolePermissions[role as keyof typeof rolePermissions]?.map((permission, index) => (
-                    <Badge key={index} variant="secondary" className="text-xs">
-                      {permission}
-                    </Badge>
-                  ))}
+                  {rolePermissions[role as keyof typeof rolePermissions]?.map(
+                    (permission, index) => (
+                      <Badge
+                        key={index}
+                        variant="secondary"
+                        className="text-xs"
+                      >
+                        {permission}
+                      </Badge>
+                    ),
+                  )}
                 </div>
               </div>
             ))}

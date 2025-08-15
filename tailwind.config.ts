@@ -82,7 +82,7 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        arabic: ['Cairo', 'Noto Sans Arabic', 'system-ui', 'sans-serif'],
+        arabic: ["Cairo", "Noto Sans Arabic", "system-ui", "sans-serif"],
       },
       keyframes: {
         "accordion-down": {
