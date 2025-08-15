@@ -15,7 +15,10 @@ export function formatEGP(amount: number): string {
 /**
  * Format weight in kilograms
  */
-export function formatWeight(weight: number): string {
+export function formatWeight(weight: number | undefined | null): string {
+  if (weight == null || isNaN(weight)) {
+    return '0.0 كيلو';
+  }
   return `${weight.toLocaleString('ar-EG', {
     minimumFractionDigits: 1,
     maximumFractionDigits: 2
