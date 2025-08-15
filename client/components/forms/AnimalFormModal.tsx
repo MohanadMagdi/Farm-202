@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   Select,
   SelectContent,
@@ -216,7 +217,7 @@ export default function AnimalFormModal({ isOpen, onClose, onSave, animal, mode 
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="birthDate">تار��خ الميلاد *</Label>
+              <Label htmlFor="birthDate">تاريخ الميلاد *</Label>
               <Input
                 id="birthDate"
                 type="date"
