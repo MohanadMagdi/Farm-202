@@ -284,7 +284,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                   <TableRow key={animal.id}>
                     <TableCell className="font-medium">{animal.tagId}</TableCell>
                     <TableCell>{formatArabicDate(animal.birthDate)}</TableCell>
-                    <TableCell>{formatWeight(animal.currentWeight)}</TableCell>
+                    <TableCell>{formatWeight(animal.currentWeightKg)}</TableCell>
                     <TableCell>
                       <Badge className={getHealthStatusColor(animal.healthStatus)}>
                         {healthStatus[animal.healthStatus]}
