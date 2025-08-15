@@ -22,53 +22,95 @@ import {
   Calendar
 } from "lucide-react";
 
-// Mock data - in real app this would come from Firebase/API
-const mockData = {
-  totalAnimals: 247,
-  males: 89,
-  females: 134,
-  newborns: 24,
-  totalValue: 850000,
-  monthlyGrowth: 5.2,
-  averageWeight: 65.5,
-  barns: {
-    total: 8,
-    occupied: 6,
-    capacity: 300,
-    current: 247
-  },
-  alerts: [
-    {
-      id: 1,
-      type: "warning",
-      title: "مخزون العلف منخفض",
-      description: "مخزون الدريس أقل من المستوى المطلوب (50 كيلو متبقي)",
-      priority: "high"
-    },
-    {
-      id: 2,
-      type: "info", 
-      title: "موعد التطعيم",
-      description: "15 حيوان يحتاج تطعيم خلال الأسبوع القادم",
-      priority: "medium"
-    },
-    {
-      id: 3,
-      type: "success",
-      title: "ولادة جديدة",
-      description: "ولد صغير جديد في الحظيرة رقم 3 اليوم",
-      priority: "low"
-    }
-  ],
-  recentActivity: [
-    { id: 1, action: "إضافة حيوان جديد", animal: "خروف رقم 248", time: "منذ ساعتين" },
-    { id: 2, action: "تسجيل وزن", animal: "نعجة رقم 156", weight: "72.5 كيلو", time: "منذ 4 ساعات" },
-    { id: 3, action: "نقل إلى حظيرة", animal: "خروف رقم 201", barn: "الحظيرة 2", time: "أمس" },
-    { id: 4, action: "صرف علف", amount: "120 كيلو دريس", barn: "الحظيرة 1", time: "أمس" }
-  ]
-};
-
 export default function Index() {
+  const [animals, setAnimals] = useState<Animal[]>([]);
+  const [barns, setBarns] = useState<Barn[]>([]);
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      const [animalsSnapshot, barnsSnapshot, inventorySnapshot] = await Promise.all([
+        db.collection('animals').get(),
+        db.collection('barns').get(),
+        db.collection('inventory').get()
+      ]);
+
+      setAnimals(animalsSnapshot.docs.map(doc => doc.data() as Animal));
+      setBarns(barnsSnapshot.docs.map(doc => doc.data() as Barn));
+      setInventoryItems(inventorySnapshot.docs.map(doc => doc.data() as InventoryItem));
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="grid gap-4 md:grid-cols-4">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="h-32 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Calculate real data from Firebase mock
+  const activeAnimals = animals.filter(a => a.status === 'active');
+  const totalAnimals = activeAnimals.length;
+  const males = activeAnimals.filter(a => a.type === 'male').length;
+  const females = activeAnimals.filter(a => a.type === 'female').length;
+  const newborns = activeAnimals.filter(a => a.type === 'newborn').length;
+  
+  const totalValue = activeAnimals.reduce((sum, animal) => sum + (animal.purchase?.priceEGP || 0), 0);
+  const averageWeight = totalAnimals > 0 
+    ? activeAnimals.reduce((sum, animal) => sum + animal.currentWeightKg, 0) / totalAnimals 
+    : 0;
+
+  const totalCapacity = barns.reduce((sum, barn) => sum + barn.capacity, 0);
+  const currentOccupancy = totalAnimals;
+
+  // Generate alerts based on real data
+  const lowStockItems = inventoryItems.filter(item => {
+    const currentStock = db.getCurrentStock(item.id);
+    return currentStock <= item.minLevel;
+  });
+
+  const alerts = [
+    ...lowStockItems.map(item => ({
+      id: `stock_${item.id}`,
+      type: "warning" as const,
+      title: "مخزون منخفض",
+      description: `مخزون ${item.name} أقل من المستوى المطلوب`,
+      priority: "high" as const
+    })),
+    ...(newborns > 0 ? [{
+      id: "newborns",
+      type: "success" as const,
+      title: "مواليد جديدة",
+      description: `${newborns} من الصغار في المزرعة`,
+      priority: "low" as const
+    }] : [])
+  ];
+
+  const recentActivity = [
+    { id: 1, action: "إضافة حيوان جديد", animal: activeAnimals[0]?.tagId || "غير محدد", time: "منذ ساعتين" },
+    { id: 2, action: "تسجيل وزن", animal: activeAnimals[1]?.tagId || "غير محدد", weight: `${activeAnimals[1]?.currentWeightKg || 0} كيلو`, time: "منذ 4 ساعات" },
+    { id: 3, action: "نقل إلى حظيرة", animal: activeAnimals[2]?.tagId || "غير محدد", barn: activeAnimals[2]?.barnId || "غير محدد", time: "أمس" }
+  ];
+
+  const monthlyGrowth = 5.2; // Mock calculation
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -87,27 +129,29 @@ export default function Index() {
       </div>
 
       {/* Alerts Section */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-farm-700">التنبيهات العاجلة</h2>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {mockData.alerts.map((alert) => (
-            <Alert 
-              key={alert.id} 
-              className={`${
-                alert.priority === 'high' ? 'border-destructive' :
-                alert.priority === 'medium' ? 'border-yellow-500' :
-                'border-green-500'
-              }`}
-            >
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>{alert.title}</AlertTitle>
-              <AlertDescription className="mt-2">
-                {alert.description}
-              </AlertDescription>
-            </Alert>
-          ))}
+      {alerts.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold text-farm-700">التنبيهات العاجلة</h2>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {alerts.map((alert) => (
+              <Alert 
+                key={alert.id} 
+                className={`${
+                  alert.priority === 'high' ? 'border-destructive' :
+                  alert.priority === 'medium' ? 'border-yellow-500' :
+                  'border-green-500'
+                }`}
+              >
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>{alert.title}</AlertTitle>
+                <AlertDescription className="mt-2">
+                  {alert.description}
+                </AlertDescription>
+              </Alert>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -119,11 +163,11 @@ export default function Index() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-farm-800">
-              {formatArabicNumber(mockData.totalAnimals)}
+              {formatArabicNumber(totalAnimals)}
             </div>
             <div className="flex items-center space-x-2 space-x-reverse text-xs text-muted-foreground">
               <TrendingUp className="h-3 w-3 text-green-500" />
-              <span>+{formatArabicNumber(mockData.monthlyGrowth)}% هذا الشهر</span>
+              <span>+{formatArabicNumber(monthlyGrowth)}% هذا الشهر</span>
             </div>
           </CardContent>
         </Card>
@@ -136,10 +180,10 @@ export default function Index() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-farm-800">
-              {formatEGP(mockData.totalValue)}
+              {formatEGP(totalValue)}
             </div>
             <p className="text-xs text-muted-foreground">
-              متوسط السعر: {formatEGP(Math.round(mockData.totalValue / mockData.totalAnimals))} للحيوان
+              متوسط السعر: {totalAnimals > 0 ? formatEGP(Math.round(totalValue / totalAnimals)) : formatEGP(0)} للحيوان
             </p>
           </CardContent>
         </Card>
@@ -152,7 +196,7 @@ export default function Index() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-farm-800">
-              {formatWeight(mockData.averageWeight)}
+              {formatWeight(averageWeight)}
             </div>
             <p className="text-xs text-muted-foreground">
               للحيوانات البالغة
@@ -168,14 +212,14 @@ export default function Index() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-farm-800">
-              {Math.round((mockData.barns.current / mockData.barns.capacity) * 100)}%
+              {totalCapacity > 0 ? Math.round((currentOccupancy / totalCapacity) * 100) : 0}%
             </div>
             <Progress 
-              value={(mockData.barns.current / mockData.barns.capacity) * 100} 
+              value={totalCapacity > 0 ? (currentOccupancy / totalCapacity) * 100 : 0} 
               className="mt-2"
             />
             <p className="text-xs text-muted-foreground mt-1">
-              {formatArabicNumber(mockData.barns.current)} من {formatArabicNumber(mockData.barns.capacity)}
+              {formatArabicNumber(currentOccupancy)} من {formatArabicNumber(totalCapacity)}
             </p>
           </CardContent>
         </Card>
@@ -191,44 +235,50 @@ export default function Index() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2 space-x-reverse">
-                <div className="h-3 w-3 rounded-full bg-blue-500"></div>
-                <span>{animalTypes.male}</span>
+            <Link to="/animals/males" className="block">
+              <div className="flex items-center justify-between p-2 rounded hover:bg-accent transition-colors">
+                <div className="flex items-center space-x-2 space-x-reverse">
+                  <div className="h-3 w-3 rounded-full bg-blue-500"></div>
+                  <span>{animalTypes.male}</span>
+                </div>
+                <div className="text-left">
+                  <span className="font-semibold">{formatArabicNumber(males)}</span>
+                  <span className="text-sm text-muted-foreground mr-1">
+                    ({totalAnimals > 0 ? Math.round((males / totalAnimals) * 100) : 0}%)
+                  </span>
+                </div>
               </div>
-              <div className="text-left">
-                <span className="font-semibold">{formatArabicNumber(mockData.males)}</span>
-                <span className="text-sm text-muted-foreground mr-1">
-                  ({Math.round((mockData.males / mockData.totalAnimals) * 100)}%)
-                </span>
-              </div>
-            </div>
+            </Link>
             
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2 space-x-reverse">
-                <div className="h-3 w-3 rounded-full bg-pink-500"></div>
-                <span>{animalTypes.female}</span>
+            <Link to="/animals/females" className="block">
+              <div className="flex items-center justify-between p-2 rounded hover:bg-accent transition-colors">
+                <div className="flex items-center space-x-2 space-x-reverse">
+                  <div className="h-3 w-3 rounded-full bg-pink-500"></div>
+                  <span>{animalTypes.female}</span>
+                </div>
+                <div className="text-left">
+                  <span className="font-semibold">{formatArabicNumber(females)}</span>
+                  <span className="text-sm text-muted-foreground mr-1">
+                    ({totalAnimals > 0 ? Math.round((females / totalAnimals) * 100) : 0}%)
+                  </span>
+                </div>
               </div>
-              <div className="text-left">
-                <span className="font-semibold">{formatArabicNumber(mockData.females)}</span>
-                <span className="text-sm text-muted-foreground mr-1">
-                  ({Math.round((mockData.females / mockData.totalAnimals) * 100)}%)
-                </span>
-              </div>
-            </div>
+            </Link>
             
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2 space-x-reverse">
-                <div className="h-3 w-3 rounded-full bg-green-500"></div>
-                <span>{animalTypes.newborn}</span>
+            <Link to="/animals/newborns" className="block">
+              <div className="flex items-center justify-between p-2 rounded hover:bg-accent transition-colors">
+                <div className="flex items-center space-x-2 space-x-reverse">
+                  <div className="h-3 w-3 rounded-full bg-green-500"></div>
+                  <span>{animalTypes.newborn}</span>
+                </div>
+                <div className="text-left">
+                  <span className="font-semibold">{formatArabicNumber(newborns)}</span>
+                  <span className="text-sm text-muted-foreground mr-1">
+                    ({totalAnimals > 0 ? Math.round((newborns / totalAnimals) * 100) : 0}%)
+                  </span>
+                </div>
               </div>
-              <div className="text-left">
-                <span className="font-semibold">{formatArabicNumber(mockData.newborns)}</span>
-                <span className="text-sm text-muted-foreground mr-1">
-                  ({Math.round((mockData.newborns / mockData.totalAnimals) * 100)}%)
-                </span>
-              </div>
-            </div>
+            </Link>
           </CardContent>
         </Card>
 
@@ -241,7 +291,7 @@ export default function Index() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {mockData.recentActivity.map((activity) => (
+              {recentActivity.map((activity) => (
                 <div key={activity.id} className="flex items-start space-x-3 space-x-reverse">
                   <div className="h-2 w-2 rounded-full bg-farm-500 mt-2"></div>
                   <div className="flex-1 space-y-1">
@@ -250,7 +300,6 @@ export default function Index() {
                       {activity.animal && `${activity.animal} - `}
                       {activity.weight && `${activity.weight} - `}
                       {activity.barn && `${activity.barn} - `}
-                      {activity.amount && `${activity.amount} - `}
                       <span className="text-xs">{activity.time}</span>
                     </p>
                   </div>
@@ -271,22 +320,30 @@ export default function Index() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Button className="h-auto flex-col space-y-2 p-4" variant="outline">
-              <CircleDot className="h-6 w-6" />
-              <span>إضافة حيوان جديد</span>
-            </Button>
-            <Button className="h-auto flex-col space-y-2 p-4" variant="outline">
-              <Scale className="h-6 w-6" />
-              <span>تسجيل وزن</span>
-            </Button>
-            <Button className="h-auto flex-col space-y-2 p-4" variant="outline">
-              <Package className="h-6 w-6" />
-              <span>صرف علف</span>
-            </Button>
-            <Button className="h-auto flex-col space-y-2 p-4" variant="outline">
-              <Heart className="h-6 w-6" />
-              <span>تسجيل علاج</span>
-            </Button>
+            <Link to="/animals">
+              <Button className="h-auto flex-col space-y-2 p-4 w-full" variant="outline">
+                <CircleDot className="h-6 w-6" />
+                <span>إضافة حيوان جديد</span>
+              </Button>
+            </Link>
+            <Link to="/animals">
+              <Button className="h-auto flex-col space-y-2 p-4 w-full" variant="outline">
+                <Scale className="h-6 w-6" />
+                <span>تسجيل وزن</span>
+              </Button>
+            </Link>
+            <Link to="/inventory">
+              <Button className="h-auto flex-col space-y-2 p-4 w-full" variant="outline">
+                <Package className="h-6 w-6" />
+                <span>صرف علف</span>
+              </Button>
+            </Link>
+            <Link to="/animals">
+              <Button className="h-auto flex-col space-y-2 p-4 w-full" variant="outline">
+                <Heart className="h-6 w-6" />
+                <span>تسجيل علاج</span>
+              </Button>
+            </Link>
           </div>
         </CardContent>
       </Card>
