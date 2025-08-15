@@ -209,7 +209,7 @@ export default function FeedingPage() {
         <div>
           <h1 className="text-3xl font-bold text-farm-800">إدارة التغذية</h1>
           <p className="text-muted-foreground">
-            جداول التغذية وتسجيل الوجبات اليومية
+            جداول التغذية وتسجيل ��لوجبات اليومية
           </p>
         </div>
         <div className="flex items-center space-x-3 space-x-reverse">
@@ -346,7 +346,7 @@ export default function FeedingPage() {
             <CardHeader>
               <CardTitle>جداول التغذية اليومية</CardTitle>
               <CardDescription>
-                الجداول المخططة لتاريخ{" "}
+                الجدا��ل المخططة لتاريخ{" "}
                 {formatArabicDate(new Date(selectedDate))}
               </CardDescription>
             </CardHeader>
@@ -410,14 +410,27 @@ export default function FeedingPage() {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            <div className="flex items-center space-x-2 space-x-reverse">
-                              <Button variant="outline" size="sm">
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                              >
                                 <Eye className="h-3 w-3" />
                               </Button>
-                              <Button variant="outline" size="sm">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                              >
                                 <Edit className="h-3 w-3" />
                               </Button>
-                              <Button variant="outline" size="sm">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleAddFeeding(schedule.barnId)}
+                                className="h-8 w-8 p-0 text-green-600 hover:text-green-700"
+                              >
                                 <Utensils className="h-3 w-3" />
                               </Button>
                             </div>
@@ -483,11 +496,20 @@ export default function FeedingPage() {
                           <TableCell>{formatWeight(record.qtyKg)}</TableCell>
                           <TableCell>{record.recordedBy}</TableCell>
                           <TableCell>
-                            <div className="flex items-center space-x-2 space-x-reverse">
-                              <Button variant="outline" size="sm">
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                              >
                                 <Eye className="h-3 w-3" />
                               </Button>
-                              <Button variant="outline" size="sm">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEditFeeding(record)}
+                                className="h-8 w-8 p-0"
+                              >
                                 <Edit className="h-3 w-3" />
                               </Button>
                             </div>
@@ -557,7 +579,7 @@ export default function FeedingPage() {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2 space-x-reverse">
                   <Calendar className="h-5 w-5 text-farm-600" />
-                  <span>معدل التغذية الأس��وعي</span>
+                  <span>معدل التغذية الأس����وعي</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -591,6 +613,16 @@ export default function FeedingPage() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Feeding Modal */}
+      <FeedingFormModal
+        isOpen={showFeedingModal}
+        onClose={() => setShowFeedingModal(false)}
+        onSave={handleModalSave}
+        feedingRecord={selectedFeedingRecord}
+        mode={modalMode}
+        preselectedBarnId={preselectedBarnId}
+      />
     </div>
   );
 }
