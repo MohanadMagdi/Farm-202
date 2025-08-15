@@ -6,10 +6,76 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Layout from "@/components/Layout";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import PlaceholderPage from "@/components/PlaceholderPage";
 
 const queryClient = new QueryClient();
+
+// Placeholder page components
+const AnimalsPage = () => (
+  <PlaceholderPage 
+    title="إدارة الحيوانات" 
+    description="عرض وإدارة جميع الحيوانات في المزرعة"
+  />
+);
+
+const MalesPage = () => (
+  <PlaceholderPage 
+    title="الذكور" 
+    description="إدارة الذكور في المزرعة"
+  />
+);
+
+const FemalesPage = () => (
+  <PlaceholderPage 
+    title="الإناث" 
+    description="إدارة الإناث في المزرعة"
+  />
+);
+
+const NewbornsPage = () => (
+  <PlaceholderPage 
+    title="الصغار" 
+    description="إدارة الصغار في المزرعة"
+  />
+);
+
+const BarnsPage = () => (
+  <PlaceholderPage 
+    title="الحظائر" 
+    description="إدارة حظائر المزرعة"
+  />
+);
+
+const InventoryPage = () => (
+  <PlaceholderPage 
+    title="المخزون" 
+    description="إدارة مخزون الأعلاف والأدوية والمعدات"
+  />
+);
+
+const FeedingPage = () => (
+  <PlaceholderPage 
+    title="التغذية" 
+    description="جداول التغذية وتسجيل الوجبات"
+  />
+);
+
+const ReportsPage = () => (
+  <PlaceholderPage 
+    title="التقارير" 
+    description="تقارير المزرعة والإحصائيات"
+  />
+);
+
+const UsersPage = () => (
+  <PlaceholderPage 
+    title="إدارة المستخدمين" 
+    description="إدارة مستخدمي النظام والصلاحيات"
+  />
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -17,11 +83,22 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/animals" element={<AnimalsPage />} />
+            <Route path="/animals/males" element={<MalesPage />} />
+            <Route path="/animals/females" element={<FemalesPage />} />
+            <Route path="/animals/newborns" element={<NewbornsPage />} />
+            <Route path="/barns" element={<BarnsPage />} />
+            <Route path="/inventory" element={<InventoryPage />} />
+            <Route path="/feeding" element={<FeedingPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/users" element={<UsersPage />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Layout>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
