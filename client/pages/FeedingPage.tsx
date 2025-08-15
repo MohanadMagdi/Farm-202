@@ -131,7 +131,7 @@ export default function FeedingPage() {
   const exportReport = () => {
     toast({
       title: "تصدير التقرير",
-      description: "سيتم تنفيذ التصدير قريباً",
+      description: "سيتم تنفيذ الت��دير قريباً",
     });
   };
 
@@ -209,7 +209,7 @@ export default function FeedingPage() {
         <div>
           <h1 className="text-3xl font-bold text-farm-800">إدارة التغذية</h1>
           <p className="text-muted-foreground">
-            جداول التغذية وتسجيل ��لوجبات اليومية
+            جداول التغذية وتسجيل الوجبات اليومية
           </p>
         </div>
         <div className="flex items-center space-x-3 space-x-reverse">
@@ -346,7 +346,7 @@ export default function FeedingPage() {
             <CardHeader>
               <CardTitle>جداول التغذية اليومية</CardTitle>
               <CardDescription>
-                الجدا��ل المخططة لتاريخ{" "}
+                الجداول المخططة لتاريخ{" "}
                 {formatArabicDate(new Date(selectedDate))}
               </CardDescription>
             </CardHeader>
@@ -579,7 +579,7 @@ export default function FeedingPage() {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2 space-x-reverse">
                   <Calendar className="h-5 w-5 text-farm-600" />
-                  <span>معدل التغذية الأس����وعي</span>
+                  <span>معدل التغذية الأسبوعي</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
