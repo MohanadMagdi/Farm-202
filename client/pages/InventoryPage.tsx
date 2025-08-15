@@ -249,7 +249,7 @@ export default function InventoryPage() {
   const createDispatchOrder = () => {
     toast({
       title: "إذن صرف",
-      description: "سيتم إنشاء إذن الصرف قريباً",
+      description: "سيت�� إنشاء إذن الصرف قريباً",
     });
   };
 
@@ -308,14 +308,14 @@ export default function InventoryPage() {
     return { text: "متوفر", color: "bg-green-100 text-green-800" };
   };
 
-  const lowStockItems = mockInventoryItems.filter(
-    (item) => item.currentStock <= item.minLevel,
+  const lowStockItems = inventoryItems.filter(
+    (item) => db.getCurrentStock(item.id) <= item.minLevel,
   );
-  const totalValue = mockInventoryItems.reduce(
-    (sum, item) => sum + item.currentStock * item.pricePerUnit,
+  const totalValue = inventoryItems.reduce(
+    (sum, item) => sum + db.getCurrentStock(item.id) * item.pricePerUnitEGP,
     0,
   );
-  const totalItems = mockInventoryItems.filter((item) => item.active).length;
+  const totalItems = inventoryItems.filter((item) => item.active).length;
 
   return (
     <div className="space-y-6">
@@ -328,15 +328,15 @@ export default function InventoryPage() {
           </p>
         </div>
         <div className="flex items-center space-x-3 space-x-reverse">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={exportReport}>
             <Download className="h-4 w-4 ml-2" />
             تصدير تقرير
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={createDispatchOrder}>
             <FileText className="h-4 w-4 ml-2" />
             إذن صرف
           </Button>
-          <Button>
+          <Button onClick={handleAddItem}>
             <Plus className="h-4 w-4 ml-2" />
             إضافة صنف جديد
           </Button>
@@ -445,7 +445,7 @@ export default function InventoryPage() {
                   <span className="font-medium">{item.name}</span>
                   <div className="flex items-center space-x-2 space-x-reverse">
                     <span className="text-sm text-muted-foreground">
-                      المخزون الحالي: {formatArabicNumber(item.currentStock)}{" "}
+                      المخزون الحالي: {formatArabicNumber(db.getCurrentStock(item.id))}{" "}
                       {item.unit}
                     </span>
                     <Badge
@@ -454,7 +454,7 @@ export default function InventoryPage() {
                     >
                       الحد الأدنى: {formatArabicNumber(item.minLevel)}
                     </Badge>
-                    <Button size="sm" variant="outline">
+                    <Button size="sm" variant="outline" onClick={() => requestSupply(item)}>
                       طلب توريد
                     </Button>
                   </div>
@@ -547,7 +547,7 @@ export default function InventoryPage() {
                       <TableHead className="text-right">سعر الوحدة</TableHead>
                       <TableHead className="text-right">الحالة</TableHead>
                       <TableHead className="text-right">آخر توريد</TableHead>
-                      <TableHead className="text-right">الإجراءات</TableHead>
+                      <TableHead className="text-right">الإجرا��ات</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
