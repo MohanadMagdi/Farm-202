@@ -201,7 +201,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-farm-800">
-              {formatEGP(filteredAnimals.reduce((sum, animal) => sum + (animal.purchasePrice || 0), 0))}
+              {formatEGP(filteredAnimals.reduce((sum, animal) => sum + (animal.purchase?.priceEGP || 0), 0))}
             </div>
           </CardContent>
         </Card>
@@ -259,7 +259,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
         <CardHeader>
           <CardTitle>قائمة {animalTypes[animalType]}</CardTitle>
           <CardDescription>
-            إجمالي {filteredAnimals.length} ��ن {animalTypes[animalType]}
+            إجمالي {filteredAnimals.length} من {animalTypes[animalType]}
           </CardDescription>
         </CardHeader>
         <CardContent>
