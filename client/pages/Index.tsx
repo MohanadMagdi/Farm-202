@@ -5,7 +5,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { formatEGP, formatWeight, formatArabicNumber, animalTypes } from "@/lib/arabic-utils";
 import {
-  Sheep,
+  CircleDot,
   TrendingUp,
   TrendingDown,
   Building2,
@@ -112,7 +112,7 @@ export default function Index() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">إجمالي الحيوانات</CardTitle>
-            <Sheep className="h-4 w-4 text-farm-600" />
+            <CircleDot className="h-4 w-4 text-farm-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-farm-800">
@@ -269,12 +269,12 @@ export default function Index() {
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <Button className="h-auto flex-col space-y-2 p-4" variant="outline">
-              <Sheep className="h-6 w-6" />
+              <CircleDot className="h-6 w-6" />
               <span>إضافة حيوان جديد</span>
             </Button>
             <Button className="h-auto flex-col space-y-2 p-4" variant="outline">
               <Scale className="h-6 w-6" />
-              <span>تسجيل ��زن</span>
+              <span>تسجيل وزن</span>
             </Button>
             <Button className="h-auto flex-col space-y-2 p-4" variant="outline">
               <Package className="h-6 w-6" />
