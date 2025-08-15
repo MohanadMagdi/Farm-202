@@ -35,12 +35,7 @@ const FeedingManagement = () => <FeedingPage />;
 
 const ReportsManagement = () => <ReportsPage />;
 
-const UsersPage = () => (
-  <PlaceholderPage 
-    title="إدارة المستخدمين" 
-    description="إدارة مستخدمي النظام والصلاحيات"
-  />
-);
+const UsersManagement = () => <UsersPage />;
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
