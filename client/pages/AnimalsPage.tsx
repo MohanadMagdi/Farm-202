@@ -259,7 +259,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
         <CardHeader>
           <CardTitle>قائمة {animalTypes[animalType]}</CardTitle>
           <CardDescription>
-            إجمالي {filteredAnimals.length} من {animalTypes[animalType]}
+            إجمالي {filteredAnimals.length} ��ن {animalTypes[animalType]}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -298,7 +298,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                     <TableCell>{animal.barnId}</TableCell>
                     {animalType !== 'newborn' && (
                       <TableCell>
-                        {animal.purchasePrice ? formatEGP(animal.purchasePrice) : '-'}
+                        {animal.purchase?.priceEGP ? formatEGP(animal.purchase.priceEGP) : '-'}
                       </TableCell>
                     )}
                     <TableCell>
