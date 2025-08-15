@@ -70,7 +70,7 @@ const App = () => (
         <Layout>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/animals" element={<AnimalsPage />} />
+            <Route path="/animals" element={<AllAnimalsPage />} />
             <Route path="/animals/males" element={<MalesPage />} />
             <Route path="/animals/females" element={<FemalesPage />} />
             <Route path="/animals/newborns" element={<NewbornsPage />} />
