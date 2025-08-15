@@ -53,7 +53,7 @@ const ReportsPage = () => (
 const UsersPage = () => (
   <PlaceholderPage 
     title="إدارة المستخدمين" 
-    description="إدارة مستخدمي النظام والصلاحيات"
+    description="إدارة مستخدمي الن��ام والصلاحيات"
   />
 );
 
@@ -70,7 +70,7 @@ const App = () => (
             <Route path="/animals/males" element={<MalesPage />} />
             <Route path="/animals/females" element={<FemalesPage />} />
             <Route path="/animals/newborns" element={<NewbornsPage />} />
-            <Route path="/barns" element={<BarnsPage />} />
+            <Route path="/barns" element={<BarnsManagement />} />
             <Route path="/inventory" element={<InventoryPage />} />
             <Route path="/feeding" element={<FeedingPage />} />
             <Route path="/reports" element={<ReportsPage />} />
