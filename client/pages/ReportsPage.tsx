@@ -320,15 +320,15 @@ export default function ReportsPage() {
         </Card>
       </div>
 
-      <Tabs defaultValue="animals" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs defaultValue="animals" className="w-full" dir="rtl">
+        <TabsList className="grid w-full grid-cols-4" dir="rtl">
           <TabsTrigger value="animals">تقرير الحيوانات</TabsTrigger>
           <TabsTrigger value="inventory">تقرير المخزون</TabsTrigger>
           <TabsTrigger value="feeding">تقرير التغذية</TabsTrigger>
           <TabsTrigger value="financial">التقرير المالي</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="animals" className="space-y-4">
+        <TabsContent value="animals" className="space-y-4" dir="rtl">
           <div className="grid gap-6 md:grid-cols-2">
             {/* Animals Summary */}
             <Card>
@@ -398,7 +398,7 @@ export default function ReportsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2 space-x-reverse">
                   <TrendingUp className="h-5 w-5 text-farm-600" />
-                  <span>أفضل الحيوانات أداءً</span>
+                  <span>أفضل الحيوانا�� أداءً</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -439,7 +439,7 @@ export default function ReportsPage() {
             </CardHeader>
             <CardContent>
               <div className="rounded-md border">
-                <Table>
+                <Table dir="rtl">
                   <TableHeader>
                     <TableRow>
                       <TableHead className="text-right">رقم الأذن</TableHead>
@@ -511,7 +511,7 @@ export default function ReportsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="inventory" className="space-y-4">
+        <TabsContent value="inventory" className="space-y-4" dir="rtl">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2 space-x-reverse">
@@ -521,7 +521,7 @@ export default function ReportsPage() {
             </CardHeader>
             <CardContent>
               <div className="rounded-md border">
-                <Table>
+                <Table dir="rtl">
                   <TableHeader>
                     <TableRow>
                       <TableHead className="text-right">اسم الصنف</TableHead>
@@ -562,7 +562,7 @@ export default function ReportsPage() {
                           >
                             {item.currentStock <= item.minLevel
                               ? "منخفض"
-                              : "طبيعي"}
+                              : "طبيع��"}
                           </Badge>
                         </TableCell>
                       </TableRow>
@@ -574,7 +574,7 @@ export default function ReportsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="feeding" className="space-y-4">
+        <TabsContent value="feeding" className="space-y-4" dir="rtl">
           <div className="grid gap-6 md:grid-cols-2">
             <Card>
               <CardHeader>
@@ -650,7 +650,7 @@ export default function ReportsPage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="financial" className="space-y-4">
+        <TabsContent value="financial" className="space-y-4" dir="rtl">
           <div className="grid gap-6 md:grid-cols-2">
             <Card>
               <CardHeader>
