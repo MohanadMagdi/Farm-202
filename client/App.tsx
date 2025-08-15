@@ -11,6 +11,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import PlaceholderPage from "@/components/PlaceholderPage";
 import AnimalsPage from "./pages/AnimalsPage";
+import BarnsPage from "./pages/BarnsPage";
 
 const queryClient = new QueryClient();
 
@@ -42,7 +43,7 @@ const InventoryPage = () => (
 
 const FeedingPage = () => (
   <PlaceholderPage 
-    title="التغذية" 
+    title="التغذ��ة" 
     description="جداول التغذية وتسجيل الوجبات"
   />
 );
