@@ -249,7 +249,7 @@ export default function InventoryPage() {
   const createDispatchOrder = () => {
     toast({
       title: "إذن صرف",
-      description: "سيت�� إنشاء إذن الصرف قريباً",
+      description: "سيتم إنشاء إذن الصرف قريباً",
     });
   };
 
@@ -324,7 +324,7 @@ export default function InventoryPage() {
         <div>
           <h1 className="text-3xl font-bold text-farm-800">إدارة ��لمخزون</h1>
           <p className="text-muted-foreground">
-            إدارة مخزون الأعلاف والأدوية والمعدات
+            إدارة مخزون ال��علاف والأدوية والمعدات
           </p>
         </div>
         <div className="flex items-center space-x-3 space-x-reverse">
@@ -538,22 +538,23 @@ export default function InventoryPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-right">اسم الصنف</TableHead>
-                      <TableHead className="text-right">الفئة</TableHead>
-                      <TableHead className="text-right">
+                      <TableHead className="text-right w-1/6">اسم الصنف</TableHead>
+                      <TableHead className="text-right w-1/12">الفئة</TableHead>
+                      <TableHead className="text-right w-1/8">
                         المخزون الحالي
                       </TableHead>
-                      <TableHead className="text-right">الحد الأدنى</TableHead>
-                      <TableHead className="text-right">سعر الوحدة</TableHead>
-                      <TableHead className="text-right">الحالة</TableHead>
-                      <TableHead className="text-right">آخر توريد</TableHead>
-                      <TableHead className="text-right">الإجرا��ات</TableHead>
+                      <TableHead className="text-right w-1/12">الحد الأدنى</TableHead>
+                      <TableHead className="text-right w-1/8">سعر الوحدة</TableHead>
+                      <TableHead className="text-right w-1/12">الحالة</TableHead>
+                      <TableHead className="text-right w-1/8">آخر توريد</TableHead>
+                      <TableHead className="text-right w-1/6">الإجراءات</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredItems.map((item) => {
+                      const currentStock = db.getCurrentStock(item.id);
                       const stockBadge = getStockBadge(
-                        item.currentStock,
+                        currentStock,
                         item.minLevel,
                       );
 
@@ -570,7 +571,7 @@ export default function InventoryPage() {
                                   variant="outline"
                                   className="text-xs mt-1"
                                 >
-                                  {item.concentratePct}% بروتين
+                                  {formatArabicNumber(item.concentratePct)}% بروتين
                                 </Badge>
                               )}
                             </div>
@@ -583,12 +584,12 @@ export default function InventoryPage() {
                           <TableCell>
                             <div
                               className={getStockStatusColor(
-                                item.currentStock,
+                                currentStock,
                                 item.minLevel,
                               )}
                             >
                               <span className="font-medium">
-                                {formatArabicNumber(item.currentStock)}
+                                {formatArabicNumber(currentStock)}
                               </span>
                               <span className="text-sm text-muted-foreground mr-1">
                                 {item.unit}
@@ -599,7 +600,7 @@ export default function InventoryPage() {
                             {formatArabicNumber(item.minLevel)} {item.unit}
                           </TableCell>
                           <TableCell>
-                            {formatEGP(item.pricePerUnit)} / {item.unit}
+                            {formatEGP(item.pricePerUnitEGP)} / {item.unit}
                           </TableCell>
                           <TableCell>
                             <Badge className={stockBadge.color}>
@@ -607,8 +608,8 @@ export default function InventoryPage() {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            {item.lastRestocked
-                              ? formatArabicDate(item.lastRestocked)
+                            {item.timestamps?.updatedAt
+                              ? formatArabicDate(item.timestamps.updatedAt)
                               : "-"}
                           </TableCell>
                           <TableCell>
