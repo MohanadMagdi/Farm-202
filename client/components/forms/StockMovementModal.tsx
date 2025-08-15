@@ -81,7 +81,7 @@ export default function StockMovementModal({
     if (mode === "in") {
       return [
         { value: "purchase", label: "شراء جديد" },
-        { value: "return_from_barn", label: "ع��ئد من الحظيرة" },
+        { value: "return_from_barn", label: "عائد من الحظيرة" },
         { value: "transfer_in", label: "تحويل وارد" },
         { value: "manual_adjustment_in", label: "تعديل يدوي (زيادة)" },
         { value: "other", label: "أخرى..." },
@@ -137,7 +137,7 @@ export default function StockMovementModal({
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>
-            {mode === "in" ? "إضافة للمخزون" : "صرف من المخزون"}
+            {mode === "in" ? "إضافة للمخ��ون" : "صرف من المخزون"}
           </DialogTitle>
           <DialogDescription>
             {inventoryItem ? `${inventoryItem.name} - المخزون الحالي: ${formatArabicNumber(currentStock)} ${inventoryItem.unit}` : ""}

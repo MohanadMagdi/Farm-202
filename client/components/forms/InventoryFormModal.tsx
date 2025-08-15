@@ -177,7 +177,7 @@ export default function InventoryFormModal({
           <DialogDescription>
             {mode === "add"
               ? "إدخال بيانات صنف جديد في المخزون"
-              : "تعديل الب��انات الأساسية للصنف"}
+              : "تعديل البيانات الأساسية للصنف"}
           </DialogDescription>
         </DialogHeader>
 
