@@ -384,8 +384,8 @@ export default function FeedingPage() {
                           <TableCell className="text-right">
                             {formatArabicNumber(schedule.sessionsPerDay)}
                           </TableCell>
-                          <TableCell>
-                            <div className="flex flex-wrap gap-1">
+                          <TableCell className="text-right">
+                            <div className="flex flex-wrap gap-1 justify-end">
                               {schedule.entries.map((entry, index) => (
                                 <Badge
                                   key={index}
@@ -409,8 +409,8 @@ export default function FeedingPage() {
                               {completed ? "مكتمل" : "قيد التنفيذ"}
                             </Badge>
                           </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1">
+                          <TableCell className="text-right">
+                            <div className="flex items-center gap-1 justify-end">
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -495,8 +495,8 @@ export default function FeedingPage() {
                           <TableCell className="text-right">{feedItem?.name || "غير معروف"}</TableCell>
                           <TableCell className="text-right">{formatWeight(record.qtyKg)}</TableCell>
                           <TableCell className="text-right">{record.recordedBy}</TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1">
+                          <TableCell className="text-right">
+                            <div className="flex items-center gap-1 justify-end">
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -565,7 +565,7 @@ export default function FeedingPage() {
                                 (r) => r.feedItemId === item.id,
                               ).length,
                             )}{" "}
-                            وجب��
+                            وجبة
                           </div>
                         </div>
                       </div>
@@ -579,7 +579,7 @@ export default function FeedingPage() {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2 space-x-reverse">
                   <Calendar className="h-5 w-5 text-farm-600" />
-                  <span>معدل التغذية الأس����وعي</span>
+                  <span>معدل التغذية الأس������وعي</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
