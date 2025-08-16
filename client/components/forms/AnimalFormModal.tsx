@@ -231,7 +231,7 @@ export default function AnimalFormModal({
       }
 
       if (formData.category === "newborn") {
-        animalData.motherId = formData.motherId || undefined;
+        animalData.motherId = formData.motherId === "none" || !formData.motherId ? undefined : formData.motherId;
         animalData.birthDate = formData.birthDate ? new Date(formData.birthDate) : undefined;
         animalData.weaningDate = formData.weaningDate ? new Date(formData.weaningDate) : undefined;
       }
