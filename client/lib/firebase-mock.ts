@@ -270,7 +270,7 @@ class MockFirestore {
         },
         {
           id: "wh_004",
-          name: "مضاد حيوي - أوكسي تتراسيكلين",
+          name: "مضاد حيوي - أوكسي ت��راسيكلين",
           type: "medicines" as WarehouseType,
           category: "أدوية",
           unit: "قارورة",
@@ -311,7 +311,7 @@ class MockFirestore {
           unitPrice: 4.2,
           totalCost: 2100,
           date: new Date("2024-01-10"),
-          reason: "مشتريات جديدة",
+          reason: "مشتر��ات جديدة",
           recordedBy: "user_001",
           billNumber: "INV-2024-001",
           notes: "دفعة جديدة من التبن"
@@ -384,7 +384,100 @@ class MockFirestore {
           createdAt: new Date(),
           updatedAt: now
         }
-      ] as FeedingSchedule[]
+      ] as FeedingSchedule[],
+
+      mortalityRecords: [
+        {
+          id: "mort_001",
+          animalId: "anim_dead_001",
+          animalEarTagId: "M999",
+          animalCategory: "male" as AnimalCategory,
+          deathDate: new Date("2024-01-15"),
+          cause: "illness" as const,
+          causeDescription: "التهاب رئوي حاد",
+          ageAtDeath: 18, // months
+          weightAtDeath: 45.5,
+          barnId: "barn_001",
+          veterinaryReport: "تم العلاج لمدة أسبوع ولكن لم يستجب للعلاج",
+          preventable: true,
+          financialLoss: 8500, // EGP
+          recordedBy: "user_001",
+          createdAt: new Date("2024-01-15"),
+          notes: "حالة مؤسفة ��ان من الممكن تجنبها بالعلاج المبكر"
+        },
+        {
+          id: "mort_002",
+          animalId: "anim_dead_002",
+          animalEarTagId: "F888",
+          animalCategory: "female" as AnimalCategory,
+          deathDate: new Date("2024-02-03"),
+          cause: "birth_complications" as const,
+          causeDescription: "مضاعفات أثناء الولادة",
+          ageAtDeath: 36, // months
+          weightAtDeath: 52.0,
+          barnId: "barn_002",
+          veterinaryReport: "ولادة متعسرة أدت إلى نزيف داخلي",
+          preventable: false,
+          financialLoss: 12000, // EGP
+          recordedBy: "user_001",
+          createdAt: new Date("2024-02-03"),
+          notes: "حالة طبيعية صعبة رغم المتابعة المكثفة"
+        },
+        {
+          id: "mort_003",
+          animalId: "anim_dead_003",
+          animalEarTagId: "N777",
+          animalCategory: "newborn" as AnimalCategory,
+          deathDate: new Date("2024-02-20"),
+          cause: "accident" as const,
+          causeDescription: "إصابة في الرأس",
+          ageAtDeath: 2, // months
+          weightAtDeath: 15.2,
+          barnId: "barn_003",
+          veterinaryReport: "إصا��ة نتيجة سقوط من مكان مرتفع",
+          preventable: true,
+          financialLoss: 2500, // EGP
+          recordedBy: "user_001",
+          createdAt: new Date("2024-02-20"),
+          notes: "يجب تحسين إجراءات السلامة في حظيرة الصغار"
+        },
+        {
+          id: "mort_004",
+          animalId: "anim_dead_004",
+          animalEarTagId: "M666",
+          animalCategory: "male" as AnimalCategory,
+          deathDate: new Date("2024-03-10"),
+          cause: "unknown" as const,
+          causeDescription: "موت مفاجئ",
+          ageAtDeath: 24, // months
+          weightAtDeath: 58.0,
+          barnId: "barn_001",
+          veterinaryReport: "لم يتم تحديد سبب واضح للوفاة",
+          preventable: false,
+          financialLoss: 9500, // EGP
+          recordedBy: "user_001",
+          createdAt: new Date("2024-03-10"),
+          notes: "حالة نادرة تتطلب مزيد من الفحوصات المخبرية"
+        },
+        {
+          id: "mort_005",
+          animalId: "anim_dead_005",
+          animalEarTagId: "F555",
+          animalCategory: "female" as AnimalCategory,
+          deathDate: new Date("2024-03-25"),
+          cause: "old_age" as const,
+          causeDescription: "شيخوخة طبيعية",
+          ageAtDeath: 84, // months (7 years)
+          weightAtDeath: 48.5,
+          barnId: "barn_002",
+          veterinaryReport: "وفاة طبيعية بسبب التقدم في العمر",
+          preventable: false,
+          financialLoss: 6000, // EGP (lower due to age)
+          recordedBy: "user_001",
+          createdAt: new Date("2024-03-25"),
+          notes: "عاشت حياة مثمرة وأنجبت 15 مولوداً"
+        }
+      ] as MortalityRecord[]
     };
   }
 
