@@ -733,6 +733,59 @@ export default function AnimalFormModal({
                       ))}
                     </SelectContent>
                   </Select>
+
+                  {/* Mother validation feedback */}
+                  {formData.motherId && formData.motherId !== "none" && (
+                    <div className="mt-2 space-y-2">
+                      {!motherValidation.isValid && motherValidation.errors.length > 0 && (
+                        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                          <div className="flex items-start">
+                            <AlertTriangle className="h-4 w-4 text-red-500 mt-0.5 ml-2" />
+                            <div>
+                              <p className="text-sm font-medium text-red-800">أخطاء في اختيار الأم:</p>
+                              <ul className="text-sm text-red-700 mt-1 list-disc list-inside">
+                                {motherValidation.errors.map((error, index) => (
+                                  <li key={index}>{error}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {motherValidation.warnings.length > 0 && (
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                          <div className="flex items-start">
+                            <AlertTriangle className="h-4 w-4 text-yellow-500 mt-0.5 ml-2" />
+                            <div>
+                              <p className="text-sm font-medium text-yellow-800">تحذيرات:</p>
+                              <ul className="text-sm text-yellow-700 mt-1 list-disc list-inside">
+                                {motherValidation.warnings.map((warning, index) => (
+                                  <li key={index}>{warning}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {motherValidation.isValid && formData.motherId !== "none" && (
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                          <div className="flex items-start">
+                            <Lightbulb className="h-4 w-4 text-green-500 mt-0.5 ml-2" />
+                            <div>
+                              <p className="text-sm font-medium text-green-800">
+                                ✅ اختيار الأم صحيح
+                              </p>
+                              <p className="text-sm text-green-700 mt-1">
+                                سيتم ربط المولود بالأم تلقائياً مع تحديث إ��صائيات الأم
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div>
