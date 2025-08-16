@@ -144,7 +144,7 @@ export default function ReportsPage() {
 
   const activeAnimals = animals.filter((a) => a.status === "active");
   const totalAnimalsValue = activeAnimals.reduce(
-    (sum, animal) => sum + (animal.purchase?.priceEGP || 0),
+    (sum, animal) => sum + (animal.currentPrice || animal.purchasePrice || 0),
     0,
   );
   const totalInventoryValue = inventoryItems.reduce((sum, item) => {
