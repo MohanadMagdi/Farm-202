@@ -37,6 +37,7 @@ import type {
   FeedingAnalytics 
 } from "@shared/types";
 import FeedingFormModal from "@/components/forms/FeedingFormModal";
+import FeedingEfficiencyDashboard from "@/components/FeedingEfficiencyDashboard";
 import { toast } from "@/hooks/use-toast";
 import {
   Plus,
@@ -651,7 +652,7 @@ export default function FeedingPage() {
                     {todaySchedules.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={7} className="text-center py-8">
-                          لا توجد جداول تغذية نشطة
+                          لا توجد جداول ��غذية نشطة
                         </TableCell>
                       </TableRow>
                     )}
@@ -733,7 +734,7 @@ export default function FeedingPage() {
                       <Badge className="bg-yellow-100 text-yellow-800">3 - 5</Badge>
                     </div>
                     <p className="text-sm text-yellow-700">
-                      كفاءة مقبولة، يمكن تحسينها
+                      كفاءة مقبولة، ��مكن تحسينها
                     </p>
                   </div>
                   
