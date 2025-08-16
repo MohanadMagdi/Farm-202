@@ -143,9 +143,35 @@ export default function FeedingEfficiencyDashboard({ className }: FeedingEfficie
     }
   };
 
-  const exportReport = () => {
-    // TODO: Implement PDF/Excel export
-    console.log('Export feeding efficiency report', metrics);
+  const exportReport = async (format: 'pdf' | 'excel') => {
+    try {
+      setLoading(true);
+
+      // Get feeding records data
+      const feedingRecords = await dataService.feedingRecords.getAll();
+
+      // Filter by selected period
+      const days = parseInt(selectedPeriod);
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - days);
+      const filteredRecords = feedingRecords.filter(record => record.date >= cutoffDate);
+
+      await exportFeedingReport(filteredRecords, format);
+
+      toast({
+        title: "تم تصدير التقرير بنجاح",
+        description: `تم تصدير تقرير كفاءة التغذية بصيغة ${format === 'pdf' ? 'PDF' : 'Excel'}`,
+      });
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({
+        title: "خطأ في التصدير",
+        description: "حدث خطأ أثناء تصدير التقرير",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading || !metrics) {
