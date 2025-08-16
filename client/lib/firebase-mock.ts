@@ -336,13 +336,154 @@ class MockFirestore {
       ] as FeedingRecord[],
 
       weightRecords: [
+        // Weight records for animal M001 (growth over time)
         {
           id: "weight_001",
           animalId: "anim_001",
-          weight: 75.5,
-          date: new Date(),
+          weight: 45.2,
+          date: new Date("2023-08-01"),
           recordedBy: "user_001",
-          notes: "وزن أسبوعي"
+          notes: "وزن البداية"
+        },
+        {
+          id: "weight_002",
+          animalId: "anim_001",
+          weight: 52.8,
+          date: new Date("2023-09-01"),
+          recordedBy: "user_001",
+          notes: "وزن شهري"
+        },
+        {
+          id: "weight_003",
+          animalId: "anim_001",
+          weight: 61.5,
+          date: new Date("2023-10-01"),
+          recordedBy: "user_001",
+          notes: "وزن شهري"
+        },
+        {
+          id: "weight_004",
+          animalId: "anim_001",
+          weight: 68.2,
+          date: new Date("2023-11-01"),
+          recordedBy: "user_001",
+          notes: "وزن شهري"
+        },
+        {
+          id: "weight_005",
+          animalId: "anim_001",
+          weight: 75.5,
+          date: new Date("2023-12-01"),
+          recordedBy: "user_001",
+          notes: "وزن حالي"
+        },
+        // Weight records for animal M002
+        {
+          id: "weight_006",
+          animalId: "anim_002",
+          weight: 38.5,
+          date: new Date("2023-06-01"),
+          recordedBy: "user_001",
+          notes: "وزن البداية"
+        },
+        {
+          id: "weight_007",
+          animalId: "anim_002",
+          weight: 47.2,
+          date: new Date("2023-07-01"),
+          recordedBy: "user_001",
+          notes: "وزن شهري"
+        },
+        {
+          id: "weight_008",
+          animalId: "anim_002",
+          weight: 55.8,
+          date: new Date("2023-08-01"),
+          recordedBy: "user_001",
+          notes: "وزن شهري"
+        },
+        {
+          id: "weight_009",
+          animalId: "anim_002",
+          weight: 63.5,
+          date: new Date("2023-09-01"),
+          recordedBy: "user_001",
+          notes: "وزن حالي"
+        },
+        // Weight records for female F047
+        {
+          id: "weight_010",
+          animalId: "anim_003",
+          weight: 42.0,
+          date: new Date("2023-05-01"),
+          recordedBy: "user_001",
+          notes: "قبل الحمل"
+        },
+        {
+          id: "weight_011",
+          animalId: "anim_003",
+          weight: 48.5,
+          date: new Date("2023-08-01"),
+          recordedBy: "user_001",
+          notes: "أثناء الحمل"
+        },
+        {
+          id: "weight_012",
+          animalId: "anim_003",
+          weight: 45.2,
+          date: new Date("2024-01-15"),
+          recordedBy: "user_001",
+          notes: "بعد الولادة"
+        },
+        // Weight records for newborn N012
+        {
+          id: "weight_013",
+          animalId: "anim_004",
+          weight: 3.5,
+          date: new Date("2024-01-10"),
+          recordedBy: "user_001",
+          notes: "وزن الميلاد"
+        },
+        {
+          id: "weight_014",
+          animalId: "anim_004",
+          weight: 8.2,
+          date: new Date("2024-02-10"),
+          recordedBy: "user_001",
+          notes: "وزن شهري"
+        },
+        {
+          id: "weight_015",
+          animalId: "anim_004",
+          weight: 12.3,
+          date: new Date("2024-03-10"),
+          recordedBy: "user_001",
+          notes: "وزن حالي"
+        },
+        // Weight records for newborn N013
+        {
+          id: "weight_016",
+          animalId: "anim_005",
+          weight: 3.2,
+          date: new Date("2024-01-10"),
+          recordedBy: "user_001",
+          notes: "وزن الميلاد"
+        },
+        {
+          id: "weight_017",
+          animalId: "anim_005",
+          weight: 7.8,
+          date: new Date("2024-02-10"),
+          recordedBy: "user_001",
+          notes: "وزن شهري"
+        },
+        {
+          id: "weight_018",
+          animalId: "anim_005",
+          weight: 11.8,
+          date: new Date("2024-03-10"),
+          recordedBy: "user_001",
+          notes: "وزن حالي"
         }
       ] as WeightRecord[],
 
