@@ -202,12 +202,12 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
     return "bg-gray-100 text-gray-800";
   };
 
-  const getAnimalTypeLabel = (type: AnimalCategory) => {
+  const getAnimalTypeLabel = (type?: AnimalCategory) => {
     switch (type) {
       case "male": return "الذكور";
       case "female": return "الإناث";
       case "newborn": return "الصغار";
-      default: return "الحيوانات";
+      default: return "جميع الحيوانات";
     }
   };
 
@@ -350,7 +350,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
               <div className="relative">
                 <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="الب��ث برقم الأذن أو المورد..."
+                  placeholder="الب��ث بر��م الأذن أو المورد..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pr-10"
