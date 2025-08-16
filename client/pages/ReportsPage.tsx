@@ -305,7 +305,7 @@ export default function ReportsPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">
-              معدل النمو الشهري
+              معدل الن��و الشهري
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -349,7 +349,7 @@ export default function ReportsPage() {
                   <span>الذكور</span>
                   <span className="font-semibold">
                     {formatArabicNumber(
-                      activeAnimals.filter((a) => a.type === "male").length,
+                      activeAnimals.filter((a) => a && a.category === "male").length,
                     )}
                   </span>
                 </div>
