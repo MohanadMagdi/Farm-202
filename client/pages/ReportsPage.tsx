@@ -30,6 +30,7 @@ import {
   formatArabicNumber,
   formatArabicDate,
 } from "@/lib/arabic-utils";
+import AdvancedAnalyticsDashboard from "@/components/AdvancedAnalyticsDashboard";
 import {
   db,
   Animal,
