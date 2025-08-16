@@ -124,6 +124,8 @@ class MockFirestore {
           aiDate: new Date("2024-01-15"),
           expectedBirthDate: new Date("2024-06-15"),
           offspringCount: 2,
+          offspringIds: ["anim_004", "anim_005"],
+          pricingMethod: "formula" as any,
           createdAt: new Date("2022-11-08"),
           updatedAt: now,
           createdBy: "user_001",
@@ -174,7 +176,7 @@ class MockFirestore {
         },
         {
           id: "barn_003",
-          name: "حظيرة الصغار",
+          name: "حظيرة ال��غار",
           type: "newborn",
           capacity: 30,
           location: "المنطقة الوسطى",
