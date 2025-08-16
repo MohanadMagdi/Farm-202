@@ -170,6 +170,9 @@ function AppRoutes() {
 
 const App = () => {
   useEffect(() => {
+    // Initialize data synchronization
+    initializeDataSync();
+
     // Suppress ResizeObserver loop error
     const handleResizeObserverError = (e: ErrorEvent) => {
       if (e.message && e.message.includes('ResizeObserver loop completed with undelivered notifications')) {
