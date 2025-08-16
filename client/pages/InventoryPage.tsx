@@ -286,10 +286,16 @@ export default function InventoryPage() {
           </p>
         </div>
         <div className="flex items-center space-x-3 space-x-reverse">
-          <Button variant="outline" size="sm" onClick={exportReport}>
-            <Download className="h-4 w-4 ml-2" />
-            تصدير تقرير
-          </Button>
+          <div className="flex">
+            <Button variant="outline" size="sm" onClick={() => exportReport('excel')}>
+              <Download className="h-4 w-4 ml-2" />
+              Excel
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => exportReport('pdf')} className="mr-2">
+              <Download className="h-4 w-4 ml-2" />
+              PDF
+            </Button>
+          </div>
           <Button variant="outline" size="sm" onClick={createDispatchOrder}>
             <FileText className="h-4 w-4 ml-2" />
             إذن صرف
