@@ -23,6 +23,11 @@ import { Badge } from "@/components/ui/badge";
 import { formatArabicDate } from "@/lib/arabic-utils";
 import { dataService } from "@/lib/data-service";
 import { calculateCurrentPrice, formatEGP, getPricingBreakdown } from "@/lib/pricing-utils";
+import {
+  validateMotherChildRelationship,
+  createMotherChildRelationship,
+  updateMotherChildRelationship
+} from "@/lib/animal-relationships";
 import type { Animal, Barn, AnimalCategory } from "@shared/types";
 import { toast } from "@/hooks/use-toast";
 import { AlertTriangle, Lightbulb } from "lucide-react";
