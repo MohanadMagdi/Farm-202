@@ -33,9 +33,12 @@ export default function NotificationCenter() {
     totalWithExpiry: 0
   });
   const [warehouseItems, setWarehouseItems] = useState<WarehouseItem[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Load and update notifications
-  const loadNotifications = async () => {
+  const loadNotifications = async (showRefreshing = false) => {
+    if (showRefreshing) setIsRefreshing(true);
+
     try {
       const items = await dataService.getWarehouseItems();
       const updatedItems = updateItemExpiryCountdown(items);
@@ -48,6 +51,8 @@ export default function NotificationCenter() {
       setStats(stats);
     } catch (error) {
       console.error('Error loading notifications:', error);
+    } finally {
+      if (showRefreshing) setIsRefreshing(false);
     }
   };
 
@@ -70,9 +75,13 @@ export default function NotificationCenter() {
   };
 
   const markAllAsRead = () => {
-    setNotifications(prev => 
+    setNotifications(prev =>
       prev.map(n => ({ ...n, isRead: true }))
     );
+  };
+
+  const handleRefresh = () => {
+    loadNotifications(true);
   };
 
   const getSeverityIcon = (severity: 'critical' | 'warning' | 'info') => {
@@ -126,16 +135,27 @@ export default function NotificationCenter() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg">إشعارات انتهاء الصلاحية</CardTitle>
-              {notifications.length > 0 && (
+              <div className="flex items-center gap-2">
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={markAllAsRead}
-                  className="text-xs"
+                  onClick={handleRefresh}
+                  disabled={isRefreshing}
+                  className="h-8 w-8 p-0"
                 >
-                  تحديد الكل كمقروء
+                  <RefreshCw className={`h-3 w-3 ${isRefreshing ? 'animate-spin' : ''}`} />
                 </Button>
-              )}
+                {notifications.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={markAllAsRead}
+                    className="text-xs"
+                  >
+                    تحديد الكل كمق��وء
+                  </Button>
+                )}
+              </div>
             </div>
             
             {/* Statistics */}
