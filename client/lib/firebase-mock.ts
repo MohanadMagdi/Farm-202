@@ -103,6 +103,7 @@ class MockFirestore {
           barnId: "barn_001",
           healthStatus: "سليم",
           isIsolated: false,
+          pricingMethod: "formula" as any,
           createdAt: new Date("2022-08-10"),
           updatedAt: now,
           createdBy: "user_001",
