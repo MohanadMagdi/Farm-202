@@ -7,7 +7,7 @@ export interface ExpiryNotification {
   category: string;
   expiryDate: Date;
   remainingDays: number;
-  severity: 'critical' | 'warning' | 'info';
+  severity: "critical" | "warning" | "info";
   message: string;
   isRead: boolean;
   createdAt: Date;
@@ -23,8 +23,8 @@ export interface ExpiryStats {
 // Configuration for expiry thresholds
 export const EXPIRY_THRESHOLDS = {
   CRITICAL: 3, // days
-  WARNING: 7,  // days
-  INFO: 30     // days
+  WARNING: 7, // days
+  INFO: 30, // days
 };
 
 /**
@@ -41,17 +41,19 @@ export function calculateRemainingDays(expiryDate: Date): number {
 /**
  * Update remaining days for all warehouse items with expiry
  */
-export function updateItemExpiryCountdown(items: WarehouseItem[]): WarehouseItem[] {
-  return items.map(item => {
+export function updateItemExpiryCountdown(
+  items: WarehouseItem[],
+): WarehouseItem[] {
+  return items.map((item) => {
     if (!item.hasExpiry || !item.expiryDate) {
       return item;
     }
 
     const remainingDays = calculateRemainingDays(item.expiryDate);
-    
+
     return {
       ...item,
-      remainingDays
+      remainingDays,
     };
   });
 }
@@ -59,18 +61,22 @@ export function updateItemExpiryCountdown(items: WarehouseItem[]): WarehouseItem
 /**
  * Determine expiry severity based on remaining days
  */
-export function getExpirySeverity(remainingDays: number): 'critical' | 'warning' | 'info' | null {
-  if (remainingDays < 0) return 'critical'; // Already expired
-  if (remainingDays <= EXPIRY_THRESHOLDS.CRITICAL) return 'critical';
-  if (remainingDays <= EXPIRY_THRESHOLDS.WARNING) return 'warning';
-  if (remainingDays <= EXPIRY_THRESHOLDS.INFO) return 'info';
+export function getExpirySeverity(
+  remainingDays: number,
+): "critical" | "warning" | "info" | null {
+  if (remainingDays < 0) return "critical"; // Already expired
+  if (remainingDays <= EXPIRY_THRESHOLDS.CRITICAL) return "critical";
+  if (remainingDays <= EXPIRY_THRESHOLDS.WARNING) return "warning";
+  if (remainingDays <= EXPIRY_THRESHOLDS.INFO) return "info";
   return null;
 }
 
 /**
  * Generate expiry notification for an item
  */
-export function generateExpiryNotification(item: WarehouseItem): ExpiryNotification | null {
+export function generateExpiryNotification(
+  item: WarehouseItem,
+): ExpiryNotification | null {
   if (!item.hasExpiry || !item.expiryDate || item.remainingDays === undefined) {
     return null;
   }
@@ -78,7 +84,7 @@ export function generateExpiryNotification(item: WarehouseItem): ExpiryNotificat
   const severity = getExpirySeverity(item.remainingDays);
   if (!severity) return null;
 
-  let message = '';
+  let message = "";
   if (item.remainingDays < 0) {
     message = `انتهت صلاحية "${item.name}" منذ ${Math.abs(item.remainingDays)} يوم`;
   } else if (item.remainingDays === 0) {
@@ -99,19 +105,21 @@ export function generateExpiryNotification(item: WarehouseItem): ExpiryNotificat
     severity,
     message,
     isRead: false,
-    createdAt: new Date()
+    createdAt: new Date(),
   };
 }
 
 /**
  * Get all expiry notifications for warehouse items
  */
-export function getAllExpiryNotifications(items: WarehouseItem[]): ExpiryNotification[] {
+export function getAllExpiryNotifications(
+  items: WarehouseItem[],
+): ExpiryNotification[] {
   const notifications: ExpiryNotification[] = [];
-  
+
   for (const item of items) {
     if (!item.isActive) continue;
-    
+
     const notification = generateExpiryNotification(item);
     if (notification) {
       notifications.push(notification);
@@ -131,20 +139,24 @@ export function getAllExpiryNotifications(items: WarehouseItem[]): ExpiryNotific
  * Calculate expiry statistics
  */
 export function calculateExpiryStats(items: WarehouseItem[]): ExpiryStats {
-  const activeItemsWithExpiry = items.filter(item => 
-    item.isActive && item.hasExpiry && item.expiryDate && item.remainingDays !== undefined
+  const activeItemsWithExpiry = items.filter(
+    (item) =>
+      item.isActive &&
+      item.hasExpiry &&
+      item.expiryDate &&
+      item.remainingDays !== undefined,
   );
 
   const stats: ExpiryStats = {
     expired: 0,
     expiringSoon: 0,
     expiringThisMonth: 0,
-    totalWithExpiry: activeItemsWithExpiry.length
+    totalWithExpiry: activeItemsWithExpiry.length,
   };
 
   for (const item of activeItemsWithExpiry) {
     const remainingDays = item.remainingDays!;
-    
+
     if (remainingDays < 0) {
       stats.expired++;
     } else if (remainingDays <= 7) {
@@ -160,9 +172,11 @@ export function calculateExpiryStats(items: WarehouseItem[]): ExpiryStats {
 /**
  * Get notification badge count (critical + warning only)
  */
-export function getNotificationBadgeCount(notifications: ExpiryNotification[]): number {
-  return notifications.filter(n => 
-    !n.isRead && (n.severity === 'critical' || n.severity === 'warning')
+export function getNotificationBadgeCount(
+  notifications: ExpiryNotification[],
+): number {
+  return notifications.filter(
+    (n) => !n.isRead && (n.severity === "critical" || n.severity === "warning"),
   ).length;
 }
 
@@ -170,23 +184,27 @@ export function getNotificationBadgeCount(notifications: ExpiryNotification[]): 
  * Filter items by expiry status
  */
 export function filterItemsByExpiryStatus(
-  items: WarehouseItem[], 
-  status: 'expired' | 'expiring-soon' | 'expiring-month' | 'all'
+  items: WarehouseItem[],
+  status: "expired" | "expiring-soon" | "expiring-month" | "all",
 ): WarehouseItem[] {
-  const activeItemsWithExpiry = items.filter(item => 
-    item.isActive && item.hasExpiry && item.expiryDate && item.remainingDays !== undefined
+  const activeItemsWithExpiry = items.filter(
+    (item) =>
+      item.isActive &&
+      item.hasExpiry &&
+      item.expiryDate &&
+      item.remainingDays !== undefined,
   );
 
   switch (status) {
-    case 'expired':
-      return activeItemsWithExpiry.filter(item => item.remainingDays! < 0);
-    case 'expiring-soon':
-      return activeItemsWithExpiry.filter(item => 
-        item.remainingDays! >= 0 && item.remainingDays! <= 7
+    case "expired":
+      return activeItemsWithExpiry.filter((item) => item.remainingDays! < 0);
+    case "expiring-soon":
+      return activeItemsWithExpiry.filter(
+        (item) => item.remainingDays! >= 0 && item.remainingDays! <= 7,
       );
-    case 'expiring-month':
-      return activeItemsWithExpiry.filter(item => 
-        item.remainingDays! > 7 && item.remainingDays! <= 30
+    case "expiring-month":
+      return activeItemsWithExpiry.filter(
+        (item) => item.remainingDays! > 7 && item.remainingDays! <= 30,
       );
     default:
       return activeItemsWithExpiry;
@@ -200,9 +218,9 @@ export function formatRemainingDays(remainingDays: number): string {
   if (remainingDays < 0) {
     return `منتهية الصلاحية منذ ${Math.abs(remainingDays)} يوم`;
   } else if (remainingDays === 0) {
-    return 'تنتهي اليوم';
+    return "تنتهي اليوم";
   } else if (remainingDays === 1) {
-    return 'تنتهي غداً';
+    return "تنتهي غداً";
   } else {
     return `${remainingDays} يوم متبقي`;
   }
@@ -211,14 +229,16 @@ export function formatRemainingDays(remainingDays: number): string {
 /**
  * Get expiry badge color based on severity
  */
-export function getExpiryBadgeVariant(remainingDays: number): 'destructive' | 'default' | 'secondary' {
+export function getExpiryBadgeVariant(
+  remainingDays: number,
+): "destructive" | "default" | "secondary" {
   const severity = getExpirySeverity(remainingDays);
   switch (severity) {
-    case 'critical':
-      return 'destructive';
-    case 'warning':
-      return 'default';
+    case "critical":
+      return "destructive";
+    case "warning":
+      return "default";
     default:
-      return 'secondary';
+      return "secondary";
   }
 }

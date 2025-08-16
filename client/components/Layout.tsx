@@ -112,17 +112,22 @@ export default function Layout({ children }: LayoutProps) {
     try {
       await signOut();
     } catch (error) {
-      console.error('Sign out error:', error);
+      console.error("Sign out error:", error);
     }
   };
 
   // Filter navigation items based on user permissions
-  const filteredNavigation = navigation.filter(item => 
-    hasPermission('all') || hasPermission(item.permission)
+  const filteredNavigation = navigation.filter(
+    (item) => hasPermission("all") || hasPermission(item.permission),
   );
 
   const getUserInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .substring(0, 2)
+      .toUpperCase();
   };
 
   return (
@@ -135,8 +140,10 @@ export default function Layout({ children }: LayoutProps) {
             <div>
               <h1 className="text-xl font-bold text-farm-800">مزرعة الأغنام</h1>
               <div className="flex items-center space-x-2 space-x-reverse">
-                <p className="text-sm text-muted-foreground">نظام إدارة المزرعة</p>
-                {dataMode === 'mock' && (
+                <p className="text-sm text-muted-foreground">
+                  نظام إدارة المزرعة
+                </p>
+                {dataMode === "mock" && (
                   <Badge variant="outline" className="text-xs">
                     <Database className="h-3 w-3 ml-1" />
                     وضع التطوير
@@ -145,9 +152,9 @@ export default function Layout({ children }: LayoutProps) {
               </div>
             </div>
           </div>
-          
+
           <div className="flex-1" />
-          
+
           <div className="flex items-center space-x-4 space-x-reverse">
             {/* Notifications */}
             <NotificationCenter />
@@ -159,14 +166,14 @@ export default function Layout({ children }: LayoutProps) {
                   <div className="flex items-center space-x-2 space-x-reverse">
                     <Avatar className="h-8 w-8">
                       <AvatarFallback className="bg-farm-600 text-white text-xs">
-                        {user ? getUserInitials(user.displayName) : 'U'}
+                        {user ? getUserInitials(user.displayName) : "U"}
                       </AvatarFallback>
                     </Avatar>
                     <div className="text-right">
                       <p className="text-sm font-medium">{user?.displayName}</p>
                       {user && (
-                        <Badge 
-                          variant="outline" 
+                        <Badge
+                          variant="outline"
                           className={`text-xs ${roleColors[user.role]}`}
                         >
                           {roleLabels[user.role]}
@@ -180,10 +187,14 @@ export default function Layout({ children }: LayoutProps) {
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium">{user?.displayName}</p>
-                    <p className="text-xs text-muted-foreground">{user?.email}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {user?.email}
+                    </p>
                     <div className="flex items-center space-x-2 space-x-reverse mt-1">
                       <Shield className="h-3 w-3" />
-                      <span className="text-xs">{roleLabels[user?.role || 'barn_manager']}</span>
+                      <span className="text-xs">
+                        {roleLabels[user?.role || "barn_manager"]}
+                      </span>
                     </div>
                   </div>
                 </DropdownMenuLabel>
@@ -197,7 +208,10 @@ export default function Layout({ children }: LayoutProps) {
                   <span>الملف الشخصي</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
+                <DropdownMenuItem
+                  onClick={handleSignOut}
+                  className="text-red-600"
+                >
                   <LogOut className="ml-2 h-4 w-4" />
                   <span>تسجيل الخروج</span>
                 </DropdownMenuItem>
@@ -238,21 +252,25 @@ export default function Layout({ children }: LayoutProps) {
                   {item.children && (
                     <div className="mr-8 mt-2 space-y-1">
                       {item.children
-                        .filter(child => hasPermission('all') || hasPermission(child.permission))
+                        .filter(
+                          (child) =>
+                            hasPermission("all") ||
+                            hasPermission(child.permission),
+                        )
                         .map((child) => (
-                        <Link
-                          key={child.href}
-                          to={child.href}
-                          className={cn(
-                            "block rounded-lg px-3 py-2 text-sm transition-colors",
-                            location.pathname === child.href
-                              ? "bg-farm-50 text-farm-700 font-medium"
-                              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-                          )}
-                        >
-                          {child.name}
-                        </Link>
-                      ))}
+                          <Link
+                            key={child.href}
+                            to={child.href}
+                            className={cn(
+                              "block rounded-lg px-3 py-2 text-sm transition-colors",
+                              location.pathname === child.href
+                                ? "bg-farm-50 text-farm-700 font-medium"
+                                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                            )}
+                          >
+                            {child.name}
+                          </Link>
+                        ))}
                     </div>
                   )}
                 </div>

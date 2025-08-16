@@ -181,7 +181,10 @@ export default function ReportsPage() {
   // Weight gain analysis (using weight difference as approximation)
   const averageWeightGain =
     activeAnimals.length > 0
-      ? activeAnimals.reduce((sum, animal) => sum + calculateWeightGain(animal), 0) / activeAnimals.length
+      ? activeAnimals.reduce(
+          (sum, animal) => sum + calculateWeightGain(animal),
+          0,
+        ) / activeAnimals.length
       : 0;
 
   // Stock movements analysis
@@ -201,9 +204,7 @@ export default function ReportsPage() {
 
   // Inventory turnover
   const inventoryTurnover = inventoryItems.map((item) => {
-    const outMovements = stockOutMovements.filter(
-      (m) => m.itemId === item.id,
-    );
+    const outMovements = stockOutMovements.filter((m) => m.itemId === item.id);
     const totalOut = outMovements.reduce((sum, m) => sum + m.quantity, 0);
     const currentStock = item.currentStock || 0;
     const turnoverRate = currentStock > 0 ? totalOut / currentStock : 0;
@@ -347,7 +348,8 @@ export default function ReportsPage() {
                   <span>الذكور</span>
                   <span className="font-semibold">
                     {formatArabicNumber(
-                      activeAnimals.filter((a) => a && a.category === "male").length,
+                      activeAnimals.filter((a) => a && a.category === "male")
+                        .length,
                     )}
                   </span>
                 </div>
@@ -355,7 +357,8 @@ export default function ReportsPage() {
                   <span>الإناث</span>
                   <span className="font-semibold">
                     {formatArabicNumber(
-                      activeAnimals.filter((a) => a && a.category === "female").length,
+                      activeAnimals.filter((a) => a && a.category === "female")
+                        .length,
                     )}
                   </span>
                 </div>
@@ -363,7 +366,8 @@ export default function ReportsPage() {
                   <span>الصغار</span>
                   <span className="font-semibold">
                     {formatArabicNumber(
-                      activeAnimals.filter((a) => a && a.category === "newborn").length,
+                      activeAnimals.filter((a) => a && a.category === "newborn")
+                        .length,
                     )}
                   </span>
                 </div>
@@ -382,8 +386,10 @@ export default function ReportsPage() {
                   <span>متوسط مع��ل ��لنمو ��ليومي</span>
                   <span className="font-semibold">
                     {(
-                      activeAnimals.reduce((sum, a) => sum + calculateADG(a), 0) /
-                      Math.max(1, activeAnimals.length)
+                      activeAnimals.reduce(
+                        (sum, a) => sum + calculateADG(a),
+                        0,
+                      ) / Math.max(1, activeAnimals.length)
                     ).toFixed(2)}{" "}
                     كيلو/يوم
                   </span>
@@ -411,7 +417,8 @@ export default function ReportsPage() {
                         <div>
                           <div className="font-medium">{animal.earTagId}</div>
                           <div className="text-sm text-muted-foreground">
-                            معدل النمو: {calculateADG(animal).toFixed(2)} كيلو/��وم
+                            معدل النمو: {calculateADG(animal).toFixed(2)}{" "}
+                            كيلو/��وم
                           </div>
                         </div>
                       </div>
@@ -442,8 +449,12 @@ export default function ReportsPage() {
                     <TableRow>
                       <TableHead className="text-right">رقم الأذن</TableHead>
                       <TableHead className="text-right">النوع</TableHead>
-                      <TableHead className="text-right">العمر (��يام)</TableHead>
-                      <TableHead className="text-right">الوزن الحال��</TableHead>
+                      <TableHead className="text-right">
+                        العمر (��يام)
+                      </TableHead>
+                      <TableHead className="text-right">
+                        الوزن الحال��
+                      </TableHead>
                       <TableHead className="text-right">إجمالي النمو</TableHead>
                       <TableHead className="text-right">
                         معدل النمو اليومي
@@ -630,7 +641,7 @@ export default function ReportsPage() {
                       <span className="font-medium">{animal.earTagId}</span>
                       <div className="text-left">
                         <div className="text-sm font-semibold">
-                          {(animal.weight * 3) > 0
+                          {animal.weight * 3 > 0
                             ? (
                                 calculateWeightGain(animal) /
                                 (animal.weight * 3)
@@ -639,8 +650,7 @@ export default function ReportsPage() {
                           كيلو نمو/كيلو ��لف
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          إجمالي العل��:{" "}
-                          {formatWeight((animal.weight * 3))}
+                          إجمالي العل��: {formatWeight(animal.weight * 3)}
                         </div>
                       </div>
                     </div>

@@ -22,11 +22,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { formatArabicDate } from "@/lib/arabic-utils";
 import { dataService } from "@/lib/data-service";
-import { calculateCurrentPrice, formatEGP, getPricingBreakdown } from "@/lib/pricing-utils";
+import {
+  calculateCurrentPrice,
+  formatEGP,
+  getPricingBreakdown,
+} from "@/lib/pricing-utils";
 import {
   validateMotherChildRelationship,
   createMotherChildRelationship,
-  updateMotherChildRelationship
+  updateMotherChildRelationship,
 } from "@/lib/animal-relationships";
 import type { Animal, Barn, AnimalCategory } from "@shared/types";
 import { toast } from "@/hooks/use-toast";
@@ -65,13 +69,13 @@ export default function AnimalFormModal({
     isIsolated: false,
     isolationType: "",
     isolationReason: "",
-    
+
     // For females
     isPregnant: false,
     aiDate: "",
     expectedBirthDate: "",
     offspringCount: "",
-    
+
     // For newborns
     motherId: "",
     birthDate: new Date().toISOString().split("T")[0],
@@ -86,7 +90,7 @@ export default function AnimalFormModal({
   const [motherValidation, setMotherValidation] = useState({
     isValid: true,
     errors: [] as string[],
-    warnings: [] as string[]
+    warnings: [] as string[],
   });
 
   useEffect(() => {
@@ -109,19 +113,37 @@ export default function AnimalFormModal({
 
   // Automatically update price when weight or pricing method changes
   useEffect(() => {
-    if (formData.pricingMethod === 'formula' && formData.weight) {
+    if (formData.pricingMethod === "formula" && formData.weight) {
       const tempAnimal = createAnimalFromFormData(formData);
       const calculatedPrice = calculateCurrentPrice(tempAnimal as any);
-      if (calculatedPrice !== parseFloat(formData.currentPrice || '0')) {
-        setFormData(prev => ({ ...prev, currentPrice: calculatedPrice.toString() }));
+      if (calculatedPrice !== parseFloat(formData.currentPrice || "0")) {
+        setFormData((prev) => ({
+          ...prev,
+          currentPrice: calculatedPrice.toString(),
+        }));
       }
     }
-  }, [formData.weight, formData.pricingMethod, formData.formulaMultiplier, formData.purchasePrice, formData.birthDate]);
+  }, [
+    formData.weight,
+    formData.pricingMethod,
+    formData.formulaMultiplier,
+    formData.purchasePrice,
+    formData.birthDate,
+  ]);
 
   // Validate mother selection in real-time
   useEffect(() => {
-    if (formData.category === "newborn" && formData.motherId && formData.motherId !== "none" && animals.length > 0) {
-      const validation = validateMotherChildRelationship(formData.motherId, formData.category, animals);
+    if (
+      formData.category === "newborn" &&
+      formData.motherId &&
+      formData.motherId !== "none" &&
+      animals.length > 0
+    ) {
+      const validation = validateMotherChildRelationship(
+        formData.motherId,
+        formData.category,
+        animals,
+      );
       setMotherValidation(validation);
     } else {
       setMotherValidation({ isValid: true, errors: [], warnings: [] });
@@ -136,10 +158,14 @@ export default function AnimalFormModal({
       purchasePrice: parseFloat(data.purchasePrice) || 0,
       currentPrice: parseFloat(data.currentPrice) || undefined,
       pricingMethod: data.pricingMethod as any,
-      formulaMultiplier: data.formulaMultiplier ? parseFloat(data.formulaMultiplier) : undefined,
+      formulaMultiplier: data.formulaMultiplier
+        ? parseFloat(data.formulaMultiplier)
+        : undefined,
       birthDate: data.birthDate ? new Date(data.birthDate) : undefined,
       purchaseDate: new Date(data.purchaseDate),
-      offspringCount: data.offspringCount ? parseInt(data.offspringCount) : undefined
+      offspringCount: data.offspringCount
+        ? parseInt(data.offspringCount)
+        : undefined,
     };
     return animalLike;
   };
@@ -151,7 +177,7 @@ export default function AnimalFormModal({
         dataService.animals.getAll(),
       ]);
 
-      setBarns(barnsData.filter(barn => barn.isActive));
+      setBarns(barnsData.filter((barn) => barn.isActive));
       setAnimals(animalsData);
     } catch (error) {
       console.error("Error loading select data:", error);
@@ -162,7 +188,7 @@ export default function AnimalFormModal({
     try {
       const nextId = await dataService.animals.getNextEarTagId(animalType);
       setEarTagSuggestion(nextId);
-      setFormData(prev => ({ ...prev, earTagId: nextId }));
+      setFormData((prev) => ({ ...prev, earTagId: nextId }));
     } catch (error) {
       console.error("Error generating ear tag:", error);
     }
@@ -172,7 +198,7 @@ export default function AnimalFormModal({
     try {
       const exists = await dataService.animals.checkEarTagExists(
         formData.earTagId,
-        animal?.id
+        animal?.id,
       );
       setEarTagExists(exists);
     } catch (error) {
@@ -191,23 +217,26 @@ export default function AnimalFormModal({
       purchasePrice: animalData.purchasePrice.toString(),
       currentPrice: animalData.currentPrice?.toString() || "",
       pricingMethod: (animalData as any).pricingMethod || "formula",
-      formulaMultiplier: (animalData as any).formulaMultiplier?.toString() || "",
+      formulaMultiplier:
+        (animalData as any).formulaMultiplier?.toString() || "",
       barnId: animalData.barnId,
       healthStatus: animalData.healthStatus,
       isIsolated: animalData.isIsolated,
       isolationType: animalData.isolationType || "",
       isolationReason: animalData.isolationReason || "",
-      
+
       // For females
       isPregnant: animalData.isPregnant || false,
       aiDate: animalData.aiDate?.toISOString().split("T")[0] || "",
-      expectedBirthDate: animalData.expectedBirthDate?.toISOString().split("T")[0] || "",
+      expectedBirthDate:
+        animalData.expectedBirthDate?.toISOString().split("T")[0] || "",
       offspringCount: animalData.offspringCount?.toString() || "",
-      
+
       // For newborns
       motherId: animalData.motherId || "none",
-      birthDate: animalData.birthDate?.toISOString().split("T")[0] || 
-                 animalData.purchaseDate.toISOString().split("T")[0],
+      birthDate:
+        animalData.birthDate?.toISOString().split("T")[0] ||
+        animalData.purchaseDate.toISOString().split("T")[0],
       weaningDate: animalData.weaningDate?.toISOString().split("T")[0] || "",
     });
   };
@@ -229,13 +258,13 @@ export default function AnimalFormModal({
       isIsolated: false,
       isolationType: "",
       isolationReason: "",
-      
+
       // For females
       isPregnant: false,
       aiDate: "",
       expectedBirthDate: "",
       offspringCount: "",
-      
+
       // For newborns
       motherId: "none",
       birthDate: new Date().toISOString().split("T")[0],
@@ -256,7 +285,7 @@ export default function AnimalFormModal({
 
     setLoading(true);
     try {
-      const animalData: Omit<Animal, 'id'> = {
+      const animalData: Omit<Animal, "id"> = {
         earTagId: formData.earTagId,
         category: formData.category,
         sex: formData.sex,
@@ -264,13 +293,17 @@ export default function AnimalFormModal({
         supplier: formData.supplier || undefined,
         purchaseDate: new Date(formData.purchaseDate),
         purchasePrice: parseFloat(formData.purchasePrice) || 0,
-        currentPrice: formData.currentPrice ? parseFloat(formData.currentPrice) : undefined,
+        currentPrice: formData.currentPrice
+          ? parseFloat(formData.currentPrice)
+          : undefined,
         pricingMethod: formData.pricingMethod as any,
-        formulaMultiplier: formData.formulaMultiplier ? parseFloat(formData.formulaMultiplier) : undefined,
+        formulaMultiplier: formData.formulaMultiplier
+          ? parseFloat(formData.formulaMultiplier)
+          : undefined,
         barnId: formData.barnId,
         healthStatus: formData.healthStatus,
         isIsolated: formData.isIsolated,
-        isolationType: formData.isolationType as any || undefined,
+        isolationType: (formData.isolationType as any) || undefined,
         isolationReason: formData.isolationReason || undefined,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -281,15 +314,28 @@ export default function AnimalFormModal({
       // Add category-specific fields
       if (formData.category === "female") {
         animalData.isPregnant = formData.isPregnant;
-        animalData.aiDate = formData.aiDate ? new Date(formData.aiDate) : undefined;
-        animalData.expectedBirthDate = formData.expectedBirthDate ? new Date(formData.expectedBirthDate) : undefined;
-        animalData.offspringCount = formData.offspringCount ? parseInt(formData.offspringCount) : undefined;
+        animalData.aiDate = formData.aiDate
+          ? new Date(formData.aiDate)
+          : undefined;
+        animalData.expectedBirthDate = formData.expectedBirthDate
+          ? new Date(formData.expectedBirthDate)
+          : undefined;
+        animalData.offspringCount = formData.offspringCount
+          ? parseInt(formData.offspringCount)
+          : undefined;
       }
 
       if (formData.category === "newborn") {
-        animalData.motherId = formData.motherId === "none" || !formData.motherId ? undefined : formData.motherId;
-        animalData.birthDate = formData.birthDate ? new Date(formData.birthDate) : undefined;
-        animalData.weaningDate = formData.weaningDate ? new Date(formData.weaningDate) : undefined;
+        animalData.motherId =
+          formData.motherId === "none" || !formData.motherId
+            ? undefined
+            : formData.motherId;
+        animalData.birthDate = formData.birthDate
+          ? new Date(formData.birthDate)
+          : undefined;
+        animalData.weaningDate = formData.weaningDate
+          ? new Date(formData.weaningDate)
+          : undefined;
       }
 
       if (formData.isIsolated) {
@@ -297,20 +343,27 @@ export default function AnimalFormModal({
       }
 
       // Calculate current price if using formula method
-      if (animalData.pricingMethod === 'formula') {
+      if (animalData.pricingMethod === "formula") {
         animalData.currentPrice = calculateCurrentPrice(animalData as Animal);
       }
 
       if (mode === "edit" && animal) {
         // Handle relationship changes for existing animals
         if (formData.category === "newborn") {
-          const newMotherId = formData.motherId === "none" || !formData.motherId ? null : formData.motherId;
+          const newMotherId =
+            formData.motherId === "none" || !formData.motherId
+              ? null
+              : formData.motherId;
           const oldMotherId = animal.motherId || null;
 
           if (newMotherId !== oldMotherId) {
-            const relationshipResult = await updateMotherChildRelationship(animal.id, newMotherId, oldMotherId);
+            const relationshipResult = await updateMotherChildRelationship(
+              animal.id,
+              newMotherId,
+              oldMotherId,
+            );
             if (!relationshipResult.success) {
-              throw new Error(relationshipResult.errors.join(', '));
+              throw new Error(relationshipResult.errors.join(", "));
             }
           }
         }
@@ -322,10 +375,17 @@ export default function AnimalFormModal({
         });
       } else {
         // Handle new animal creation with relationships
-        if (formData.category === "newborn" && formData.motherId && formData.motherId !== "none") {
-          const relationshipResult = await createMotherChildRelationship(formData.motherId, animalData);
+        if (
+          formData.category === "newborn" &&
+          formData.motherId &&
+          formData.motherId !== "none"
+        ) {
+          const relationshipResult = await createMotherChildRelationship(
+            formData.motherId,
+            animalData,
+          );
           if (!relationshipResult.success) {
-            throw new Error(relationshipResult.errors.join(', '));
+            throw new Error(relationshipResult.errors.join(", "));
           }
           toast({
             title: "تم الإضافة بنجاح",
@@ -355,11 +415,11 @@ export default function AnimalFormModal({
   };
 
   const filteredBarns = barns.filter(
-    (barn) => barn.type === formData.category || barn.type === "mixed"
+    (barn) => barn.type === formData.category || barn.type === "mixed",
   );
 
   const potentialMothers = animals.filter(
-    (a) => a.category === "female" && a.id !== animal?.id
+    (a) => a.category === "female" && a.id !== animal?.id,
   );
 
   const isolationTypes = [
@@ -387,7 +447,7 @@ export default function AnimalFormModal({
           {/* Basic Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">المعلومات الأساس��ة</h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="earTagId">رقم الأذن *</Label>
@@ -515,7 +575,10 @@ export default function AnimalFormModal({
                     id="isolationReason"
                     value={formData.isolationReason}
                     onChange={(e) =>
-                      setFormData({ ...formData, isolationReason: e.target.value })
+                      setFormData({
+                        ...formData,
+                        isolationReason: e.target.value,
+                      })
                     }
                     placeholder="وصف سبب العزل"
                   />
@@ -528,7 +591,7 @@ export default function AnimalFormModal({
           {formData.category !== "newborn" && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">معلومات الشراء</h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                   <Label htmlFor="purchaseDate">تاريخ الشراء</Label>
@@ -549,7 +612,10 @@ export default function AnimalFormModal({
                     type="number"
                     value={formData.purchasePrice}
                     onChange={(e) =>
-                      setFormData({ ...formData, purchasePrice: e.target.value })
+                      setFormData({
+                        ...formData,
+                        purchasePrice: e.target.value,
+                      })
                     }
                     placeholder="3500"
                   />
@@ -567,7 +633,9 @@ export default function AnimalFormModal({
                       <SelectValue placeholder="اختر طريقة التسعير" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="formula">حساب تلقائي بالمعادلة</SelectItem>
+                      <SelectItem value="formula">
+                        حساب تلقائي بالمعادلة
+                      </SelectItem>
                       <SelectItem value="manual">تحديد يدوي</SelectItem>
                       <SelectItem value="market_rate">سعر السوق</SelectItem>
                     </SelectContent>
@@ -582,7 +650,10 @@ export default function AnimalFormModal({
                       type="number"
                       value={formData.currentPrice}
                       onChange={(e) =>
-                        setFormData({ ...formData, currentPrice: e.target.value })
+                        setFormData({
+                          ...formData,
+                          currentPrice: e.target.value,
+                        })
                       }
                       placeholder="4500"
                     />
@@ -592,13 +663,18 @@ export default function AnimalFormModal({
                 {formData.pricingMethod === "formula" && (
                   <div className="space-y-4">
                     <div>
-                      <Label htmlFor="formulaMultiplier">سعر الكيلو (جنيه) - اختياري</Label>
+                      <Label htmlFor="formulaMultiplier">
+                        سعر الكيلو (جنيه) - اختياري
+                      </Label>
                       <Input
                         id="formulaMultiplier"
                         type="number"
                         value={formData.formulaMultiplier}
                         onChange={(e) =>
-                          setFormData({ ...formData, formulaMultiplier: e.target.value })
+                          setFormData({
+                            ...formData,
+                            formulaMultiplier: e.target.value,
+                          })
                         }
                         placeholder="45"
                       />
@@ -609,9 +685,15 @@ export default function AnimalFormModal({
 
                     {formData.weight && (
                       <div className="bg-blue-50 p-3 rounded-lg border">
-                        <p className="text-sm font-medium text-blue-800 mb-1">ال��عر المحسوب:</p>
+                        <p className="text-sm font-medium text-blue-800 mb-1">
+                          ال��عر المحسوب:
+                        </p>
                         <p className="text-lg font-bold text-blue-900">
-                          {formatEGP(calculateCurrentPrice(createAnimalFromFormData(formData) as any))}
+                          {formatEGP(
+                            calculateCurrentPrice(
+                              createAnimalFromFormData(formData) as any,
+                            ),
+                          )}
                         </p>
                         <p className="text-xs text-blue-600 mt-1">
                           سيتم تحديث السعر تلقائياً عند الحفظ
@@ -623,12 +705,17 @@ export default function AnimalFormModal({
 
                 {formData.pricingMethod === "market_rate" && (
                   <div className="bg-green-50 p-3 rounded-lg border">
-                    <p className="text-sm font-medium text-green-800 mb-1">سعر السوق المقدر:</p>
+                    <p className="text-sm font-medium text-green-800 mb-1">
+                      سعر السوق المقدر:
+                    </p>
                     <p className="text-lg font-bold text-green-900">
-                      {formData.weight && formatEGP(calculateCurrentPrice({
-                        ...createAnimalFromFormData(formData),
-                        pricingMethod: 'market_rate'
-                      } as any))}
+                      {formData.weight &&
+                        formatEGP(
+                          calculateCurrentPrice({
+                            ...createAnimalFromFormData(formData),
+                            pricingMethod: "market_rate",
+                          } as any),
+                        )}
                     </p>
                     <p className="text-xs text-green-600 mt-1">
                       سيتم تحديث السعر تلقائياً حسب أسعار السوق
@@ -655,7 +742,7 @@ export default function AnimalFormModal({
           {formData.category === "female" && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">معلومات التناسل</h3>
-              
+
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="pregnant"
@@ -681,24 +768,34 @@ export default function AnimalFormModal({
                     />
                   </div>
                   <div>
-                    <Label htmlFor="expectedBirthDate">تاريخ الولادة المتوقع</Label>
+                    <Label htmlFor="expectedBirthDate">
+                      تاريخ الولادة المتوقع
+                    </Label>
                     <Input
                       id="expectedBirthDate"
                       type="date"
                       value={formData.expectedBirthDate}
                       onChange={(e) =>
-                        setFormData({ ...formData, expectedBirthDate: e.target.value })
+                        setFormData({
+                          ...formData,
+                          expectedBirthDate: e.target.value,
+                        })
                       }
                     />
                   </div>
                   <div>
-                    <Label htmlFor="offspringCount">عدد الموا��يد السابقة</Label>
+                    <Label htmlFor="offspringCount">
+                      عدد الموا��يد السابقة
+                    </Label>
                     <Input
                       id="offspringCount"
                       type="number"
                       value={formData.offspringCount}
                       onChange={(e) =>
-                        setFormData({ ...formData, offspringCount: e.target.value })
+                        setFormData({
+                          ...formData,
+                          offspringCount: e.target.value,
+                        })
                       }
                       placeholder="2"
                     />
@@ -712,7 +809,7 @@ export default function AnimalFormModal({
           {formData.category === "newborn" && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">معلومات المولود</h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="motherId">الأم</Label>
@@ -738,53 +835,64 @@ export default function AnimalFormModal({
                   {/* Mother validation feedback */}
                   {formData.motherId && formData.motherId !== "none" && (
                     <div className="mt-2 space-y-2">
-                      {!motherValidation.isValid && motherValidation.errors.length > 0 && (
-                        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                          <div className="flex items-start">
-                            <AlertTriangle className="h-4 w-4 text-red-500 mt-0.5 ml-2" />
-                            <div>
-                              <p className="text-sm font-medium text-red-800">أخطاء في اختيار الأم:</p>
-                              <ul className="text-sm text-red-700 mt-1 list-disc list-inside">
-                                {motherValidation.errors.map((error, index) => (
-                                  <li key={index}>{error}</li>
-                                ))}
-                              </ul>
+                      {!motherValidation.isValid &&
+                        motherValidation.errors.length > 0 && (
+                          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                            <div className="flex items-start">
+                              <AlertTriangle className="h-4 w-4 text-red-500 mt-0.5 ml-2" />
+                              <div>
+                                <p className="text-sm font-medium text-red-800">
+                                  أخطاء في اختيار الأم:
+                                </p>
+                                <ul className="text-sm text-red-700 mt-1 list-disc list-inside">
+                                  {motherValidation.errors.map(
+                                    (error, index) => (
+                                      <li key={index}>{error}</li>
+                                    ),
+                                  )}
+                                </ul>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      )}
+                        )}
 
                       {motherValidation.warnings.length > 0 && (
                         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                           <div className="flex items-start">
                             <AlertTriangle className="h-4 w-4 text-yellow-500 mt-0.5 ml-2" />
                             <div>
-                              <p className="text-sm font-medium text-yellow-800">تحذيرات:</p>
+                              <p className="text-sm font-medium text-yellow-800">
+                                تحذيرات:
+                              </p>
                               <ul className="text-sm text-yellow-700 mt-1 list-disc list-inside">
-                                {motherValidation.warnings.map((warning, index) => (
-                                  <li key={index}>{warning}</li>
-                                ))}
+                                {motherValidation.warnings.map(
+                                  (warning, index) => (
+                                    <li key={index}>{warning}</li>
+                                  ),
+                                )}
                               </ul>
                             </div>
                           </div>
                         </div>
                       )}
 
-                      {motherValidation.isValid && formData.motherId !== "none" && (
-                        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                          <div className="flex items-start">
-                            <Lightbulb className="h-4 w-4 text-green-500 mt-0.5 ml-2" />
-                            <div>
-                              <p className="text-sm font-medium text-green-800">
-                                ✅ اختيار الأم صحيح
-                              </p>
-                              <p className="text-sm text-green-700 mt-1">
-                                سيتم ربط المولود بالأم ��لقائياً مع تحديث إ��صائيات الأم
-                              </p>
+                      {motherValidation.isValid &&
+                        formData.motherId !== "none" && (
+                          <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                            <div className="flex items-start">
+                              <Lightbulb className="h-4 w-4 text-green-500 mt-0.5 ml-2" />
+                              <div>
+                                <p className="text-sm font-medium text-green-800">
+                                  ✅ اختيار الأم صحيح
+                                </p>
+                                <p className="text-sm text-green-700 mt-1">
+                                  سيتم ربط المولود بالأم ��لقائياً مع تحديث
+                                  إ��صائيات الأم
+                                </p>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      )}
+                        )}
                     </div>
                   )}
                 </div>

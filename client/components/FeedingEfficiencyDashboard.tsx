@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -25,10 +25,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { 
-  BarChart3, 
-  TrendingUp, 
-  TrendingDown, 
+import {
+  BarChart3,
+  TrendingUp,
+  TrendingDown,
   Target,
   DollarSign,
   Scale,
@@ -37,7 +37,7 @@ import {
   AlertTriangle,
   CheckCircle,
   Lightbulb,
-  Download
+  Download,
 } from "lucide-react";
 import { dataService } from "@/lib/data-service";
 import {
@@ -47,22 +47,32 @@ import {
   formatEfficiencyMetrics,
   type FeedingEfficiencyMetrics,
   type BarnFeedingComparison,
-  type FeedingTrends
+  type FeedingTrends,
 } from "@/lib/feeding-analytics";
 import { exportFeedingReport } from "@/lib/export-utils";
 import { toast } from "@/hooks/use-toast";
-import type { FeedingRecord, Animal, Barn, WarehouseItem, WeightRecord } from "@shared/types";
+import type {
+  FeedingRecord,
+  Animal,
+  Barn,
+  WarehouseItem,
+  WeightRecord,
+} from "@shared/types";
 
 interface FeedingEfficiencyDashboardProps {
   className?: string;
 }
 
-export default function FeedingEfficiencyDashboard({ className }: FeedingEfficiencyDashboardProps) {
+export default function FeedingEfficiencyDashboard({
+  className,
+}: FeedingEfficiencyDashboardProps) {
   const [metrics, setMetrics] = useState<FeedingEfficiencyMetrics | null>(null);
-  const [barnComparisons, setBarnComparisons] = useState<BarnFeedingComparison[]>([]);
+  const [barnComparisons, setBarnComparisons] = useState<
+    BarnFeedingComparison[]
+  >([]);
   const [trends, setTrends] = useState<FeedingTrends[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPeriod, setSelectedPeriod] = useState<string>('30');
+  const [selectedPeriod, setSelectedPeriod] = useState<string>("30");
 
   useEffect(() => {
     loadEfficiencyData();
@@ -71,29 +81,34 @@ export default function FeedingEfficiencyDashboard({ className }: FeedingEfficie
   const loadEfficiencyData = async () => {
     try {
       setLoading(true);
-      
-      const [feedingRecords, animals, barns, warehouseItems, weightRecords] = await Promise.all([
-        dataService.feedingRecords.getAll(),
-        dataService.animals.getAll(),
-        dataService.barns.getAll(),
-        dataService.warehouseItems.getAll(),
-        dataService.weightRecords.getAll()
-      ]);
+
+      const [feedingRecords, animals, barns, warehouseItems, weightRecords] =
+        await Promise.all([
+          dataService.feedingRecords.getAll(),
+          dataService.animals.getAll(),
+          dataService.barns.getAll(),
+          dataService.warehouseItems.getAll(),
+          dataService.weightRecords.getAll(),
+        ]);
 
       // Filter data by selected period
       const days = parseInt(selectedPeriod);
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - days);
 
-      const filteredRecords = feedingRecords.filter(record => record.date >= cutoffDate);
-      const filteredWeights = weightRecords.filter(record => record.date >= cutoffDate);
+      const filteredRecords = feedingRecords.filter(
+        (record) => record.date >= cutoffDate,
+      );
+      const filteredWeights = weightRecords.filter(
+        (record) => record.date >= cutoffDate,
+      );
 
       // Calculate comprehensive metrics
       const calculatedMetrics = calculateFeedingEfficiencyMetrics(
         filteredRecords,
         animals,
         filteredWeights,
-        warehouseItems
+        warehouseItems,
       );
 
       // Compare barn efficiency
@@ -101,7 +116,7 @@ export default function FeedingEfficiencyDashboard({ className }: FeedingEfficie
         filteredRecords,
         barns,
         animals,
-        filteredWeights
+        filteredWeights,
       );
 
       // Generate trends
@@ -109,14 +124,14 @@ export default function FeedingEfficiencyDashboard({ className }: FeedingEfficie
         filteredRecords,
         animals,
         filteredWeights,
-        Math.min(days, 30)
+        Math.min(days, 30),
       );
 
       setMetrics(calculatedMetrics);
       setBarnComparisons(barnComparison);
       setTrends(trendsData);
     } catch (error) {
-      console.error('Error loading efficiency data:', error);
+      console.error("Error loading efficiency data:", error);
     } finally {
       setLoading(false);
     }
@@ -124,27 +139,39 @@ export default function FeedingEfficiencyDashboard({ className }: FeedingEfficie
 
   const getEfficiencyColor = (rating: string) => {
     switch (rating) {
-      case 'excellent': return 'text-green-600';
-      case 'good': return 'text-blue-600';
-      case 'average': return 'text-yellow-600';
-      case 'poor': return 'text-orange-600';
-      case 'critical': return 'text-red-600';
-      default: return 'text-gray-600';
+      case "excellent":
+        return "text-green-600";
+      case "good":
+        return "text-blue-600";
+      case "average":
+        return "text-yellow-600";
+      case "poor":
+        return "text-orange-600";
+      case "critical":
+        return "text-red-600";
+      default:
+        return "text-gray-600";
     }
   };
 
   const getEfficiencyBadge = (rating: string) => {
     switch (rating) {
-      case 'excellent': return { color: 'bg-green-100 text-green-800', text: 'ممتاز' };
-      case 'good': return { color: 'bg-blue-100 text-blue-800', text: 'جيد' };
-      case 'average': return { color: 'bg-yellow-100 text-yellow-800', text: 'متوسط' };
-      case 'poor': return { color: 'bg-orange-100 text-orange-800', text: 'ضعيف' };
-      case 'critical': return { color: 'bg-red-100 text-red-800', text: 'حرج' };
-      default: return { color: 'bg-gray-100 text-gray-800', text: 'غير محدد' };
+      case "excellent":
+        return { color: "bg-green-100 text-green-800", text: "ممتاز" };
+      case "good":
+        return { color: "bg-blue-100 text-blue-800", text: "جيد" };
+      case "average":
+        return { color: "bg-yellow-100 text-yellow-800", text: "متوسط" };
+      case "poor":
+        return { color: "bg-orange-100 text-orange-800", text: "ضعيف" };
+      case "critical":
+        return { color: "bg-red-100 text-red-800", text: "حرج" };
+      default:
+        return { color: "bg-gray-100 text-gray-800", text: "غير محدد" };
     }
   };
 
-  const exportReport = async (format: 'pdf' | 'excel') => {
+  const exportReport = async (format: "pdf" | "excel") => {
     try {
       setLoading(true);
 
@@ -155,16 +182,18 @@ export default function FeedingEfficiencyDashboard({ className }: FeedingEfficie
       const days = parseInt(selectedPeriod);
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - days);
-      const filteredRecords = feedingRecords.filter(record => record.date >= cutoffDate);
+      const filteredRecords = feedingRecords.filter(
+        (record) => record.date >= cutoffDate,
+      );
 
       await exportFeedingReport(filteredRecords, format);
 
       toast({
         title: "تم تصدير التقرير بنجاح",
-        description: `تم تصدير تقرير كفاءة التغذية بصيغة ${format === 'pdf' ? 'PDF' : 'Excel'}`,
+        description: `تم تصدير تقرير كفاءة التغذية بصيغة ${format === "pdf" ? "PDF" : "Excel"}`,
       });
     } catch (error) {
-      console.error('Export error:', error);
+      console.error("Export error:", error);
       toast({
         title: "خطأ في التصدير",
         description: "حدث خطأ أثناء تصدير التقرير",
@@ -193,10 +222,14 @@ export default function FeedingEfficiencyDashboard({ className }: FeedingEfficie
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-farm-800">لوحة كفاءة التغذية</h2>
-          <p className="text-muted-foreground">تحليل شامل لكفاءة التغذية والأداء</p>
+          <h2 className="text-2xl font-bold text-farm-800">
+            لوحة كفاءة التغذية
+          </h2>
+          <p className="text-muted-foreground">
+            تحليل شامل لكفاءة التغذية والأداء
+          </p>
         </div>
-        
+
         <div className="flex gap-2">
           <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
             <SelectTrigger className="w-32">
@@ -209,13 +242,22 @@ export default function FeedingEfficiencyDashboard({ className }: FeedingEfficie
               <SelectItem value="365">سنة كاملة</SelectItem>
             </SelectContent>
           </Select>
-          
+
           <div className="flex">
-            <Button onClick={() => exportReport('excel')} variant="outline" size="sm">
+            <Button
+              onClick={() => exportReport("excel")}
+              variant="outline"
+              size="sm"
+            >
               <Download className="h-4 w-4 ml-2" />
               Excel
             </Button>
-            <Button onClick={() => exportReport('pdf')} variant="outline" size="sm" className="mr-2">
+            <Button
+              onClick={() => exportReport("pdf")}
+              variant="outline"
+              size="sm"
+              className="mr-2"
+            >
               <Download className="h-4 w-4 ml-2" />
               PDF
             </Button>
@@ -230,9 +272,15 @@ export default function FeedingEfficiencyDashboard({ className }: FeedingEfficie
             <div className="flex items-center">
               <Scale className="h-8 w-8 text-blue-600" />
               <div className="mr-4">
-                <p className="text-sm font-medium text-muted-foreground">معدل تحويل العلف</p>
-                <div className="text-2xl font-bold">{formattedMetrics.feedingEfficiencyFormatted}</div>
-                <Badge className={getEfficiencyBadge(metrics.efficiencyRating).color}>
+                <p className="text-sm font-medium text-muted-foreground">
+                  معدل تحويل العلف
+                </p>
+                <div className="text-2xl font-bold">
+                  {formattedMetrics.feedingEfficiencyFormatted}
+                </div>
+                <Badge
+                  className={getEfficiencyBadge(metrics.efficiencyRating).color}
+                >
                   {getEfficiencyBadge(metrics.efficiencyRating).text}
                 </Badge>
               </div>
@@ -245,9 +293,15 @@ export default function FeedingEfficiencyDashboard({ className }: FeedingEfficie
             <div className="flex items-center">
               <Users className="h-8 w-8 text-green-600" />
               <div className="mr-4">
-                <p className="text-sm font-medium text-muted-foreground">العلف لكل حيوان</p>
-                <div className="text-2xl font-bold">{formattedMetrics.feedPerAnimalFormatted}</div>
-                <p className="text-xs text-muted-foreground">من {metrics.animalsCount} حيوان</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  العلف لكل حيوان
+                </p>
+                <div className="text-2xl font-bold">
+                  {formattedMetrics.feedPerAnimalFormatted}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  من {metrics.animalsCount} حيوان
+                </p>
               </div>
             </div>
           </CardContent>
@@ -258,8 +312,12 @@ export default function FeedingEfficiencyDashboard({ className }: FeedingEfficie
             <div className="flex items-center">
               <TrendingUp className="h-8 w-8 text-purple-600" />
               <div className="mr-4">
-                <p className="text-sm font-medium text-muted-foreground">متوسط النمو اليومي</p>
-                <div className="text-2xl font-bold">{formattedMetrics.avgDailyGainFormatted}</div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  متوسط النمو اليومي
+                </p>
+                <div className="text-2xl font-bold">
+                  {formattedMetrics.avgDailyGainFormatted}
+                </div>
                 <p className="text-xs text-muted-foreground">كيلو/يوم</p>
               </div>
             </div>
@@ -271,8 +329,12 @@ export default function FeedingEfficiencyDashboard({ className }: FeedingEfficie
             <div className="flex items-center">
               <DollarSign className="h-8 w-8 text-yellow-600" />
               <div className="mr-4">
-                <p className="text-sm font-medium text-muted-foreground">التكلفة لكل كيلو نمو</p>
-                <div className="text-2xl font-bold">{formattedMetrics.costPerKgGainFormatted}</div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  التكلفة لكل كيلو نمو
+                </p>
+                <div className="text-2xl font-bold">
+                  {formattedMetrics.costPerKgGainFormatted}
+                </div>
                 <p className="text-xs text-muted-foreground">جنيه</p>
               </div>
             </div>
@@ -289,25 +351,32 @@ export default function FeedingEfficiencyDashboard({ className }: FeedingEfficie
               <Target className="h-5 w-5 ml-2" />
               درجة التحسين
             </CardTitle>
-            <CardDescription>
-              مؤشر شامل للأداء والكفاءة (0-100)
-            </CardDescription>
+            <CardDescription>مؤشر شامل للأداء والكفاءة (0-100)</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-3xl font-bold">{metrics.optimizationScore.toFixed(0)}/100</span>
-                <Badge variant={metrics.optimizationScore >= 70 ? "default" : "destructive"}>
+                <span className="text-3xl font-bold">
+                  {metrics.optimizationScore.toFixed(0)}/100
+                </span>
+                <Badge
+                  variant={
+                    metrics.optimizationScore >= 70 ? "default" : "destructive"
+                  }
+                >
                   {metrics.optimizationScore >= 70 ? "أداء جيد" : "يحتاج تحسين"}
                 </Badge>
               </div>
-              
+
               <Progress value={metrics.optimizationScore} className="h-3" />
-              
+
               <div className="text-sm text-muted-foreground">
-                مقارنة بالمعايير الصناعية: 
-                <span className={`font-semibold ml-1 ${metrics.benchmarkComparison >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {metrics.benchmarkComparison >= 0 ? '+' : ''}{metrics.benchmarkComparison.toFixed(1)}%
+                مقارنة بالمعايير الصناعية:
+                <span
+                  className={`font-semibold ml-1 ${metrics.benchmarkComparison >= 0 ? "text-green-600" : "text-red-600"}`}
+                >
+                  {metrics.benchmarkComparison >= 0 ? "+" : ""}
+                  {metrics.benchmarkComparison.toFixed(1)}%
                 </span>
               </div>
             </div>
@@ -328,12 +397,18 @@ export default function FeedingEfficiencyDashboard({ className }: FeedingEfficie
           <CardContent>
             <div className="space-y-4">
               <div>
-                <p className="text-sm text-muted-foreground">إجمالي تكلفة العلف</p>
-                <p className="text-2xl font-bold">{formattedMetrics.totalFeedCostFormatted}</p>
+                <p className="text-sm text-muted-foreground">
+                  إجمالي تكلفة العلف
+                </p>
+                <p className="text-2xl font-bold">
+                  {formattedMetrics.totalFeedCostFormatted}
+                </p>
               </div>
-              
+
               <div>
-                <p className="text-sm text-muted-foreground">الوفورات المحتملة (شهرياً)</p>
+                <p className="text-sm text-muted-foreground">
+                  الوفورات المحتملة (شهرياً)
+                </p>
                 <p className="text-xl font-semibold text-green-600">
                   {formattedMetrics.potentialSavingsFormatted}
                 </p>
@@ -341,7 +416,8 @@ export default function FeedingEfficiencyDashboard({ className }: FeedingEfficie
 
               <div className="bg-blue-50 p-3 rounded-lg">
                 <p className="text-sm font-medium text-blue-800">
-                  التكلفة لكل حيوان: {(metrics.feedCostPerAnimal).toFixed(1)} جنيه/يوم
+                  التكلفة لكل حيوان: {metrics.feedCostPerAnimal.toFixed(1)}{" "}
+                  جنيه/يوم
                 </p>
               </div>
             </div>
@@ -371,8 +447,11 @@ export default function FeedingEfficiencyDashboard({ className }: FeedingEfficie
             <CardContent>
               <div className="space-y-3">
                 {metrics.recommendations.map((recommendation, index) => (
-                  <div key={index} className="flex items-start space-x-3 space-x-reverse">
-                    {metrics.efficiencyRating === 'excellent' ? (
+                  <div
+                    key={index}
+                    className="flex items-start space-x-3 space-x-reverse"
+                  >
+                    {metrics.efficiencyRating === "excellent" ? (
                       <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
                     ) : (
                       <AlertTriangle className="h-5 w-5 text-yellow-500 mt-0.5" />
@@ -402,24 +481,39 @@ export default function FeedingEfficiencyDashboard({ className }: FeedingEfficie
                     <TableHead className="text-right">عدد الحيوانات</TableHead>
                     <TableHead className="text-right">العلف/حيوان</TableHead>
                     <TableHead className="text-right">الكفاءة</TableHead>
-                    <TableHead className="text-right">مقارنة بالمتوسط</TableHead>
+                    <TableHead className="text-right">
+                      مقارنة بالمتوسط
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {barnComparisons.map((barn) => (
                     <TableRow key={barn.barnId}>
                       <TableCell>
-                        <Badge variant={barn.ranking <= 3 ? "default" : "secondary"}>
+                        <Badge
+                          variant={barn.ranking <= 3 ? "default" : "secondary"}
+                        >
                           #{barn.ranking}
                         </Badge>
                       </TableCell>
-                      <TableCell className="font-medium">{barn.barnName}</TableCell>
+                      <TableCell className="font-medium">
+                        {barn.barnName}
+                      </TableCell>
                       <TableCell>{barn.animalsCount}</TableCell>
-                      <TableCell>{barn.feedPerAnimal.toFixed(1)} كيلو</TableCell>
+                      <TableCell>
+                        {barn.feedPerAnimal.toFixed(1)} كيلو
+                      </TableCell>
                       <TableCell>{barn.efficiency.toFixed(1)}</TableCell>
                       <TableCell>
-                        <span className={barn.efficiencyVsAverage > 0 ? 'text-green-600' : 'text-red-600'}>
-                          {barn.efficiencyVsAverage > 0 ? '+' : ''}{barn.efficiencyVsAverage.toFixed(1)}%
+                        <span
+                          className={
+                            barn.efficiencyVsAverage > 0
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }
+                        >
+                          {barn.efficiencyVsAverage > 0 ? "+" : ""}
+                          {barn.efficiencyVsAverage.toFixed(1)}%
                         </span>
                       </TableCell>
                     </TableRow>

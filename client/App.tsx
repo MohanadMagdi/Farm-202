@@ -178,18 +178,23 @@ const App = () => {
     // Initialize expiry countdown service
     if (!expiryCountdownService.isServiceRunning()) {
       expiryCountdownService.start();
-      console.log('Expiry countdown service initialized');
+      console.log("Expiry countdown service initialized");
     }
 
     // Initialize automatic weaning service
     if (!automaticWeaningService.isServiceRunning()) {
       automaticWeaningService.start();
-      console.log('Automatic weaning service initialized');
+      console.log("Automatic weaning service initialized");
     }
 
     // Suppress ResizeObserver loop error
     const handleResizeObserverError = (e: ErrorEvent) => {
-      if (e.message && e.message.includes('ResizeObserver loop completed with undelivered notifications')) {
+      if (
+        e.message &&
+        e.message.includes(
+          "ResizeObserver loop completed with undelivered notifications",
+        )
+      ) {
         e.stopImmediatePropagation();
         e.preventDefault();
         return false;
@@ -197,7 +202,11 @@ const App = () => {
     };
 
     const handleUnhandledRejection = (e: PromiseRejectionEvent) => {
-      if (e.reason && e.reason.message && e.reason.message.includes('ResizeObserver')) {
+      if (
+        e.reason &&
+        e.reason.message &&
+        e.reason.message.includes("ResizeObserver")
+      ) {
         e.preventDefault();
         return false;
       }
@@ -209,7 +218,10 @@ const App = () => {
 
     console.error = (...args: any[]) => {
       const message = args[0];
-      if (typeof message === 'string' && message.includes('ResizeObserver loop completed')) {
+      if (
+        typeof message === "string" &&
+        message.includes("ResizeObserver loop completed")
+      ) {
         return; // Suppress this specific error
       }
       originalConsoleError.apply(console, args);
@@ -217,18 +229,24 @@ const App = () => {
 
     console.warn = (...args: any[]) => {
       const message = args[0];
-      if (typeof message === 'string' && message.includes('ResizeObserver loop completed')) {
+      if (
+        typeof message === "string" &&
+        message.includes("ResizeObserver loop completed")
+      ) {
         return; // Suppress this specific warning
       }
       originalConsoleWarn.apply(console, args);
     };
 
-    window.addEventListener('error', handleResizeObserverError);
-    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    window.addEventListener("error", handleResizeObserverError);
+    window.addEventListener("unhandledrejection", handleUnhandledRejection);
 
     return () => {
-      window.removeEventListener('error', handleResizeObserverError);
-      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+      window.removeEventListener("error", handleResizeObserverError);
+      window.removeEventListener(
+        "unhandledrejection",
+        handleUnhandledRejection,
+      );
       console.error = originalConsoleError; // Restore original console.error
       console.warn = originalConsoleWarn; // Restore original console.warn
     };

@@ -1,4 +1,7 @@
-import { performAutomaticWeaningCheck, getBreedingWorkflowStats } from "./breeding-workflow";
+import {
+  performAutomaticWeaningCheck,
+  getBreedingWorkflowStats,
+} from "./breeding-workflow";
 
 /**
  * Background service for automatic weaning monitoring and processing
@@ -23,12 +26,12 @@ export class AutomaticWeaningService {
    */
   start(): void {
     if (this.isRunning) {
-      console.log('Automatic weaning service is already running');
+      console.log("Automatic weaning service is already running");
       return;
     }
 
     this.isRunning = true;
-    console.log('Starting automatic weaning service...');
+    console.log("Starting automatic weaning service...");
 
     // Run initial check
     this.performWeaningCheck();
@@ -47,7 +50,7 @@ export class AutomaticWeaningService {
     }
     this.isRunning = false;
     this.lastCheck = null;
-    console.log('Automatic weaning service stopped');
+    console.log("Automatic weaning service stopped");
   }
 
   /**
@@ -70,7 +73,7 @@ export class AutomaticWeaningService {
   private scheduleChecks(): void {
     // Check every 12 hours (twice daily)
     const checkInterval = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
-    
+
     this.intervalId = setInterval(() => {
       this.performWeaningCheck();
     }, checkInterval);
@@ -82,21 +85,21 @@ export class AutomaticWeaningService {
   private async performWeaningCheck(): Promise<void> {
     try {
       this.lastCheck = new Date();
-      console.log('Performing automatic weaning check...');
-      
+      console.log("Performing automatic weaning check...");
+
       const results = await performAutomaticWeaningCheck();
-      
+
       // Log results
       console.log(`Weaning check completed:`, {
         scanned: results.scanned,
         readyForWeaning: results.readyForWeaning,
         autoTransferred: results.autoTransferred,
-        timestamp: this.lastCheck
+        timestamp: this.lastCheck,
       });
 
       // Log notifications to console for admin visibility
       if (results.notifications.length > 0) {
-        console.log('Weaning notifications:', results.notifications);
+        console.log("Weaning notifications:", results.notifications);
       }
 
       // Log detailed statistics
@@ -104,17 +107,20 @@ export class AutomaticWeaningService {
       if (stats.overdue > 0) {
         console.warn(`⚠️ ${stats.overdue} newborns are overdue for weaning`);
       }
-      
+
       if (stats.readyForWeaning > 0) {
-        console.info(`ℹ️ ${stats.readyForWeaning} newborns are ready for weaning`);
+        console.info(
+          `ℹ️ ${stats.readyForWeaning} newborns are ready for weaning`,
+        );
       }
 
       if (results.autoTransferred > 0) {
-        console.info(`✅ Successfully auto-transferred ${results.autoTransferred} animals`);
+        console.info(
+          `✅ Successfully auto-transferred ${results.autoTransferred} animals`,
+        );
       }
-
     } catch (error) {
-      console.error('Error in automatic weaning check:', error);
+      console.error("Error in automatic weaning check:", error);
     }
   }
 
@@ -135,7 +141,7 @@ export class AutomaticWeaningService {
     checkInterval: number;
   } {
     const checkInterval = 12 * 60 * 60 * 1000; // 12 hours
-    const nextCheck = this.lastCheck 
+    const nextCheck = this.lastCheck
       ? new Date(this.lastCheck.getTime() + checkInterval)
       : null;
 
@@ -143,7 +149,7 @@ export class AutomaticWeaningService {
       isRunning: this.isRunning,
       lastCheck: this.lastCheck,
       nextCheck,
-      checkInterval
+      checkInterval,
     };
   }
 
@@ -152,7 +158,7 @@ export class AutomaticWeaningService {
    */
   setCheckInterval(hours: number): void {
     if (hours < 1 || hours > 24) {
-      throw new Error('Check interval must be between 1 and 24 hours');
+      throw new Error("Check interval must be between 1 and 24 hours");
     }
 
     // Stop current schedule
@@ -184,24 +190,24 @@ export class AutomaticWeaningService {
   }> {
     try {
       const stats = await getBreedingWorkflowStats();
-      
+
       return {
         totalNewborns: stats.totalNewborns,
         readyForWeaning: stats.readyForWeaning,
         overdue: stats.overdue,
         averageAge: stats.averageWeaningAge,
         lastCheckTime: this.lastCheck,
-        serviceStatus: this.isRunning ? 'Active' : 'Stopped'
+        serviceStatus: this.isRunning ? "Active" : "Stopped",
       };
     } catch (error) {
-      console.error('Error getting activity summary:', error);
+      console.error("Error getting activity summary:", error);
       return {
         totalNewborns: 0,
         readyForWeaning: 0,
         overdue: 0,
         averageAge: 0,
         lastCheckTime: this.lastCheck,
-        serviceStatus: 'Error'
+        serviceStatus: "Error",
       };
     }
   }
@@ -211,12 +217,12 @@ export class AutomaticWeaningService {
 export const automaticWeaningService = AutomaticWeaningService.getInstance();
 
 // Auto-start the service when this module is imported
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   // Only start in browser environment
   automaticWeaningService.start();
-  
+
   // Stop service when page unloads
-  window.addEventListener('beforeunload', () => {
+  window.addEventListener("beforeunload", () => {
     automaticWeaningService.stop();
   });
 }

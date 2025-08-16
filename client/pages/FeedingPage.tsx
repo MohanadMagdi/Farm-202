@@ -28,13 +28,13 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { formatArabicDate } from "@/lib/arabic-utils";
 import { dataService, farmHelpers } from "@/lib/data-service";
-import type { 
-  FeedingRecord, 
-  FeedingSchedule, 
-  Barn, 
-  WarehouseItem, 
+import type {
+  FeedingRecord,
+  FeedingSchedule,
+  Barn,
+  WarehouseItem,
   Animal,
-  FeedingAnalytics 
+  FeedingAnalytics,
 } from "@shared/types";
 import FeedingFormModal from "@/components/forms/FeedingFormModal";
 import FeedingEfficiencyDashboard from "@/components/FeedingEfficiencyDashboard";
@@ -58,14 +58,16 @@ import {
 } from "lucide-react";
 
 export default function FeedingPage() {
-  const [feedingSchedules, setFeedingSchedules] = useState<FeedingSchedule[]>([]);
+  const [feedingSchedules, setFeedingSchedules] = useState<FeedingSchedule[]>(
+    [],
+  );
   const [feedingRecords, setFeedingRecords] = useState<FeedingRecord[]>([]);
   const [warehouseItems, setWarehouseItems] = useState<WarehouseItem[]>([]);
   const [barns, setBarns] = useState<Barn[]>([]);
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split("T")[0]
+    new Date().toISOString().split("T")[0],
   );
 
   // Analytics state
@@ -82,7 +84,8 @@ export default function FeedingPage() {
 
   // Modal states
   const [showFeedingModal, setShowFeedingModal] = useState(false);
-  const [selectedFeedingRecord, setSelectedFeedingRecord] = useState<FeedingRecord | null>(null);
+  const [selectedFeedingRecord, setSelectedFeedingRecord] =
+    useState<FeedingRecord | null>(null);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [preselectedBarnId, setPreselectedBarnId] = useState<string>();
 
@@ -108,7 +111,12 @@ export default function FeedingPage() {
 
       setFeedingSchedules(schedulesData);
       setFeedingRecords(recordsData);
-      setWarehouseItems(warehouseData.filter(item => item.category.includes("علف") || item.category.includes("أعلاف")));
+      setWarehouseItems(
+        warehouseData.filter(
+          (item) =>
+            item.category.includes("علف") || item.category.includes("أعلاف"),
+        ),
+      );
       setBarns(barnsData);
       setAnimals(animalsData);
 
@@ -129,65 +137,98 @@ export default function FeedingPage() {
     records: FeedingRecord[],
     barnsData: Barn[],
     animalsData: Animal[],
-    warehouseData: WarehouseItem[]
+    warehouseData: WarehouseItem[],
   ) => {
     const selectedDateObj = new Date(selectedDate);
-    
+
     // Filter records for selected date
-    const todayRecords = records.filter(record => 
-      record.date.toDateString() === selectedDateObj.toDateString()
+    const todayRecords = records.filter(
+      (record) => record.date.toDateString() === selectedDateObj.toDateString(),
     );
 
-    const totalActualFeeding = todayRecords.reduce((sum, record) => sum + record.quantityIssued, 0);
-    const totalAnimalsCount = todayRecords.reduce((sum, record) => sum + record.animalsCount, 0);
+    const totalActualFeeding = todayRecords.reduce(
+      (sum, record) => sum + record.quantityIssued,
+      0,
+    );
+    const totalAnimalsCount = todayRecords.reduce(
+      (sum, record) => sum + record.animalsCount,
+      0,
+    );
     const feedCost = todayRecords.reduce((sum, record) => {
-      const feedItem = warehouseData.find(item => item.name === record.feedType);
-      return sum + (record.quantityIssued * (feedItem?.unitPrice || 0));
+      const feedItem = warehouseData.find(
+        (item) => item.name === record.feedType,
+      );
+      return sum + record.quantityIssued * (feedItem?.unitPrice || 0);
     }, 0);
 
-    const avgFeedPerAnimal = totalAnimalsCount > 0 ? totalActualFeeding / totalAnimalsCount : 0;
-    const avgFeedingEfficiency = todayRecords.length > 0 
-      ? todayRecords.reduce((sum, record) => sum + (record.feedingEfficiency || 0), 0) / todayRecords.length 
-      : 0;
+    const avgFeedPerAnimal =
+      totalAnimalsCount > 0 ? totalActualFeeding / totalAnimalsCount : 0;
+    const avgFeedingEfficiency =
+      todayRecords.length > 0
+        ? todayRecords.reduce(
+            (sum, record) => sum + (record.feedingEfficiency || 0),
+            0,
+          ) / todayRecords.length
+        : 0;
 
     // Calculate barn-specific analytics
-    const barnAnalytics = barnsData.map(barn => {
-      const barnRecords = todayRecords.filter(record => record.barnId === barn.id);
-      const barnAnimals = animalsData.filter(animal => animal.barnId === barn.id);
-      const feedIssued = barnRecords.reduce((sum, record) => sum + record.quantityIssued, 0);
-      const avgDailyGain = barnAnimals.length > 0 
-        ? barnAnimals.reduce((sum, animal) => sum + farmHelpers.calculateADG(animal), 0) / barnAnimals.length 
-        : 0;
-      const efficiency = feedIssued > 0 && avgDailyGain > 0 
-        ? farmHelpers.calculateFeedingEfficiency(feedIssued / barnAnimals.length, avgDailyGain) 
-        : 0;
+    const barnAnalytics = barnsData.map((barn) => {
+      const barnRecords = todayRecords.filter(
+        (record) => record.barnId === barn.id,
+      );
+      const barnAnimals = animalsData.filter(
+        (animal) => animal.barnId === barn.id,
+      );
+      const feedIssued = barnRecords.reduce(
+        (sum, record) => sum + record.quantityIssued,
+        0,
+      );
+      const avgDailyGain =
+        barnAnimals.length > 0
+          ? barnAnimals.reduce(
+              (sum, animal) => sum + farmHelpers.calculateADG(animal),
+              0,
+            ) / barnAnimals.length
+          : 0;
+      const efficiency =
+        feedIssued > 0 && avgDailyGain > 0
+          ? farmHelpers.calculateFeedingEfficiency(
+              feedIssued / barnAnimals.length,
+              avgDailyGain,
+            )
+          : 0;
 
       return {
         barnId: barn.id,
         barnName: barn.name,
         feedIssued,
         animalsCount: barnAnimals.length,
-        feedPerAnimal: barnAnimals.length > 0 ? feedIssued / barnAnimals.length : 0,
+        feedPerAnimal:
+          barnAnimals.length > 0 ? feedIssued / barnAnimals.length : 0,
         efficiency,
         avgDailyGain,
       };
     });
 
     // Calculate feed type usage
-    const feedTypeUsage = warehouseData.map(item => {
-      const consumed = todayRecords
-        .filter(record => record.feedType === item.name)
-        .reduce((sum, record) => sum + record.quantityIssued, 0);
-      const cost = consumed * item.unitPrice;
-      
-      return {
-        feedType: item.name,
-        consumed,
-        cost,
-        unit: item.unit,
-        recordsCount: todayRecords.filter(record => record.feedType === item.name).length,
-      };
-    }).filter(item => item.consumed > 0);
+    const feedTypeUsage = warehouseData
+      .map((item) => {
+        const consumed = todayRecords
+          .filter((record) => record.feedType === item.name)
+          .reduce((sum, record) => sum + record.quantityIssued, 0);
+        const cost = consumed * item.unitPrice;
+
+        return {
+          feedType: item.name,
+          consumed,
+          cost,
+          unit: item.unit,
+          recordsCount: todayRecords.filter(
+            (record) => record.feedType === item.name,
+          ).length,
+        };
+      })
+      .filter((item) => item.consumed > 0);
 
     setAnalytics({
       totalScheduledFeeding: 0, // TODO: Calculate from schedules
@@ -267,12 +308,12 @@ export default function FeedingPage() {
 
   // Filter data for selected date
   const selectedDateObj = new Date(selectedDate);
-  const todayRecords = feedingRecords.filter(record => 
-    record.date.toDateString() === selectedDateObj.toDateString()
+  const todayRecords = feedingRecords.filter(
+    (record) => record.date.toDateString() === selectedDateObj.toDateString(),
   );
 
-  const todaySchedules = feedingSchedules.filter(schedule => 
-    schedule.isActive
+  const todaySchedules = feedingSchedules.filter(
+    (schedule) => schedule.isActive,
   );
 
   return (
@@ -333,9 +374,7 @@ export default function FeedingPage() {
             <div className="text-2xl font-bold text-farm-800">
               {farmHelpers.formatCurrency(analytics.feedCost)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              التكلفة اليومية
-            </p>
+            <p className="text-xs text-muted-foreground">التكلفة اليومية</p>
           </CardContent>
         </Card>
 
@@ -350,9 +389,7 @@ export default function FeedingPage() {
             <div className="text-2xl font-bold text-farm-800">
               {farmHelpers.formatWeight(analytics.avgFeedPerAnimal)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              كيلو/حيوان/يوم
-            </p>
+            <p className="text-xs text-muted-foreground">كيلو/حيوان/يوم</p>
           </CardContent>
         </Card>
 
@@ -384,9 +421,7 @@ export default function FeedingPage() {
             <div className="text-2xl font-bold text-green-600">
               {todayRecords.length}
             </div>
-            <p className="text-xs text-muted-foreground">
-              وجبة اليوم
-            </p>
+            <p className="text-xs text-muted-foreground">وجبة اليوم</p>
           </CardContent>
         </Card>
       </div>
@@ -403,52 +438,73 @@ export default function FeedingPage() {
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {analytics.barnAnalytics
-                .filter(barn => barn.feedIssued > 0)
+                .filter((barn) => barn.feedIssued > 0)
                 .map((barn) => (
-                <div key={barn.barnId} className="p-4 bg-white rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-medium">{barn.barnName}</h4>
-                    <Badge variant="outline">{barn.animalsCount} حيوان</Badge>
+                  <div key={barn.barnId} className="p-4 bg-white rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-medium">{barn.barnName}</h4>
+                      <Badge variant="outline">{barn.animalsCount} حيوان</Badge>
+                    </div>
+
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>العلف المصروف:</span>
+                        <span className="font-semibold">
+                          {farmHelpers.formatWeight(barn.feedIssued)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>العلف/حيوان:</span>
+                        <span className="font-semibold">
+                          {farmHelpers.formatWeight(barn.feedPerAnimal)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>متوسط النمو:</span>
+                        <span className="font-semibold">
+                          {barn.avgDailyGain.toFixed(2)} كيلو/يوم
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>كفاءة التغذية:</span>
+                        <span
+                          className={`font-semibold ${
+                            barn.efficiency <= 3
+                              ? "text-green-600"
+                              : barn.efficiency <= 5
+                                ? "text-yellow-600"
+                                : "text-red-600"
+                          }`}
+                        >
+                          {barn.efficiency.toFixed(1)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="mt-2 pt-2 border-t">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">
+                          تقييم الكفاءة:
+                        </span>
+                        <Badge
+                          className={
+                            barn.efficiency <= 3
+                              ? "bg-green-100 text-green-800"
+                              : barn.efficiency <= 5
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-red-100 text-red-800"
+                          }
+                        >
+                          {barn.efficiency <= 3
+                            ? "ممتاز"
+                            : barn.efficiency <= 5
+                              ? "جيد"
+                              : "يحت��ج تحسين"}
+                        </Badge>
+                      </div>
+                    </div>
                   </div>
-                  
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>العلف المصروف:</span>
-                      <span className="font-semibold">{farmHelpers.formatWeight(barn.feedIssued)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>العلف/حيوان:</span>
-                      <span className="font-semibold">{farmHelpers.formatWeight(barn.feedPerAnimal)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>متوسط النمو:</span>
-                      <span className="font-semibold">{barn.avgDailyGain.toFixed(2)} كيلو/يوم</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>كفاءة التغذية:</span>
-                      <span className={`font-semibold ${
-                        barn.efficiency <= 3 ? 'text-green-600' :
-                        barn.efficiency <= 5 ? 'text-yellow-600' : 'text-red-600'
-                      }`}>
-                        {barn.efficiency.toFixed(1)}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-2 pt-2 border-t">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">تقييم الكفاءة:</span>
-                      <Badge className={
-                        barn.efficiency <= 3 ? 'bg-green-100 text-green-800' :
-                        barn.efficiency <= 5 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
-                      }>
-                        {barn.efficiency <= 3 ? 'ممتاز' :
-                         barn.efficiency <= 5 ? 'جيد' : 'يحت��ج تحسين'}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                ))}
             </div>
           </CardContent>
         </Card>
@@ -477,11 +533,19 @@ export default function FeedingPage() {
                       <TableHead className="text-right">الوقت</TableHead>
                       <TableHead className="text-right">الحظيرة</TableHead>
                       <TableHead className="text-right">نوع العلف</TableHead>
-                      <TableHead className="text-right">الكمية المصروفة</TableHead>
-                      <TableHead className="text-right">عدد الحيوانات</TableHead>
+                      <TableHead className="text-right">
+                        الكمية المصروفة
+                      </TableHead>
+                      <TableHead className="text-right">
+                        عدد الحيوانات
+                      </TableHead>
                       <TableHead className="text-right">العلف/حيوان</TableHead>
-                      <TableHead className="text-right">كفاءة التغذية</TableHead>
-                      <TableHead className="text-right">المسجل بواسطة</TableHead>
+                      <TableHead className="text-right">
+                        كفاءة التغذية
+                      </TableHead>
+                      <TableHead className="text-right">
+                        المسجل بواسطة
+                      </TableHead>
                       <TableHead className="text-right">الإجراءات</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -510,11 +574,16 @@ export default function FeedingPage() {
                             {farmHelpers.formatWeight(record.feedPerAnimal)}
                           </TableCell>
                           <TableCell className="text-right">
-                            <Badge className={
-                              (record.feedingEfficiency || 0) <= 3 ? 'bg-green-100 text-green-800' :
-                              (record.feedingEfficiency || 0) <= 5 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
-                            }>
-                              {record.feedingEfficiency?.toFixed(1) || 'N/A'}
+                            <Badge
+                              className={
+                                (record.feedingEfficiency || 0) <= 3
+                                  ? "bg-green-100 text-green-800"
+                                  : (record.feedingEfficiency || 0) <= 5
+                                    ? "bg-yellow-100 text-yellow-800"
+                                    : "bg-red-100 text-red-800"
+                              }
+                            >
+                              {record.feedingEfficiency?.toFixed(1) || "N/A"}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
@@ -606,18 +675,28 @@ export default function FeedingPage() {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex flex-wrap gap-1 justify-end">
-                              {schedule.scheduledTime.split(',').map((time, index) => (
-                                <Badge key={index} variant="outline" className="text-xs">
-                                  {time.trim()}
-                                </Badge>
-                              ))}
+                              {schedule.scheduledTime
+                                .split(",")
+                                .map((time, index) => (
+                                  <Badge
+                                    key={index}
+                                    variant="outline"
+                                    className="text-xs"
+                                  >
+                                    {time.trim()}
+                                  </Badge>
+                                ))}
                             </div>
                           </TableCell>
                           <TableCell className="text-right">
-                            <Badge className={
-                              schedule.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                            }>
-                              {schedule.isActive ? 'نشط' : 'غير نشط'}
+                            <Badge
+                              className={
+                                schedule.isActive
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-gray-100 text-gray-800"
+                              }
+                            >
+                              {schedule.isActive ? "نشط" : "غير نشط"}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
@@ -639,7 +718,9 @@ export default function FeedingPage() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleAddFeeding(schedule.barnId)}
+                                onClick={() =>
+                                  handleAddFeeding(schedule.barnId)
+                                }
                                 className="h-8 w-8 p-0 text-green-600 hover:text-green-700"
                               >
                                 <Utensils className="h-3 w-3" />
@@ -665,7 +746,10 @@ export default function FeedingPage() {
 
         <TabsContent value="analytics" className="space-y-4" dir="rtl">
           <FeedingEfficiencyDashboard />
-          <div className="grid gap-6 md:grid-cols-2" style={{ display: 'none' }}>
+          <div
+            className="grid gap-6 md:grid-cols-2"
+            style={{ display: "none" }}
+          >
             {/* Feed Type Usage */}
             <Card>
               <CardHeader>
@@ -691,15 +775,23 @@ export default function FeedingPage() {
                       </div>
                       <div className="flex justify-between text-xs text-muted-foreground">
                         <span>{item.recordsCount} وجبة</span>
-                        <span>{(item.consumed / analytics.totalActualFeeding * 100).toFixed(1)}% من الإجمالي</span>
+                        <span>
+                          {(
+                            (item.consumed / analytics.totalActualFeeding) *
+                            100
+                          ).toFixed(1)}
+                          % من الإجمالي
+                        </span>
                       </div>
-                      <Progress 
-                        value={item.consumed / analytics.totalActualFeeding * 100} 
+                      <Progress
+                        value={
+                          (item.consumed / analytics.totalActualFeeding) * 100
+                        }
                         className="h-2"
                       />
                     </div>
                   ))}
-                  
+
                   {analytics.feedTypeUsage.length === 0 && (
                     <p className="text-center text-muted-foreground py-4">
                       لا توجد بيانات استهلاك لهذا التاريخ
@@ -722,27 +814,35 @@ export default function FeedingPage() {
                   <div className="p-3 bg-green-50 rounded-lg">
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-medium text-green-800">ممتاز</span>
-                      <Badge className="bg-green-100 text-green-800">أقل من 3</Badge>
+                      <Badge className="bg-green-100 text-green-800">
+                        أقل من 3
+                      </Badge>
                     </div>
                     <p className="text-sm text-green-700">
                       كفاءة عالية في تحويل العلف إلى نمو
                     </p>
                   </div>
-                  
+
                   <div className="p-3 bg-yellow-50 rounded-lg">
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-medium text-yellow-800">جيد</span>
-                      <Badge className="bg-yellow-100 text-yellow-800">3 - 5</Badge>
+                      <Badge className="bg-yellow-100 text-yellow-800">
+                        3 - 5
+                      </Badge>
                     </div>
                     <p className="text-sm text-yellow-700">
                       كفاءة مقبولة، ��مكن تحسينها
                     </p>
                   </div>
-                  
+
                   <div className="p-3 bg-red-50 rounded-lg">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium text-red-800">يحتاج تحسين</span>
-                      <Badge className="bg-red-100 text-red-800">أكثر من 5</Badge>
+                      <span className="font-medium text-red-800">
+                        يحتاج تحسين
+                      </span>
+                      <Badge className="bg-red-100 text-red-800">
+                        أكثر من 5
+                      </Badge>
                     </div>
                     <p className="text-sm text-red-700">
                       كفاءة منخفضة، مراجعة نوعية العلف والصحة
@@ -753,8 +853,13 @@ export default function FeedingPage() {
                     <h4 className="font-medium mb-2">المعادلات المستخدمة:</h4>
                     <div className="space-y-1 text-sm text-muted-foreground">
                       <p>• العلف لكل حيوان = إجمالي العلف ÷ عدد الحيوانات</p>
-                      <p>• كفاءة التغذية = العلف لكل حيوان ÷ معدل النمو اليومي</p>
-                      <p>• معدل النمو اليومي = (الوزن الحالي - وزن الميلاد) ÷ العمر بالأيام</p>
+                      <p>
+                        • كفاءة التغذية = العلف لكل حيوان ÷ معدل النمو اليومي
+                      </p>
+                      <p>
+                        • معدل النمو اليومي = (الوزن الحالي - وزن الميلاد) ÷
+                        العمر بالأيام
+                      </p>
                     </div>
                   </div>
                 </div>

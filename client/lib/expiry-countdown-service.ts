@@ -23,12 +23,12 @@ export class ExpiryCountdownService {
    */
   start(): void {
     if (this.isRunning) {
-      console.log('Expiry countdown service is already running');
+      console.log("Expiry countdown service is already running");
       return;
     }
 
     this.isRunning = true;
-    console.log('Starting expiry countdown service...');
+    console.log("Starting expiry countdown service...");
 
     // Run immediately on start
     this.updateExpiryCountdown();
@@ -46,7 +46,7 @@ export class ExpiryCountdownService {
       this.intervalId = null;
     }
     this.isRunning = false;
-    console.log('Expiry countdown service stopped');
+    console.log("Expiry countdown service stopped");
   }
 
   /**
@@ -63,7 +63,7 @@ export class ExpiryCountdownService {
     // Update every hour during business hours (6 AM - 10 PM)
     // Update once daily during off hours
     const updateInterval = this.getUpdateInterval();
-    
+
     this.intervalId = setInterval(() => {
       this.updateExpiryCountdown();
     }, updateInterval);
@@ -75,12 +75,12 @@ export class ExpiryCountdownService {
   private getUpdateInterval(): number {
     const now = new Date();
     const hour = now.getHours();
-    
+
     // During business hours (6 AM - 10 PM): update every hour
     if (hour >= 6 && hour <= 22) {
       return 60 * 60 * 1000; // 1 hour
     }
-    
+
     // During off hours: update every 6 hours
     return 6 * 60 * 60 * 1000; // 6 hours
   }
@@ -90,23 +90,23 @@ export class ExpiryCountdownService {
    */
   private async updateExpiryCountdown(): Promise<void> {
     try {
-      console.log('Updating expiry countdown for all warehouse items...');
-      
+      console.log("Updating expiry countdown for all warehouse items...");
+
       // Get all warehouse items
       const items = await dataService.warehouseItems.getAll();
-      
+
       // Update remaining days using our countdown system
       const updatedItems = updateItemExpiryCountdown(items);
-      
+
       // Save updated items back to the database
-      const itemsToUpdate = updatedItems.filter(item => 
-        item.hasExpiry && item.remainingDays !== undefined
+      const itemsToUpdate = updatedItems.filter(
+        (item) => item.hasExpiry && item.remainingDays !== undefined,
       );
 
       for (const item of itemsToUpdate) {
         try {
           await dataService.warehouseItems.update(item.id, {
-            remainingDays: item.remainingDays
+            remainingDays: item.remainingDays,
           });
         } catch (error) {
           console.error(`Error updating item ${item.id}:`, error);
@@ -114,27 +114,32 @@ export class ExpiryCountdownService {
       }
 
       console.log(`Updated expiry countdown for ${itemsToUpdate.length} items`);
-      
+
       // Log items that need attention
-      const expiredItems = updatedItems.filter(item => 
-        item.hasExpiry && item.remainingDays !== undefined && item.remainingDays < 0
+      const expiredItems = updatedItems.filter(
+        (item) =>
+          item.hasExpiry &&
+          item.remainingDays !== undefined &&
+          item.remainingDays < 0,
       );
-      
-      const expiringSoon = updatedItems.filter(item => 
-        item.hasExpiry && item.remainingDays !== undefined && 
-        item.remainingDays >= 0 && item.remainingDays <= 7
+
+      const expiringSoon = updatedItems.filter(
+        (item) =>
+          item.hasExpiry &&
+          item.remainingDays !== undefined &&
+          item.remainingDays >= 0 &&
+          item.remainingDays <= 7,
       );
 
       if (expiredItems.length > 0) {
         console.warn(`⚠️ ${expiredItems.length} items have expired`);
       }
-      
+
       if (expiringSoon.length > 0) {
         console.warn(`⏰ ${expiringSoon.length} items expiring within 7 days`);
       }
-
     } catch (error) {
-      console.error('Error updating expiry countdown:', error);
+      console.error("Error updating expiry countdown:", error);
     }
   }
 
@@ -168,7 +173,7 @@ export class ExpiryCountdownService {
     return {
       isRunning: this.isRunning,
       nextUpdate: this.getNextUpdateTime(),
-      updateInterval: this.getUpdateInterval()
+      updateInterval: this.getUpdateInterval(),
     };
   }
 }
@@ -177,12 +182,12 @@ export class ExpiryCountdownService {
 export const expiryCountdownService = ExpiryCountdownService.getInstance();
 
 // Auto-start the service when this module is imported
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   // Only start in browser environment
   expiryCountdownService.start();
-  
+
   // Stop service when page unloads
-  window.addEventListener('beforeunload', () => {
+  window.addEventListener("beforeunload", () => {
     expiryCountdownService.stop();
   });
 }

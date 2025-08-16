@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -8,17 +8,23 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  Users, 
-  Baby, 
+import {
+  Users,
+  Baby,
   Heart,
   Eye,
   AlertTriangle,
   CheckCircle,
-  RefreshCw
+  RefreshCw,
 } from "lucide-react";
-import { getOffspringForMother, getMotherForChild } from "@/lib/animal-relationships";
-import { autoRepairRelationships, performDataHealthCheck } from "@/lib/data-sync";
+import {
+  getOffspringForMother,
+  getMotherForChild,
+} from "@/lib/animal-relationships";
+import {
+  autoRepairRelationships,
+  performDataHealthCheck,
+} from "@/lib/data-sync";
 import { formatArabicDate } from "@/lib/arabic-utils";
 import type { Animal } from "@shared/types";
 import { toast } from "@/hooks/use-toast";
@@ -28,14 +34,17 @@ interface AnimalRelationshipCardProps {
   onViewAnimal?: (animalId: string) => void;
 }
 
-export default function AnimalRelationshipCard({ animal, onViewAnimal }: AnimalRelationshipCardProps) {
+export default function AnimalRelationshipCard({
+  animal,
+  onViewAnimal,
+}: AnimalRelationshipCardProps) {
   const [offspring, setOffspring] = useState<Animal[]>([]);
   const [mother, setMother] = useState<Animal | null>(null);
   const [loading, setLoading] = useState(false);
   const [healthCheck, setHealthCheck] = useState({
     isHealthy: true,
     issues: 0,
-    lastCheck: new Date()
+    lastCheck: new Date(),
   });
 
   useEffect(() => {
@@ -45,25 +54,24 @@ export default function AnimalRelationshipCard({ animal, onViewAnimal }: AnimalR
   const loadRelationshipData = async () => {
     try {
       setLoading(true);
-      
+
       // Load offspring if this is a female
-      if (animal.sex === 'female') {
+      if (animal.sex === "female") {
         const offspringData = await getOffspringForMother(animal.id);
         setOffspring(offspringData);
       }
-      
+
       // Load mother if this animal has one
       if (animal.motherId) {
         const motherData = await getMotherForChild(animal.id);
         setMother(motherData);
       }
-      
+
       // Perform health check
       const health = await performDataHealthCheck();
       setHealthCheck(health);
-      
     } catch (error) {
-      console.error('Error loading relationship data:', error);
+      console.error("Error loading relationship data:", error);
     } finally {
       setLoading(false);
     }
@@ -73,7 +81,7 @@ export default function AnimalRelationshipCard({ animal, onViewAnimal }: AnimalR
     try {
       setLoading(true);
       const result = await autoRepairRelationships();
-      
+
       if (result.repaired > 0) {
         toast({
           title: "تم إصلاح العلاقات",
@@ -86,17 +94,16 @@ export default function AnimalRelationshipCard({ animal, onViewAnimal }: AnimalR
           description: "جميع العلاقات صحيحة",
         });
       }
-      
+
       if (result.errors.length > 0) {
         toast({
           title: "أخطاء في الإصلاح",
-          description: result.errors.join(', '),
+          description: result.errors.join(", "),
           variant: "destructive",
         });
       }
-      
     } catch (error) {
-      console.error('Error repairing relationships:', error);
+      console.error("Error repairing relationships:", error);
       toast({
         title: "خطأ في الإصلاح",
         description: "حدث خطأ أثناء إصلاح العلاقات",
@@ -108,7 +115,7 @@ export default function AnimalRelationshipCard({ animal, onViewAnimal }: AnimalR
   };
 
   // Don't show the card if there are no relationships
-  if (!animal.motherId && animal.sex !== 'female') {
+  if (!animal.motherId && animal.sex !== "female") {
     return null;
   }
 
@@ -136,7 +143,9 @@ export default function AnimalRelationshipCard({ animal, onViewAnimal }: AnimalR
                 onClick={handleRepairRelationships}
                 disabled={loading}
               >
-                <RefreshCw className={`h-3 w-3 ml-1 ${loading ? 'animate-spin' : ''}`} />
+                <RefreshCw
+                  className={`h-3 w-3 ml-1 ${loading ? "animate-spin" : ""}`}
+                />
                 إصلاح
               </Button>
             )}
@@ -146,7 +155,7 @@ export default function AnimalRelationshipCard({ animal, onViewAnimal }: AnimalR
           معلومات الأمومة والنسل للحيوان {animal.earTagId}
         </CardDescription>
       </CardHeader>
-      
+
       <CardContent className="space-y-4">
         {/* Mother Information */}
         {animal.motherId && (
@@ -167,14 +176,23 @@ export default function AnimalRelationshipCard({ animal, onViewAnimal }: AnimalR
                 </Button>
               )}
             </div>
-            
+
             {mother ? (
               <div className="space-y-1">
-                <p><strong>رقم الأذن:</strong> {mother.earTagId}</p>
-                <p><strong>الوزن:</strong> {mother.weight.toFixed(1)} كيلو</p>
-                <p><strong>الحالة الصحية:</strong> {mother.healthStatus}</p>
+                <p>
+                  <strong>رقم الأذن:</strong> {mother.earTagId}
+                </p>
+                <p>
+                  <strong>الوزن:</strong> {mother.weight.toFixed(1)} كيلو
+                </p>
+                <p>
+                  <strong>الحالة الصحية:</strong> {mother.healthStatus}
+                </p>
                 {animal.birthDate && (
-                  <p><strong>تاريخ الميلاد:</strong> {formatArabicDate(animal.birthDate)}</p>
+                  <p>
+                    <strong>تاريخ الميلاد:</strong>{" "}
+                    {formatArabicDate(animal.birthDate)}
+                  </p>
                 )}
               </div>
             ) : (
@@ -187,7 +205,7 @@ export default function AnimalRelationshipCard({ animal, onViewAnimal }: AnimalR
         )}
 
         {/* Offspring Information */}
-        {animal.sex === 'female' && (
+        {animal.sex === "female" && (
           <div className="bg-blue-50 p-4 rounded-lg border">
             <div className="flex items-center justify-between mb-2">
               <h4 className="font-medium flex items-center">
@@ -198,22 +216,25 @@ export default function AnimalRelationshipCard({ animal, onViewAnimal }: AnimalR
                 المسجل: {animal.offspringCount || 0}
               </Badge>
             </div>
-            
+
             {offspring.length > 0 ? (
               <div className="space-y-2">
                 {offspring.map((child) => (
-                  <div 
-                    key={child.id} 
+                  <div
+                    key={child.id}
                     className="flex items-center justify-between bg-white p-2 rounded border"
                   >
                     <div>
                       <span className="font-medium">{child.earTagId}</span>
                       <span className="text-sm text-muted-foreground ml-2">
-                        ({child.sex === 'male' ? 'ذكر' : 'أنثى'}, {child.weight.toFixed(1)} كيلو)
+                        ({child.sex === "male" ? "ذكر" : "أنثى"},{" "}
+                        {child.weight.toFixed(1)} كيلو)
                       </span>
                     </div>
                     <div className="flex items-center space-x-1 space-x-reverse">
-                      <Badge variant={child.sex === 'male' ? 'default' : 'secondary'}>
+                      <Badge
+                        variant={child.sex === "male" ? "default" : "secondary"}
+                      >
                         {child.category}
                       </Badge>
                       {onViewAnimal && (
@@ -232,13 +253,14 @@ export default function AnimalRelationshipCard({ animal, onViewAnimal }: AnimalR
             ) : (
               <p className="text-muted-foreground">لا يوجد نسل مسجل</p>
             )}
-            
+
             {/* Data consistency check */}
             {animal.offspringCount !== offspring.length && (
               <div className="mt-2 flex items-center text-yellow-600">
                 <AlertTriangle className="h-4 w-4 ml-2" />
                 <span className="text-sm">
-                  عدم تطابق في العدد: مسجل {animal.offspringCount} ولكن موجود {offspring.length}
+                  عدم تطابق في العدد: مسجل {animal.offspringCount} ولكن موجود{" "}
+                  {offspring.length}
                 </span>
               </div>
             )}
@@ -246,7 +268,7 @@ export default function AnimalRelationshipCard({ animal, onViewAnimal }: AnimalR
         )}
 
         {/* Breeding Status for Females */}
-        {animal.sex === 'female' && animal.isPregnant && (
+        {animal.sex === "female" && animal.isPregnant && (
           <div className="bg-green-50 p-4 rounded-lg border">
             <h4 className="font-medium flex items-center mb-2">
               <Heart className="h-4 w-4 ml-2 text-green-600" />
@@ -254,10 +276,16 @@ export default function AnimalRelationshipCard({ animal, onViewAnimal }: AnimalR
             </h4>
             <div className="space-y-1">
               {animal.aiDate && (
-                <p><strong>تاريخ التلقيح:</strong> {formatArabicDate(animal.aiDate)}</p>
+                <p>
+                  <strong>تاريخ التلقيح:</strong>{" "}
+                  {formatArabicDate(animal.aiDate)}
+                </p>
               )}
               {animal.expectedBirthDate && (
-                <p><strong>تاريخ الولادة المتوقع:</strong> {formatArabicDate(animal.expectedBirthDate)}</p>
+                <p>
+                  <strong>تاريخ الولادة المتوقع:</strong>{" "}
+                  {formatArabicDate(animal.expectedBirthDate)}
+                </p>
               )}
             </div>
           </div>

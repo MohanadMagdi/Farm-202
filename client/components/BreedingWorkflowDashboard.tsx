@@ -1,6 +1,20 @@
 import { useState, useEffect } from "react";
-import { Calendar, Clock, Baby, ArrowRight, AlertTriangle, CheckCircle, Zap } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Calendar,
+  Clock,
+  Baby,
+  ArrowRight,
+  AlertTriangle,
+  CheckCircle,
+  Zap,
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -31,7 +45,7 @@ import {
   performAutomaticWeaningCheck,
   WEANING_CONFIG,
   type WeaningCandidate,
-  type BreedingWorkflowStats
+  type BreedingWorkflowStats,
 } from "@/lib/breeding-workflow";
 
 export default function BreedingWorkflowDashboard() {
@@ -42,10 +56,11 @@ export default function BreedingWorkflowDashboard() {
     weaningThisWeek: 0,
     weaningThisMonth: 0,
     overdue: 0,
-    averageWeaningAge: 0
+    averageWeaningAge: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [selectedCandidate, setSelectedCandidate] = useState<WeaningCandidate | null>(null);
+  const [selectedCandidate, setSelectedCandidate] =
+    useState<WeaningCandidate | null>(null);
   const [showWeaningModal, setShowWeaningModal] = useState(false);
   const [weaningNotes, setWeaningNotes] = useState("");
   const [processingWeaning, setProcessingWeaning] = useState(false);
@@ -60,13 +75,13 @@ export default function BreedingWorkflowDashboard() {
       setLoading(true);
       const [candidatesData, statsData] = await Promise.all([
         getWeaningCandidates(),
-        getBreedingWorkflowStats()
+        getBreedingWorkflowStats(),
       ]);
-      
+
       setCandidates(candidatesData);
       setStats(statsData);
     } catch (error) {
-      console.error('Error loading breeding workflow data:', error);
+      console.error("Error loading breeding workflow data:", error);
       toast({
         title: "خطأ في تحميل البيانات",
         description: "حدث خطأ أثناء تحميل بيانات سير العمل",
@@ -79,24 +94,24 @@ export default function BreedingWorkflowDashboard() {
 
   const handleWeaningTransfer = async () => {
     if (!selectedCandidate) return;
-    
+
     try {
       setProcessingWeaning(true);
-      
+
       const result = await performWeaningTransfer(selectedCandidate.id, {
         notes: weaningNotes || undefined,
-        recordedBy: 'user' // This should come from auth context
+        recordedBy: "user", // This should come from auth context
       });
-      
+
       if (result.success) {
         toast({
           title: "تم الفطام بنجاح",
           description: result.message,
         });
-        
+
         // Refresh data
         await loadData();
-        
+
         // Close modal
         setShowWeaningModal(false);
         setSelectedCandidate(null);
@@ -109,7 +124,7 @@ export default function BreedingWorkflowDashboard() {
         });
       }
     } catch (error) {
-      console.error('Error performing weaning:', error);
+      console.error("Error performing weaning:", error);
       toast({
         title: "خطأ في الفطام",
         description: "حدث خطأ أثناء عملية الفطام",
@@ -124,7 +139,7 @@ export default function BreedingWorkflowDashboard() {
     try {
       const results = await performAutomaticWeaningCheck();
       setAutoScanResults(results.notifications);
-      
+
       if (results.autoTransferred > 0) {
         toast({
           title: "تم الفطام التلقائي",
@@ -143,7 +158,7 @@ export default function BreedingWorkflowDashboard() {
         });
       }
     } catch (error) {
-      console.error('Error in auto scan:', error);
+      console.error("Error in auto scan:", error);
       toast({
         title: "خطأ في ال��حص التلقائي",
         description: "حدث خطأ أثناء الفحص التلقائي",
@@ -162,7 +177,9 @@ export default function BreedingWorkflowDashboard() {
     if (candidate.isReadyForWeaning) {
       if (candidate.currentAge >= WEANING_CONFIG.MAX_WEANING_AGE_MONTHS) {
         return <Badge variant="destructive">متأخر جداً</Badge>;
-      } else if (candidate.currentAge >= WEANING_CONFIG.STANDARD_WEANING_AGE_MONTHS) {
+      } else if (
+        candidate.currentAge >= WEANING_CONFIG.STANDARD_WEANING_AGE_MONTHS
+      ) {
         return <Badge variant="default">جاهز</Badge>;
       } else {
         return <Badge variant="secondary">قريب</Badge>;
@@ -201,7 +218,9 @@ export default function BreedingWorkflowDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">إجمالي المواليد</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              إجمالي المواليد
+            </CardTitle>
             <Baby className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -218,10 +237,10 @@ export default function BreedingWorkflowDashboard() {
             <CheckCircle className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.readyForWeaning}</div>
-            <p className="text-xs text-muted-foreground">
-              متاح للنقل فوراً
-            </p>
+            <div className="text-2xl font-bold text-green-600">
+              {stats.readyForWeaning}
+            </div>
+            <p className="text-xs text-muted-foreground">متاح للنقل فوراً</p>
           </CardContent>
         </Card>
 
@@ -231,10 +250,10 @@ export default function BreedingWorkflowDashboard() {
             <Calendar className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.weaningThisWeek}</div>
-            <p className="text-xs text-muted-foreground">
-              موعد فطام متوقع
-            </p>
+            <div className="text-2xl font-bold text-blue-600">
+              {stats.weaningThisWeek}
+            </div>
+            <p className="text-xs text-muted-foreground">موعد فطام متوقع</p>
           </CardContent>
         </Card>
 
@@ -244,10 +263,10 @@ export default function BreedingWorkflowDashboard() {
             <AlertTriangle className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{stats.overdue}</div>
-            <p className="text-xs text-muted-foreground">
-              تجاوز موعد الفطام
-            </p>
+            <div className="text-2xl font-bold text-red-600">
+              {stats.overdue}
+            </div>
+            <p className="text-xs text-muted-foreground">تجاوز موعد الفطام</p>
           </CardContent>
         </Card>
       </div>
@@ -280,7 +299,9 @@ export default function BreedingWorkflowDashboard() {
           <CardContent>
             <ul className="space-y-1">
               {autoScanResults.map((result, index) => (
-                <li key={index} className="text-sm">• {result}</li>
+                <li key={index} className="text-sm">
+                  • {result}
+                </li>
               ))}
             </ul>
           </CardContent>
@@ -316,7 +337,7 @@ export default function BreedingWorkflowDashboard() {
               </TableHeader>
               <TableBody>
                 {candidates.map((candidate) => (
-                  <TableRow 
+                  <TableRow
                     key={candidate.id}
                     className={`border-r-4 ${getUrgencyColor(candidate)}`}
                   >
@@ -324,23 +345,17 @@ export default function BreedingWorkflowDashboard() {
                       {candidate.earTagId}
                     </TableCell>
                     <TableCell>
-                      {candidate.motherEarTagId || 'غير محدد'}
+                      {candidate.motherEarTagId || "غير محدد"}
                     </TableCell>
-                    <TableCell>
-                      {candidate.currentAge} شهر
-                    </TableCell>
-                    <TableCell>
-                      {candidate.currentWeight} كيلو
-                    </TableCell>
+                    <TableCell>{candidate.currentAge} شهر</TableCell>
+                    <TableCell>{candidate.currentWeight} كيلو</TableCell>
                     <TableCell>
                       {formatArabicDate(candidate.estimatedWeaningDate)}
                     </TableCell>
-                    <TableCell>
-                      {getStatusBadge(candidate)}
-                    </TableCell>
+                    <TableCell>{getStatusBadge(candidate)}</TableCell>
                     <TableCell>
                       <Badge variant="outline">
-                        {candidate.newCategory === 'male' ? 'ذكر' : 'أنثى'}
+                        {candidate.newCategory === "male" ? "ذكر" : "أنثى"}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -372,29 +387,35 @@ export default function BreedingWorkflowDashboard() {
             <DialogTitle>تأكيد الفطام</DialogTitle>
             <DialogDescription>
               هل أنت متأكد من فطام {selectedCandidate?.earTagId} ونقله إلى فئة{" "}
-              {selectedCandidate?.newCategory === 'male' ? 'الذكور' : 'الإناث'}؟
+              {selectedCandidate?.newCategory === "male" ? "الذكور" : "الإناث"}؟
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedCandidate && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="font-medium">العمر الحالي:</span> {selectedCandidate.currentAge} شهر
+                  <span className="font-medium">العمر الحالي:</span>{" "}
+                  {selectedCandidate.currentAge} شهر
                 </div>
                 <div>
-                  <span className="font-medium">الوزن:</span> {selectedCandidate.currentWeight} كيلو
+                  <span className="font-medium">الوزن:</span>{" "}
+                  {selectedCandidate.currentWeight} كيلو
                 </div>
                 <div>
-                  <span className="font-medium">الأم:</span> {selectedCandidate.motherEarTagId || 'غير محدد'}
+                  <span className="font-medium">الأم:</span>{" "}
+                  {selectedCandidate.motherEarTagId || "غير محدد"}
                 </div>
                 <div>
-                  <span className="font-medium">تاريخ الميلاد:</span> {formatArabicDate(selectedCandidate.birthDate)}
+                  <span className="font-medium">تاريخ الميلاد:</span>{" "}
+                  {formatArabicDate(selectedCandidate.birthDate)}
                 </div>
               </div>
-              
+
               <div>
-                <label className="text-sm font-medium">ملاحظات (اختيارية)</label>
+                <label className="text-sm font-medium">
+                  ملاحظات (اختيارية)
+                </label>
                 <Textarea
                   value={weaningNotes}
                   onChange={(e) => setWeaningNotes(e.target.value)}
@@ -404,16 +425,19 @@ export default function BreedingWorkflowDashboard() {
               </div>
             </div>
           )}
-          
+
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowWeaningModal(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowWeaningModal(false)}
+            >
               إلغاء
             </Button>
-            <Button 
+            <Button
               onClick={handleWeaningTransfer}
               disabled={processingWeaning}
             >
-              {processingWeaning ? 'جاري الفطام...' : 'تأكيد الفطام'}
+              {processingWeaning ? "جاري الفطام..." : "تأكيد الفطام"}
             </Button>
           </DialogFooter>
         </DialogContent>

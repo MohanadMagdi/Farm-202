@@ -34,9 +34,13 @@ import {
   calculateExpiryStats,
   filterItemsByExpiryStatus,
   formatRemainingDays,
-  getExpiryBadgeVariant
+  getExpiryBadgeVariant,
 } from "@/lib/expiry-notifications";
-import type { WarehouseItem, WarehouseType, StockMovement } from "@shared/types";
+import type {
+  WarehouseItem,
+  WarehouseType,
+  StockMovement,
+} from "@shared/types";
 import InventoryFormModal from "@/components/forms/InventoryFormModal";
 import StockMovementModal from "@/components/forms/StockMovementModal";
 import { toast } from "@/hooks/use-toast";
@@ -61,12 +65,35 @@ import {
   Settings,
 } from "lucide-react";
 
-const warehouseTypes: Record<WarehouseType, { label: string; icon: any; color: string }> = {
-  chemicals: { label: "المواد الكيميائية والأعلاف", icon: Beaker, color: "text-blue-600" },
-  medicines: { label: "الأدوية والمحسنات", icon: PillBottle, color: "text-green-600" },
-  medical_supplies: { label: "المستلزمات الطبية", icon: Stethoscope, color: "text-pink-600" },
-  equipment: { label: "المعدات والأجهزة", icon: Settings, color: "text-purple-600" },
-  maintenance: { label: "الصيانة والإصلاح", icon: Wrench, color: "text-orange-600" },
+const warehouseTypes: Record<
+  WarehouseType,
+  { label: string; icon: any; color: string }
+> = {
+  chemicals: {
+    label: "المواد الكيميائية والأعلاف",
+    icon: Beaker,
+    color: "text-blue-600",
+  },
+  medicines: {
+    label: "الأدوية والمحسنات",
+    icon: PillBottle,
+    color: "text-green-600",
+  },
+  medical_supplies: {
+    label: "المستلزمات الطبية",
+    icon: Stethoscope,
+    color: "text-pink-600",
+  },
+  equipment: {
+    label: "المعدات والأجهزة",
+    icon: Settings,
+    color: "text-purple-600",
+  },
+  maintenance: {
+    label: "الصيانة والإصلاح",
+    icon: Wrench,
+    color: "text-orange-600",
+  },
 };
 
 export default function InventoryPage() {
@@ -97,9 +124,9 @@ export default function InventoryPage() {
 
     // Check for URL parameters
     const urlParams = new URLSearchParams(window.location.search);
-    const filterParam = urlParams.get('filter');
-    if (filterParam === 'expiry') {
-      setStatusFilter('expiring');
+    const filterParam = urlParams.get("filter");
+    if (filterParam === "expiry") {
+      setStatusFilter("expiring");
     }
   }, []);
 
@@ -117,17 +144,17 @@ export default function InventoryPage() {
 
       // Calculate expiry statistics
       const stats = calculateExpiryStats(updatedItems);
-      setAnalytics(prev => ({
+      setAnalytics((prev) => ({
         ...prev,
         expiredCount: stats.expired,
-        expiringCount: stats.expiringSoon
+        expiringCount: stats.expiringSoon,
       }));
 
       // Calculate other analytics
       const warehouseAnalytics = await farmHelpers.getWarehouseAnalytics();
-      setAnalytics(prev => ({
+      setAnalytics((prev) => ({
         ...prev,
-        ...warehouseAnalytics
+        ...warehouseAnalytics,
       }));
     } catch (error) {
       console.error("Error loading warehouse data:", error);
@@ -155,7 +182,7 @@ export default function InventoryPage() {
 
   const handleStockMovement = (
     item: WarehouseItem,
-    direction: "in" | "out"
+    direction: "in" | "out",
   ) => {
     setSelectedItem(item);
     setStockModalMode(direction);
@@ -170,7 +197,7 @@ export default function InventoryPage() {
     });
   };
 
-  const exportReport = async (format: 'pdf' | 'excel') => {
+  const exportReport = async (format: "pdf" | "excel") => {
     try {
       setLoading(true);
 
@@ -181,10 +208,10 @@ export default function InventoryPage() {
 
       toast({
         title: "تم تصدير التقرير بنجاح",
-        description: `تم تصدير تقرير المخزون بصيغة ${format === 'pdf' ? 'PDF' : 'Excel'}`,
+        description: `تم تصدير تقرير المخزون بصيغة ${format === "pdf" ? "PDF" : "Excel"}`,
       });
     } catch (error) {
-      console.error('Export error:', error);
+      console.error("Export error:", error);
       toast({
         title: "خطأ في التصدير",
         description: "حدث خطأ أثناء تصدير التقرير",
@@ -229,7 +256,7 @@ export default function InventoryPage() {
       (item) =>
         item.name.includes(searchTerm) ||
         item.category.includes(searchTerm) ||
-        (item.supplier && item.supplier.includes(searchTerm))
+        (item.supplier && item.supplier.includes(searchTerm)),
     )
     .filter((item) => typeFilter === "all" || item.type === typeFilter)
     .filter((item) => {
@@ -239,10 +266,18 @@ export default function InventoryPage() {
         return item.currentStock <= item.minStockLevel;
       if (statusFilter === "out_of_stock") return item.currentStock === 0;
       if (statusFilter === "expired")
-        return item.hasExpiry && item.remainingDays !== undefined && item.remainingDays < 0;
+        return (
+          item.hasExpiry &&
+          item.remainingDays !== undefined &&
+          item.remainingDays < 0
+        );
       if (statusFilter === "expiring") {
-        return item.hasExpiry && item.remainingDays !== undefined &&
-               item.remainingDays >= 0 && item.remainingDays <= 7;
+        return (
+          item.hasExpiry &&
+          item.remainingDays !== undefined &&
+          item.remainingDays >= 0 &&
+          item.remainingDays <= 7
+        );
       }
       return true;
     });
@@ -270,24 +305,28 @@ export default function InventoryPage() {
 
     return {
       text,
-      color: badgeVariant === 'destructive' ? "bg-red-100 text-red-800" :
-             badgeVariant === 'default' ? "bg-orange-100 text-orange-800" :
-             "bg-yellow-100 text-yellow-800"
+      color:
+        badgeVariant === "destructive"
+          ? "bg-red-100 text-red-800"
+          : badgeVariant === "default"
+            ? "bg-orange-100 text-orange-800"
+            : "bg-yellow-100 text-yellow-800",
     };
   };
 
   const lowStockItems = warehouseItems.filter(
-    (item) => item.currentStock <= item.minStockLevel
+    (item) => item.currentStock <= item.minStockLevel,
   );
 
   const expiredItems = warehouseItems.filter(
-    (item) => item.hasExpiry && item.expiryDate && item.expiryDate < new Date()
+    (item) => item.hasExpiry && item.expiryDate && item.expiryDate < new Date(),
   );
 
   const expiringItems = warehouseItems.filter((item) => {
     if (!item.hasExpiry || !item.expiryDate) return false;
     const daysUntilExpiry = Math.ceil(
-      (item.expiryDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+      (item.expiryDate.getTime() - new Date().getTime()) /
+        (1000 * 60 * 60 * 24),
     );
     return daysUntilExpiry > 0 && daysUntilExpiry <= 7;
   });
@@ -299,16 +338,26 @@ export default function InventoryPage() {
         <div>
           <h1 className="text-3xl font-bold text-farm-800">إدارة المستودعات</h1>
           <p className="text-muted-foreground">
-            إدارة المستودعات الخمسة: الكيماويات، الأدوية، المستلزمات الطبية، المعدات، الصيانة
+            إدارة المستودعات الخمسة: الكيماويات، الأدوية، المستلزمات الطبية،
+            المعدات، الصيانة
           </p>
         </div>
         <div className="flex items-center space-x-3 space-x-reverse">
           <div className="flex">
-            <Button variant="outline" size="sm" onClick={() => exportReport('excel')}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => exportReport("excel")}
+            >
               <Download className="h-4 w-4 ml-2" />
               Excel
             </Button>
-            <Button variant="outline" size="sm" onClick={() => exportReport('pdf')} className="mr-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => exportReport("pdf")}
+              className="mr-2"
+            >
               <Download className="h-4 w-4 ml-2" />
               PDF
             </Button>
@@ -327,12 +376,21 @@ export default function InventoryPage() {
       {/* Warehouse Type Stats */}
       <div className="grid gap-4 md:grid-cols-5">
         {Object.entries(warehouseTypes).map(([type, config]) => {
-          const typeItems = warehouseItems.filter(item => item.type === type);
-          const totalValue = typeItems.reduce((sum, item) => sum + (item.currentStock * item.unitPrice), 0);
-          const lowStockCount = typeItems.filter(item => item.currentStock <= item.minStockLevel).length;
-          
+          const typeItems = warehouseItems.filter((item) => item.type === type);
+          const totalValue = typeItems.reduce(
+            (sum, item) => sum + item.currentStock * item.unitPrice,
+            0,
+          );
+          const lowStockCount = typeItems.filter(
+            (item) => item.currentStock <= item.minStockLevel,
+          ).length;
+
           return (
-            <Card key={type} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setTypeFilter(type)}>
+            <Card
+              key={type}
+              className="cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => setTypeFilter(type)}
+            >
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium flex items-center">
                   <config.icon className={`h-4 w-4 ml-2 ${config.color}`} />
@@ -362,7 +420,9 @@ export default function InventoryPage() {
       <div className="grid gap-4 md:grid-cols-5">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">إجمالي الأصناف</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              إجمالي الأصناف
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-farm-800">
@@ -380,13 +440,17 @@ export default function InventoryPage() {
             <div className="text-2xl font-bold text-farm-800">
               {farmHelpers.formatCurrency(analytics.totalValue)}
             </div>
-            <p className="text-xs text-muted-foreground">القيمة الإجمالية الحالية</p>
+            <p className="text-xs text-muted-foreground">
+              القيمة الإجمالية الحالية
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">تنبيهات المخزون</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              تنبيهات المخزون
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center space-x-2 space-x-reverse">
@@ -397,7 +461,9 @@ export default function InventoryPage() {
                     <div className="text-2xl font-bold text-yellow-600">
                       {analytics.lowStockCount}
                     </div>
-                    <p className="text-xs text-muted-foreground">صنف مخزون منخفض</p>
+                    <p className="text-xs text-muted-foreground">
+                      صنف مخزون منخفض
+                    </p>
                   </div>
                 </>
               ) : (
@@ -405,7 +471,9 @@ export default function InventoryPage() {
                   <Package className="h-5 w-5 text-green-500" />
                   <div>
                     <div className="text-2xl font-bold text-green-600">0</div>
-                    <p className="text-xs text-muted-foreground">لا ��وجد تنبيهات</p>
+                    <p className="text-xs text-muted-foreground">
+                      لا ��وجد تنبيهات
+                    </p>
                   </div>
                 </>
               )}
@@ -415,17 +483,23 @@ export default function InventoryPage() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">انتهاء الصلاحية</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              انتهاء الصلاحية
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-1">
               <div className="flex justify-between text-sm">
                 <span>منتهية:</span>
-                <span className="font-semibold text-red-600">{analytics.expiredCount}</span>
+                <span className="font-semibold text-red-600">
+                  {analytics.expiredCount}
+                </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>تنتهي قريباً:</span>
-                <span className="font-semibold text-orange-600">{analytics.expiringCount}</span>
+                <span className="font-semibold text-orange-600">
+                  {analytics.expiringCount}
+                </span>
               </div>
             </div>
           </CardContent>
@@ -433,7 +507,9 @@ export default function InventoryPage() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">الحركة الشهرية</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              الحركة الشهرية
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-farm-800">
@@ -448,7 +524,9 @@ export default function InventoryPage() {
       </div>
 
       {/* Alerts for Low Stock & Expiry */}
-      {(lowStockItems.length > 0 || expiredItems.length > 0 || expiringItems.length > 0) && (
+      {(lowStockItems.length > 0 ||
+        expiredItems.length > 0 ||
+        expiringItems.length > 0) && (
         <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-3">
           {lowStockItems.length > 0 && (
             <Card className="border-yellow-200 bg-yellow-50">
@@ -461,13 +539,20 @@ export default function InventoryPage() {
               <CardContent className="max-h-48 overflow-y-auto">
                 <div className="space-y-2">
                   {lowStockItems.slice(0, 5).map((item) => (
-                    <div key={item.id} className="flex items-center justify-between p-2 bg-white rounded text-sm">
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between p-2 bg-white rounded text-sm"
+                    >
                       <span className="font-medium">{item.name}</span>
                       <div className="flex items-center space-x-2 space-x-reverse">
                         <span className="text-muted-foreground">
                           {item.currentStock} {item.unit}
                         </span>
-                        <Button size="sm" variant="outline" onClick={() => requestSupply(item)}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => requestSupply(item)}
+                        >
                           طلب توريد
                         </Button>
                       </div>
@@ -494,10 +579,21 @@ export default function InventoryPage() {
               <CardContent className="max-h-48 overflow-y-auto">
                 <div className="space-y-2">
                   {expiredItems.slice(0, 5).map((item) => (
-                    <div key={item.id} className="flex items-center justify-between p-2 bg-white rounded text-sm">
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between p-2 bg-white rounded text-sm"
+                    >
                       <span className="font-medium">{item.name}</span>
                       <span className="text-red-600 text-xs">
-                        انتهت منذ {Math.abs(Math.ceil((item.expiryDate!.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)))} يوم
+                        انتهت منذ{" "}
+                        {Math.abs(
+                          Math.ceil(
+                            (item.expiryDate!.getTime() -
+                              new Date().getTime()) /
+                              (1000 * 60 * 60 * 24),
+                          ),
+                        )}{" "}
+                        يوم
                       </span>
                     </div>
                   ))}
@@ -522,10 +618,17 @@ export default function InventoryPage() {
               <CardContent className="max-h-48 overflow-y-auto">
                 <div className="space-y-2">
                   {expiringItems.slice(0, 5).map((item) => (
-                    <div key={item.id} className="flex items-center justify-between p-2 bg-white rounded text-sm">
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between p-2 bg-white rounded text-sm"
+                    >
                       <span className="font-medium">{item.name}</span>
                       <span className="text-orange-600 text-xs">
-                        {Math.ceil((item.expiryDate!.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} أيام
+                        {Math.ceil(
+                          (item.expiryDate!.getTime() - new Date().getTime()) /
+                            (1000 * 60 * 60 * 24),
+                        )}{" "}
+                        أيام
                       </span>
                     </div>
                   ))}
@@ -602,7 +705,9 @@ export default function InventoryPage() {
           <Card>
             <CardHeader>
               <CardTitle>قائمة الأصناف</CardTitle>
-              <CardDescription>إجمالي {filteredItems.length} صنف</CardDescription>
+              <CardDescription>
+                إجمالي {filteredItems.length} صنف
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="rounded-md border">
@@ -611,17 +716,24 @@ export default function InventoryPage() {
                     <TableRow>
                       <TableHead className="text-right">اسم الصنف</TableHead>
                       <TableHead className="text-right">المستودع</TableHead>
-                      <TableHead className="text-right">المخزون الحالي</TableHead>
+                      <TableHead className="text-right">
+                        المخزون الحالي
+                      </TableHead>
                       <TableHead className="text-right">الحد الأدنى</TableHead>
                       <TableHead className="text-right">سعر الوحدة</TableHead>
                       <TableHead className="text-right">الحالة</TableHead>
-                      <TableHead className="text-right">انتهاء الصلاحية</TableHead>
+                      <TableHead className="text-right">
+                        انتهاء الصلاحية
+                      </TableHead>
                       <TableHead className="text-right">الإجراءات</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredItems.map((item) => {
-                      const stockBadge = getStockBadge(item.currentStock, item.minStockLevel);
+                      const stockBadge = getStockBadge(
+                        item.currentStock,
+                        item.minStockLevel,
+                      );
                       const expiryBadge = getExpiryBadge(item);
                       const warehouseConfig = warehouseTypes[item.type];
 
@@ -630,39 +742,64 @@ export default function InventoryPage() {
                           <TableCell>
                             <div>
                               <div className="font-medium">{item.name}</div>
-                              <div className="text-sm text-muted-foreground">{item.category}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {item.category}
+                              </div>
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline" className="flex items-center w-fit">
-                              <warehouseConfig.icon className={`h-3 w-3 ml-1 ${warehouseConfig.color}`} />
+                            <Badge
+                              variant="outline"
+                              className="flex items-center w-fit"
+                            >
+                              <warehouseConfig.icon
+                                className={`h-3 w-3 ml-1 ${warehouseConfig.color}`}
+                              />
                               {warehouseConfig.label}
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            <div className={getStockStatusColor(item.currentStock, item.minStockLevel)}>
-                              <span className="font-medium">{item.currentStock}</span>
-                              <span className="text-sm text-muted-foreground mr-1">{item.unit}</span>
+                            <div
+                              className={getStockStatusColor(
+                                item.currentStock,
+                                item.minStockLevel,
+                              )}
+                            >
+                              <span className="font-medium">
+                                {item.currentStock}
+                              </span>
+                              <span className="text-sm text-muted-foreground mr-1">
+                                {item.unit}
+                              </span>
                             </div>
                           </TableCell>
                           <TableCell>
                             {item.minStockLevel} {item.unit}
                           </TableCell>
                           <TableCell>
-                            {farmHelpers.formatCurrency(item.unitPrice)} / {item.unit}
+                            {farmHelpers.formatCurrency(item.unitPrice)} /{" "}
+                            {item.unit}
                           </TableCell>
                           <TableCell>
-                            <Badge className={stockBadge.color}>{stockBadge.text}</Badge>
+                            <Badge className={stockBadge.color}>
+                              {stockBadge.text}
+                            </Badge>
                           </TableCell>
                           <TableCell>
                             {expiryBadge ? (
-                              <Badge className={expiryBadge.color}>{expiryBadge.text}</Badge>
+                              <Badge className={expiryBadge.color}>
+                                {expiryBadge.text}
+                              </Badge>
                             ) : item.hasExpiry ? (
                               <span className="text-sm text-muted-foreground">
-                                {item.expiryDate ? formatArabicDate(item.expiryDate) : "غير محدد"}
+                                {item.expiryDate
+                                  ? formatArabicDate(item.expiryDate)
+                                  : "غير محدد"}
                               </span>
                             ) : (
-                              <span className="text-sm text-muted-foreground">لا ينتهي</span>
+                              <span className="text-sm text-muted-foreground">
+                                لا ينتهي
+                              </span>
                             )}
                           </TableCell>
                           <TableCell className="text-right">
@@ -714,7 +851,9 @@ export default function InventoryPage() {
           <Card>
             <CardHeader>
               <CardTitle>حركة المخزون</CardTitle>
-              <CardDescription>سجل بحركات الداخل والخارج للمخزون</CardDescription>
+              <CardDescription>
+                سجل بحركات الداخل والخارج للمخزون
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="rounded-md border">
@@ -732,7 +871,9 @@ export default function InventoryPage() {
                   </TableHeader>
                   <TableBody>
                     {stockMovements.map((movement) => {
-                      const item = warehouseItems.find((i) => i.id === movement.itemId);
+                      const item = warehouseItems.find(
+                        (i) => i.id === movement.itemId,
+                      );
 
                       return (
                         <TableRow key={movement.id}>
@@ -744,7 +885,9 @@ export default function InventoryPage() {
                           </TableCell>
                           <TableCell className="text-right">
                             <Badge
-                              variant={movement.type === "in" ? "default" : "secondary"}
+                              variant={
+                                movement.type === "in" ? "default" : "secondary"
+                              }
                               className={
                                 movement.type === "in"
                                   ? "bg-green-100 text-green-800"
@@ -757,8 +900,12 @@ export default function InventoryPage() {
                           <TableCell className="text-right">
                             {movement.quantity} {item?.unit || ""}
                           </TableCell>
-                          <TableCell className="text-right">{movement.reason}</TableCell>
-                          <TableCell className="text-right">{movement.recordedBy}</TableCell>
+                          <TableCell className="text-right">
+                            {movement.reason}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {movement.recordedBy}
+                          </TableCell>
                           <TableCell className="text-right">
                             {farmHelpers.formatCurrency(movement.totalCost)}
                           </TableCell>

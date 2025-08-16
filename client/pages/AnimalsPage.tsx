@@ -93,13 +93,20 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
 
   const calculateAnalytics = (animalsData: Animal[]) => {
     const totalCount = animalsData.length;
-    const avgWeight = totalCount > 0 
-      ? animalsData.reduce((sum, animal) => sum + animal.weight, 0) / totalCount 
-      : 0;
-    const healthyCount = animalsData.filter(a => a.healthStatus === "سليم" || a.healthStatus === "سليمة").length;
-    const totalValue = animalsData.reduce((sum, animal) => sum + (animal.currentPrice || animal.purchasePrice || 0), 0);
-    const pregnantCount = animalsData.filter(a => a.isPregnant).length;
-    const isolatedCount = animalsData.filter(a => a.isIsolated).length;
+    const avgWeight =
+      totalCount > 0
+        ? animalsData.reduce((sum, animal) => sum + animal.weight, 0) /
+          totalCount
+        : 0;
+    const healthyCount = animalsData.filter(
+      (a) => a.healthStatus === "سليم" || a.healthStatus === "سليمة",
+    ).length;
+    const totalValue = animalsData.reduce(
+      (sum, animal) => sum + (animal.currentPrice || animal.purchasePrice || 0),
+      0,
+    );
+    const pregnantCount = animalsData.filter((a) => a.isPregnant).length;
+    const isolatedCount = animalsData.filter((a) => a.isIsolated).length;
 
     setAnalytics({
       totalCount,
@@ -111,23 +118,23 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
     });
   };
 
-  const handleExport = async (format: 'pdf' | 'excel') => {
+  const handleExport = async (format: "pdf" | "excel") => {
     try {
       setLoading(true);
 
       // Filter animals based on current type
       const filteredAnimals = animalType
-        ? animals.filter(animal => animal.category === animalType)
+        ? animals.filter((animal) => animal.category === animalType)
         : animals;
 
       await exportAnimalsReport(filteredAnimals, format, animalType);
 
       toast({
         title: "تم تصدير التقرير بنجاح",
-        description: `تم تصدير تقرير ${getAnimalTypeLabel(animalType)} بصيغة ${format === 'pdf' ? 'PDF' : 'Excel'}`,
+        description: `تم تصدير تقرير ${getAnimalTypeLabel(animalType)} بصيغة ${format === "pdf" ? "PDF" : "Excel"}`,
       });
     } catch (error) {
-      console.error('Export error:', error);
+      console.error("Export error:", error);
       toast({
         title: "خطأ في التصدير",
         description: "حدث خطأ أثناء تصدير التقرير",
@@ -176,13 +183,16 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
     }
   };
 
-  const filteredAnimals = animals.filter(
-    (animal) =>
-      animal.earTagId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (animal.supplier && animal.supplier.includes(searchTerm))
-  ).filter(
-    (animal) => healthFilter === "all" || animal.healthStatus === healthFilter
-  );
+  const filteredAnimals = animals
+    .filter(
+      (animal) =>
+        animal.earTagId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (animal.supplier && animal.supplier.includes(searchTerm)),
+    )
+    .filter(
+      (animal) =>
+        healthFilter === "all" || animal.healthStatus === healthFilter,
+    );
 
   const getHealthStatusColor = (status: string) => {
     const healthyStatuses = ["سليم", "سليمة", "healthy"];
@@ -204,19 +214,27 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
 
   const getAnimalTypeLabel = (type?: AnimalCategory) => {
     switch (type) {
-      case "male": return "الذكور";
-      case "female": return "الإناث";
-      case "newborn": return "الصغار";
-      default: return "جميع الحيوانات";
+      case "male":
+        return "الذكور";
+      case "female":
+        return "الإناث";
+      case "newborn":
+        return "الصغار";
+      default:
+        return "جميع الحيوانات";
     }
   };
 
   const getAddButtonLabel = (type: AnimalCategory) => {
     switch (type) {
-      case "male": return "إضافة ذكر جديد";
-      case "female": return "إضافة أنثى جديدة";
-      case "newborn": return "إضافة صغير جديد";
-      default: return "إضافة حيوان جديد";
+      case "male":
+        return "إضافة ذكر جديد";
+      case "female":
+        return "إضافة أنثى جديدة";
+      case "newborn":
+        return "إضافة صغير جديد";
+      default:
+        return "إضافة حيوان جديد";
     }
   };
 
@@ -249,11 +267,20 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
         </div>
         <div className="flex items-center space-x-3 space-x-reverse">
           <div className="flex">
-            <Button variant="outline" size="sm" onClick={() => handleExport('excel')}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleExport("excel")}
+            >
               <Download className="h-4 w-4 ml-2" />
               Excel
             </Button>
-            <Button variant="outline" size="sm" onClick={() => handleExport('pdf')} className="mr-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleExport("pdf")}
+              className="mr-2"
+            >
               <Download className="h-4 w-4 ml-2" />
               PDF
             </Button>
@@ -305,7 +332,9 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">القيمة التقديرية</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              القيمة التقديرية
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-farm-800">
@@ -412,7 +441,10 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                     <TableCell className="font-medium text-right">
                       {animal.earTagId}
                       {animal.isIsolated && (
-                        <Badge variant="outline" className="mr-2 bg-orange-50 text-orange-700">
+                        <Badge
+                          variant="outline"
+                          className="mr-2 bg-orange-50 text-orange-700"
+                        >
                           عزل
                         </Badge>
                       )}
@@ -421,12 +453,17 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                       {farmHelpers.formatWeight(animal.weight)}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Badge className={getHealthStatusColor(animal.healthStatus)}>
+                      <Badge
+                        className={getHealthStatusColor(animal.healthStatus)}
+                      >
                         {animal.healthStatus}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Badge variant="outline" className="flex items-center w-fit">
+                      <Badge
+                        variant="outline"
+                        className="flex items-center w-fit"
+                      >
                         <MapPin className="h-3 w-3 ml-1" />
                         {animal.barnId}
                       </Badge>
@@ -444,12 +481,15 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                     )}
                     {animalType === "newborn" && (
                       <TableCell className="text-right">
-                        {animal.motherEarTagId || (animal.motherId ? "غير محدد" : "-")}
+                        {animal.motherEarTagId ||
+                          (animal.motherId ? "غير محدد" : "-")}
                       </TableCell>
                     )}
                     {animalType !== "newborn" && (
                       <TableCell className="text-right">
-                        {farmHelpers.formatCurrency(animal.currentPrice || animal.purchasePrice)}
+                        {farmHelpers.formatCurrency(
+                          animal.currentPrice || animal.purchasePrice,
+                        )}
                       </TableCell>
                     )}
                     <TableCell className="text-right">

@@ -22,13 +22,13 @@ import { Badge } from "@/components/ui/badge";
 import { dataService, farmHelpers } from "@/lib/data-service";
 import type { WarehouseItem, Barn, StockMovement } from "@shared/types";
 import { toast } from "@/hooks/use-toast";
-import { 
+import {
   Upload,
   Download,
   AlertTriangle,
   Calculator,
   FileText,
-  Camera
+  Camera,
 } from "lucide-react";
 
 interface StockMovementModalProps {
@@ -66,12 +66,12 @@ export default function StockMovementModal({
     if (isOpen) {
       loadBarns();
       resetForm();
-      
+
       // Pre-fill unit price if available
       if (warehouseItem) {
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
-          unitPrice: warehouseItem.unitPrice.toString()
+          unitPrice: warehouseItem.unitPrice.toString(),
         }));
       }
     }
@@ -80,7 +80,7 @@ export default function StockMovementModal({
   const loadBarns = async () => {
     try {
       const barnsData = await dataService.barns.getAll();
-      setBarns(barnsData.filter(barn => barn.isActive));
+      setBarns(barnsData.filter((barn) => barn.isActive));
     } catch (error) {
       console.error("Error loading barns:", error);
     }
@@ -134,13 +134,14 @@ export default function StockMovementModal({
 
     setLoading(true);
     try {
-      const finalReason = formData.reason === "other" ? formData.customReason : formData.reason;
+      const finalReason =
+        formData.reason === "other" ? formData.customReason : formData.reason;
       const quantity = parseFloat(formData.quantity);
       const unitPrice = parseFloat(formData.unitPrice);
       const totalCost = quantity * unitPrice;
 
       // Create stock movement record
-      const stockMovement: Omit<StockMovement, 'id'> = {
+      const stockMovement: Omit<StockMovement, "id"> = {
         itemId: warehouseItem.id,
         type: mode,
         quantity,
@@ -159,13 +160,14 @@ export default function StockMovementModal({
       await dataService.stockMovements.create(stockMovement);
 
       // Update warehouse item stock
-      const newStock = mode === "in" 
-        ? warehouseItem.currentStock + quantity 
-        : warehouseItem.currentStock - quantity;
+      const newStock =
+        mode === "in"
+          ? warehouseItem.currentStock + quantity
+          : warehouseItem.currentStock - quantity;
 
       await dataService.warehouseItems.update(warehouseItem.id, {
         currentStock: Math.max(0, newStock), // Prevent negative stock
-        updatedAt: new Date()
+        updatedAt: new Date(),
       });
 
       toast({
@@ -189,7 +191,8 @@ export default function StockMovementModal({
 
   const currentStock = warehouseItem?.currentStock || 0;
   const quantity = parseFloat(formData.quantity) || 0;
-  const newStock = mode === "in" ? currentStock + quantity : currentStock - quantity;
+  const newStock =
+    mode === "in" ? currentStock + quantity : currentStock - quantity;
   const totalCost = quantity * (parseFloat(formData.unitPrice) || 0);
 
   const isValidMovement = () => {
@@ -201,7 +204,7 @@ export default function StockMovementModal({
 
   const getStockStatusColor = (stock: number) => {
     if (!warehouseItem) return "text-gray-600";
-    
+
     if (stock <= 0) return "text-red-600";
     if (stock <= warehouseItem.minStockLevel) return "text-yellow-600";
     return "text-green-600";
@@ -231,14 +234,14 @@ export default function StockMovementModal({
               <div className="text-sm flex items-center gap-2">
                 <span>
                   المخزون الحالي:
-                  <span className={`font-bold mr-1 ${getStockStatusColor(currentStock)}`}>
+                  <span
+                    className={`font-bold mr-1 ${getStockStatusColor(currentStock)}`}
+                  >
                     {currentStock} {warehouseItem.unit}
                   </span>
                 </span>
                 {currentStock <= warehouseItem.minStockLevel && (
-                  <Badge variant="destructive">
-                    أقل من الحد الأدنى
-                  </Badge>
+                  <Badge variant="destructive">أقل من الحد الأدنى</Badge>
                 )}
               </div>
             </div>
@@ -264,7 +267,9 @@ export default function StockMovementModal({
               {quantity > 0 && warehouseItem && (
                 <div className="text-xs mt-1 space-y-1">
                   <p className={getStockStatusColor(newStock)}>
-                    المخزون بعد العملية: <span className="font-bold">{newStock}</span> {warehouseItem.unit}
+                    المخزون بعد العملية:{" "}
+                    <span className="font-bold">{newStock}</span>{" "}
+                    {warehouseItem.unit}
                   </p>
                   {mode === "out" && newStock < 0 && (
                     <div className="flex items-center text-red-600">
@@ -272,12 +277,14 @@ export default function StockMovementModal({
                       <span>الكمية المطلوبة أكبر من المخزون المتاح!</span>
                     </div>
                   )}
-                  {mode === "out" && newStock >= 0 && newStock <= warehouseItem.minStockLevel && (
-                    <div className="flex items-center text-yellow-600">
-                      <AlertTriangle className="h-3 w-3 ml-1" />
-                      <span>س��صبح المخزون أقل من الحد الأدنى</span>
-                    </div>
-                  )}
+                  {mode === "out" &&
+                    newStock >= 0 &&
+                    newStock <= warehouseItem.minStockLevel && (
+                      <div className="flex items-center text-yellow-600">
+                        <AlertTriangle className="h-3 w-3 ml-1" />
+                        <span>س��صبح المخزون أقل من الحد الأدنى</span>
+                      </div>
+                    )}
                 </div>
               )}
             </div>
@@ -298,7 +305,9 @@ export default function StockMovementModal({
               {totalCost > 0 && (
                 <div className="flex items-center text-sm text-muted-foreground mt-1">
                   <Calculator className="h-3 w-3 ml-1" />
-                  <span>إجمالي التكلفة: {farmHelpers.formatCurrency(totalCost)}</span>
+                  <span>
+                    إجمالي التكلفة: {farmHelpers.formatCurrency(totalCost)}
+                  </span>
                 </div>
               )}
             </div>
@@ -342,7 +351,9 @@ export default function StockMovementModal({
           )}
 
           {/* Document Information */}
-          {(formData.reason === "شراء جديد" || formData.reason === "استلام شحنة" || formData.reason === "بيع") && (
+          {(formData.reason === "شراء جديد" ||
+            formData.reason === "استلام شحنة" ||
+            formData.reason === "بيع") && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-blue-50 rounded-lg">
               <div>
                 <Label htmlFor="billNumber">رقم الفاتورة</Label>
@@ -368,7 +379,10 @@ export default function StockMovementModal({
                     id="receiptNumber"
                     value={formData.receiptNumber}
                     onChange={(e) =>
-                      setFormData({ ...formData, receiptNumber: e.target.value })
+                      setFormData({
+                        ...formData,
+                        receiptNumber: e.target.value,
+                      })
                     }
                     placeholder="REC-2024-001"
                   />
@@ -381,7 +395,8 @@ export default function StockMovementModal({
           )}
 
           {/* Warehouse Transfer */}
-          {(formData.reason === "تحويل وارد" || formData.reason === "تحويل صادر") && (
+          {(formData.reason === "تحويل وارد" ||
+            formData.reason === "تحويل صادر") && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-purple-50 rounded-lg">
               {formData.reason === "تحويل وارد" && (
                 <div>
@@ -390,13 +405,16 @@ export default function StockMovementModal({
                     id="fromWarehouse"
                     value={formData.fromWarehouse}
                     onChange={(e) =>
-                      setFormData({ ...formData, fromWarehouse: e.target.value })
+                      setFormData({
+                        ...formData,
+                        fromWarehouse: e.target.value,
+                      })
                     }
                     placeholder="اسم المستودع المُرسِل"
                   />
                 </div>
               )}
-              
+
               {formData.reason === "تحويل صادر" && (
                 <div>
                   <Label htmlFor="toWarehouse">إلى المستودع</Label>
@@ -445,12 +463,46 @@ export default function StockMovementModal({
             <div className="p-4 bg-gray-50 rounded-lg">
               <h4 className="font-medium mb-2">ملخص العملية</h4>
               <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>النوع: <span className="font-medium">{mode === "in" ? "إضافة" : "صرف"}</span></div>
-                <div>الكمية: <span className="font-medium">{quantity} {warehouseItem?.unit}</span></div>
-                <div>سعر الوحدة: <span className="font-medium">{farmHelpers.formatCurrency(parseFloat(formData.unitPrice) || 0)}</span></div>
-                <div>إجمالي التكلفة: <span className="font-medium">{farmHelpers.formatCurrency(totalCost)}</span></div>
-                <div>المخزون الحالي: <span className="font-medium">{currentStock} {warehouseItem?.unit}</span></div>
-                <div>المخزون الجديد: <span className={`font-medium ${getStockStatusColor(newStock)}`}>{newStock} {warehouseItem?.unit}</span></div>
+                <div>
+                  النوع:{" "}
+                  <span className="font-medium">
+                    {mode === "in" ? "إضافة" : "صرف"}
+                  </span>
+                </div>
+                <div>
+                  الكمية:{" "}
+                  <span className="font-medium">
+                    {quantity} {warehouseItem?.unit}
+                  </span>
+                </div>
+                <div>
+                  سعر الوحدة:{" "}
+                  <span className="font-medium">
+                    {farmHelpers.formatCurrency(
+                      parseFloat(formData.unitPrice) || 0,
+                    )}
+                  </span>
+                </div>
+                <div>
+                  إجمالي التكلفة:{" "}
+                  <span className="font-medium">
+                    {farmHelpers.formatCurrency(totalCost)}
+                  </span>
+                </div>
+                <div>
+                  المخزون الحالي:{" "}
+                  <span className="font-medium">
+                    {currentStock} {warehouseItem?.unit}
+                  </span>
+                </div>
+                <div>
+                  المخزون الجديد:{" "}
+                  <span
+                    className={`font-medium ${getStockStatusColor(newStock)}`}
+                  >
+                    {newStock} {warehouseItem?.unit}
+                  </span>
+                </div>
               </div>
             </div>
           )}
@@ -463,7 +515,11 @@ export default function StockMovementModal({
           <Button
             onClick={handleSave}
             disabled={loading || !isValidMovement()}
-            className={mode === "in" ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"}
+            className={
+              mode === "in"
+                ? "bg-green-600 hover:bg-green-700"
+                : "bg-red-600 hover:bg-red-700"
+            }
           >
             {loading
               ? "جاري الحفظ..."

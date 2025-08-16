@@ -67,28 +67,41 @@ export default function AnimalsOverviewPage() {
 
   const calculateAnalytics = (animalsData: Animal[]) => {
     const totalAnimals = animalsData.length;
-    const maleCount = animalsData.filter(a => a.category === "male").length;
-    const femaleCount = animalsData.filter(a => a.category === "female").length;
-    const newbornCount = animalsData.filter(a => a.category === "newborn").length;
+    const maleCount = animalsData.filter((a) => a.category === "male").length;
+    const femaleCount = animalsData.filter(
+      (a) => a.category === "female",
+    ).length;
+    const newbornCount = animalsData.filter(
+      (a) => a.category === "newborn",
+    ).length;
 
     const healthyStatuses = ["سليم", "سليمة", "healthy"];
-    const healthyCount = animalsData.filter(a => healthyStatuses.includes(a.healthStatus)).length;
+    const healthyCount = animalsData.filter((a) =>
+      healthyStatuses.includes(a.healthStatus),
+    ).length;
     const sickCount = totalAnimals - healthyCount;
 
-    const pregnantCount = animalsData.filter(a => a.isPregnant).length;
-    const isolatedCount = animalsData.filter(a => a.isIsolated).length;
+    const pregnantCount = animalsData.filter((a) => a.isPregnant).length;
+    const isolatedCount = animalsData.filter((a) => a.isIsolated).length;
 
-    const totalValue = animalsData.reduce((sum, animal) => 
-      sum + (animal.currentPrice || animal.purchasePrice || 0), 0
+    const totalValue = animalsData.reduce(
+      (sum, animal) => sum + (animal.currentPrice || animal.purchasePrice || 0),
+      0,
     );
 
-    const averageWeight = totalAnimals > 0 
-      ? animalsData.reduce((sum, animal) => sum + animal.weight, 0) / totalAnimals 
-      : 0;
+    const averageWeight =
+      totalAnimals > 0
+        ? animalsData.reduce((sum, animal) => sum + animal.weight, 0) /
+          totalAnimals
+        : 0;
 
-    const averageADG = totalAnimals > 0 
-      ? animalsData.reduce((sum, animal) => sum + farmHelpers.calculateADG(animal), 0) / totalAnimals 
-      : 0;
+    const averageADG =
+      totalAnimals > 0
+        ? animalsData.reduce(
+            (sum, animal) => sum + farmHelpers.calculateADG(animal),
+            0,
+          ) / totalAnimals
+        : 0;
 
     setAnalytics({
       totalAnimals,
@@ -121,20 +134,23 @@ export default function AnimalsOverviewPage() {
   }
 
   // Animals by barn
-  const animalsByBarn = animals.reduce((acc, animal) => {
-    if (!acc[animal.barnId]) {
-      acc[animal.barnId] = [];
-    }
-    acc[animal.barnId].push(animal);
-    return acc;
-  }, {} as Record<string, Animal[]>);
+  const animalsByBarn = animals.reduce(
+    (acc, animal) => {
+      if (!acc[animal.barnId]) {
+        acc[animal.barnId] = [];
+      }
+      acc[animal.barnId].push(animal);
+      return acc;
+    },
+    {} as Record<string, Animal[]>,
+  );
 
   // Recent activities (mock data based on real animals)
   const recentActivities = [
     {
       id: "1",
       type: "birth",
-      animal: animals.find(a => a.category === "newborn"),
+      animal: animals.find((a) => a.category === "newborn"),
       message: "ولادة جديدة",
       time: "منذ ساعتين",
       icon: Baby,
@@ -143,7 +159,7 @@ export default function AnimalsOverviewPage() {
     {
       id: "2",
       type: "weight",
-      animal: animals.find(a => a.category === "male"),
+      animal: animals.find((a) => a.category === "male"),
       message: "تسجيل وزن جديد",
       time: "منذ 4 ساعات",
       icon: Scale,
@@ -152,7 +168,7 @@ export default function AnimalsOverviewPage() {
     {
       id: "3",
       type: "health",
-      animal: animals.find(a => a.category === "female"),
+      animal: animals.find((a) => a.category === "female"),
       message: "فحص صحي",
       time: "أمس",
       icon: Heart,
@@ -161,13 +177,13 @@ export default function AnimalsOverviewPage() {
     {
       id: "4",
       type: "isolation",
-      animal: animals.find(a => a.isIsolated),
+      animal: animals.find((a) => a.isIsolated),
       message: "نقل إلى العزل",
       time: "منذ يومين",
       icon: AlertTriangle,
       color: "text-orange-600",
     },
-  ].filter(activity => activity.animal);
+  ].filter((activity) => activity.animal);
 
   return (
     <div className="space-y-6">
@@ -223,7 +239,9 @@ export default function AnimalsOverviewPage() {
             <p className="text-xs text-muted-foreground">
               متوسط القيمة:{" "}
               {analytics.totalAnimals > 0
-                ? farmHelpers.formatCurrency(Math.round(analytics.totalValue / analytics.totalAnimals))
+                ? farmHelpers.formatCurrency(
+                    Math.round(analytics.totalValue / analytics.totalAnimals),
+                  )
                 : farmHelpers.formatCurrency(0)}
             </p>
           </CardContent>
@@ -326,8 +344,11 @@ export default function AnimalsOverviewPage() {
                           {analytics.maleCount > 0
                             ? farmHelpers.formatWeight(
                                 animals
-                                  .filter(a => a.category === "male")
-                                  .reduce((sum, animal) => sum + animal.weight, 0) / analytics.maleCount
+                                  .filter((a) => a.category === "male")
+                                  .reduce(
+                                    (sum, animal) => sum + animal.weight,
+                                    0,
+                                  ) / analytics.maleCount,
                               )
                             : "0 كيلو"}
                         </p>
@@ -339,7 +360,10 @@ export default function AnimalsOverviewPage() {
                       </div>
                       <div className="text-sm text-muted-foreground">
                         {analytics.totalAnimals > 0
-                          ? Math.round((analytics.maleCount / analytics.totalAnimals) * 100)
+                          ? Math.round(
+                              (analytics.maleCount / analytics.totalAnimals) *
+                                100,
+                            )
                           : 0}
                         %
                       </div>
@@ -358,8 +382,11 @@ export default function AnimalsOverviewPage() {
                           {analytics.femaleCount > 0
                             ? farmHelpers.formatWeight(
                                 animals
-                                  .filter(a => a.category === "female")
-                                  .reduce((sum, animal) => sum + animal.weight, 0) / analytics.femaleCount
+                                  .filter((a) => a.category === "female")
+                                  .reduce(
+                                    (sum, animal) => sum + animal.weight,
+                                    0,
+                                  ) / analytics.femaleCount,
                               )
                             : "0 كيلو"}
                         </p>
@@ -371,7 +398,10 @@ export default function AnimalsOverviewPage() {
                       </div>
                       <div className="text-sm text-muted-foreground">
                         {analytics.totalAnimals > 0
-                          ? Math.round((analytics.femaleCount / analytics.totalAnimals) * 100)
+                          ? Math.round(
+                              (analytics.femaleCount / analytics.totalAnimals) *
+                                100,
+                            )
                           : 0}
                         %
                       </div>
@@ -390,8 +420,11 @@ export default function AnimalsOverviewPage() {
                           {analytics.newbornCount > 0
                             ? farmHelpers.formatWeight(
                                 animals
-                                  .filter(a => a.category === "newborn")
-                                  .reduce((sum, animal) => sum + animal.weight, 0) / analytics.newbornCount
+                                  .filter((a) => a.category === "newborn")
+                                  .reduce(
+                                    (sum, animal) => sum + animal.weight,
+                                    0,
+                                  ) / analytics.newbornCount,
                               )
                             : "0 كيلو"}
                         </p>
@@ -403,7 +436,11 @@ export default function AnimalsOverviewPage() {
                       </div>
                       <div className="text-sm text-muted-foreground">
                         {analytics.totalAnimals > 0
-                          ? Math.round((analytics.newbornCount / analytics.totalAnimals) * 100)
+                          ? Math.round(
+                              (analytics.newbornCount /
+                                analytics.totalAnimals) *
+                                100,
+                            )
                           : 0}
                         %
                       </div>
@@ -414,7 +451,9 @@ export default function AnimalsOverviewPage() {
 
               <TabsContent value="males">
                 <div className="text-center py-4">
-                  <div className="text-3xl font-bold text-blue-600">{analytics.maleCount}</div>
+                  <div className="text-3xl font-bold text-blue-600">
+                    {analytics.maleCount}
+                  </div>
                   <p className="text-muted-foreground">إجمالي الذكور</p>
                   <Link to="/animals/males">
                     <Button className="mt-2">عرض جميع الذكور</Button>
@@ -425,12 +464,16 @@ export default function AnimalsOverviewPage() {
               <TabsContent value="females">
                 <div className="space-y-2">
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-pink-600">{analytics.femaleCount}</div>
+                    <div className="text-3xl font-bold text-pink-600">
+                      {analytics.femaleCount}
+                    </div>
                     <p className="text-muted-foreground">��جمالي الإناث</p>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>حوامل:</span>
-                    <span className="font-semibold">{analytics.pregnantCount}</span>
+                    <span className="font-semibold">
+                      {analytics.pregnantCount}
+                    </span>
                   </div>
                   <Link to="/animals/females">
                     <Button className="w-full mt-2">عرض جميع الإناث</Button>
@@ -440,7 +483,9 @@ export default function AnimalsOverviewPage() {
 
               <TabsContent value="newborns">
                 <div className="text-center py-4">
-                  <div className="text-3xl font-bold text-green-600">{analytics.newbornCount}</div>
+                  <div className="text-3xl font-bold text-green-600">
+                    {analytics.newbornCount}
+                  </div>
                   <p className="text-muted-foreground">إجمالي الصغار</p>
                   <Link to="/animals/newborns">
                     <Button className="mt-2">عرض جميع الصغار</Button>
@@ -470,7 +515,9 @@ export default function AnimalsOverviewPage() {
                   key={activity.id}
                   className="flex items-start space-x-3 space-x-reverse"
                 >
-                  <div className={`h-8 w-8 rounded-full flex items-center justify-center bg-gray-100 ${activity.color}`}>
+                  <div
+                    className={`h-8 w-8 rounded-full flex items-center justify-center bg-gray-100 ${activity.color}`}
+                  >
                     <activity.icon className="h-4 w-4" />
                   </div>
                   <div className="flex-1 space-y-1">
@@ -509,28 +556,32 @@ export default function AnimalsOverviewPage() {
               <div key={barnId} className="p-4 border rounded-lg">
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="font-medium">{barnId}</h4>
-                  <Badge variant="outline">
-                    {barnAnimals.length}
-                  </Badge>
+                  <Badge variant="outline">{barnAnimals.length}</Badge>
                 </div>
 
                 <div className="space-y-1 text-sm text-muted-foreground">
                   <div className="flex justify-between">
                     <span>ذكور:</span>
                     <span>
-                      {barnAnimals.filter(a => a.category === "male").length}
+                      {barnAnimals.filter((a) => a.category === "male").length}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>إناث:</span>
                     <span>
-                      {barnAnimals.filter(a => a.category === "female").length}
+                      {
+                        barnAnimals.filter((a) => a.category === "female")
+                          .length
+                      }
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>صغار:</span>
                     <span>
-                      {barnAnimals.filter(a => a.category === "newborn").length}
+                      {
+                        barnAnimals.filter((a) => a.category === "newborn")
+                          .length
+                      }
                     </span>
                   </div>
                 </div>
@@ -558,7 +609,9 @@ export default function AnimalsOverviewPage() {
           <CardContent>
             <div className="space-y-2">
               {animals
-                .filter(a => !["سليم", "سليمة", "healthy"].includes(a.healthStatus))
+                .filter(
+                  (a) => !["سليم", "سليمة", "healthy"].includes(a.healthStatus),
+                )
                 .map((animal) => (
                   <div
                     key={animal.id}
@@ -566,9 +619,7 @@ export default function AnimalsOverviewPage() {
                   >
                     <div className="flex items-center space-x-2 space-x-reverse">
                       <span className="font-medium">{animal.earTagId}</span>
-                      <Badge variant="outline">
-                        {animal.healthStatus}
-                      </Badge>
+                      <Badge variant="outline">{animal.healthStatus}</Badge>
                       {animal.isIsolated && (
                         <Badge className="bg-orange-100 text-orange-800">
                           في العزل

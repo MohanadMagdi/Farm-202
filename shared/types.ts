@@ -1,18 +1,40 @@
-export type AnimalCategory = 'male' | 'female' | 'newborn';
-export type AnimalStatus = 'active' | 'sold' | 'dead' | 'isolated';
-export type IsolationType = 'health_quarantine' | 'illness' | 'post_birth' | 'feeding';
-export type MortalityCause = 'illness' | 'accident' | 'birth_complications' | 'old_age' | 'unknown' | 'other';
-export type BarnType = 'male' | 'female' | 'newborn' | 'mixed';
-export type WarehouseType = 'chemicals' | 'medicines' | 'medical_supplies' | 'equipment' | 'maintenance';
-export type UserRole = 'owner' | 'manager' | 'vet' | 'inventory' | 'barn_manager' | 'accountant' | 'sales';
-export type MovementType = 'in' | 'out' | 'transfer';
-export type PricingMethod = 'manual' | 'formula' | 'market_rate';
+export type AnimalCategory = "male" | "female" | "newborn";
+export type AnimalStatus = "active" | "sold" | "dead" | "isolated";
+export type IsolationType =
+  | "health_quarantine"
+  | "illness"
+  | "post_birth"
+  | "feeding";
+export type MortalityCause =
+  | "illness"
+  | "accident"
+  | "birth_complications"
+  | "old_age"
+  | "unknown"
+  | "other";
+export type BarnType = "male" | "female" | "newborn" | "mixed";
+export type WarehouseType =
+  | "chemicals"
+  | "medicines"
+  | "medical_supplies"
+  | "equipment"
+  | "maintenance";
+export type UserRole =
+  | "owner"
+  | "manager"
+  | "vet"
+  | "inventory"
+  | "barn_manager"
+  | "accountant"
+  | "sales";
+export type MovementType = "in" | "out" | "transfer";
+export type PricingMethod = "manual" | "formula" | "market_rate";
 
 export interface Animal {
   id: string;
   earTagId: string; // Unique ear tag ID
   category: AnimalCategory;
-  sex: 'male' | 'female';
+  sex: "male" | "female";
   weight: number; // Current weight
   supplier?: string;
   purchaseDate: Date;
@@ -26,7 +48,7 @@ export interface Animal {
   isolationType?: IsolationType;
   isolationDate?: Date;
   isolationReason?: string;
-  
+
   // For females
   isPregnant?: boolean;
   aiDate?: Date; // AI = Artificial Insemination
@@ -39,7 +61,7 @@ export interface Animal {
   motherEarTagId?: string; // Denormalized for easier display
   birthDate?: Date;
   weaningDate?: Date;
-  
+
   // Timestamps
   createdAt: Date;
   updatedAt: Date;
@@ -125,13 +147,13 @@ export interface WarehouseItem {
   minStockLevel: number;
   maxStockLevel: number;
   unitPrice: number; // EGP
-  
+
   // Expiry tracking
   hasExpiry: boolean;
   expiryDate?: Date;
   originalExpiryDays?: number;
   remainingDays?: number;
-  
+
   description?: string;
   location?: string;
   supplier?: string;
@@ -149,12 +171,12 @@ export interface StockMovement {
   totalCost: number; // EGP
   fromWarehouse?: string;
   toWarehouse?: string;
-  
+
   // Document tracking
   billNumber?: string;
   receiptNumber?: string;
   documentUrls?: string[];
-  
+
   date: Date;
   reason: string;
   recordedBy: string;
@@ -181,11 +203,11 @@ export interface FeedingRecord {
   quantityIssued: number; // kg
   animalsCount: number;
   feedPerAnimal: number; // calculated
-  
+
   // Efficiency metrics
   avgDailyGain?: number;
   feedingEfficiency?: number; // feed per animal / daily weight gain
-  
+
   date: Date;
   time: string;
   recordedBy: string;
@@ -195,7 +217,7 @@ export interface FeedingRecord {
 export interface HealthRecord {
   id: string;
   animalId: string;
-  type: 'vaccination' | 'treatment' | 'checkup' | 'illness';
+  type: "vaccination" | "treatment" | "checkup" | "illness";
   description: string;
   medicineUsed?: string;
   dosage?: string;

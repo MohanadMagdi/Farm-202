@@ -1,5 +1,13 @@
 import { useState, useEffect } from "react";
-import { Bell, X, Package, AlertTriangle, Clock, CheckCircle, RefreshCw } from "lucide-react";
+import {
+  Bell,
+  X,
+  Package,
+  AlertTriangle,
+  Clock,
+  CheckCircle,
+  RefreshCw,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,9 +26,12 @@ import {
   calculateExpiryStats,
   getNotificationBadgeCount,
   formatRemainingDays,
-  updateItemExpiryCountdown
+  updateItemExpiryCountdown,
 } from "@/lib/expiry-notifications";
-import { getBreedingWorkflowStats, getWeaningCandidates } from "@/lib/breeding-workflow";
+import {
+  getBreedingWorkflowStats,
+  getWeaningCandidates,
+} from "@/lib/breeding-workflow";
 import { dataService } from "@/lib/data-service";
 import type { WarehouseItem } from "@shared/types";
 
@@ -31,7 +42,7 @@ export default function NotificationCenter() {
     expired: 0,
     expiringSoon: 0,
     expiringThisMonth: 0,
-    totalWithExpiry: 0
+    totalWithExpiry: 0,
   });
   const [warehouseItems, setWarehouseItems] = useState<WarehouseItem[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -51,7 +62,7 @@ export default function NotificationCenter() {
       setNotifications(notifications);
       setStats(stats);
     } catch (error) {
-      console.error('Error loading notifications:', error);
+      console.error("Error loading notifications:", error);
     } finally {
       if (showRefreshing) setIsRefreshing(false);
     }
@@ -59,7 +70,7 @@ export default function NotificationCenter() {
 
   useEffect(() => {
     loadNotifications();
-    
+
     // Update notifications every minute
     const interval = setInterval(loadNotifications, 60000);
     return () => clearInterval(interval);
@@ -68,42 +79,38 @@ export default function NotificationCenter() {
   const badgeCount = getNotificationBadgeCount(notifications);
 
   const markAsRead = (notificationId: string) => {
-    setNotifications(prev => 
-      prev.map(n => 
-        n.id === notificationId ? { ...n, isRead: true } : n
-      )
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n)),
     );
   };
 
   const markAllAsRead = () => {
-    setNotifications(prev =>
-      prev.map(n => ({ ...n, isRead: true }))
-    );
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
   };
 
   const handleRefresh = () => {
     loadNotifications(true);
   };
 
-  const getSeverityIcon = (severity: 'critical' | 'warning' | 'info') => {
+  const getSeverityIcon = (severity: "critical" | "warning" | "info") => {
     switch (severity) {
-      case 'critical':
+      case "critical":
         return <AlertTriangle className="h-4 w-4 text-red-500" />;
-      case 'warning':
+      case "warning":
         return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'info':
+      case "info":
         return <Package className="h-4 w-4 text-blue-500" />;
     }
   };
 
-  const getSeverityColor = (severity: 'critical' | 'warning' | 'info') => {
+  const getSeverityColor = (severity: "critical" | "warning" | "info") => {
     switch (severity) {
-      case 'critical':
-        return 'border-r-red-500 bg-red-50';
-      case 'warning':
-        return 'border-r-yellow-500 bg-yellow-50';
-      case 'info':
-        return 'border-r-blue-500 bg-blue-50';
+      case "critical":
+        return "border-r-red-500 bg-red-50";
+      case "warning":
+        return "border-r-yellow-500 bg-yellow-50";
+      case "info":
+        return "border-r-blue-500 bg-blue-50";
     }
   };
 
@@ -121,13 +128,13 @@ export default function NotificationCenter() {
               variant="destructive"
               className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center"
             >
-              {badgeCount > 99 ? '99+' : badgeCount}
+              {badgeCount > 99 ? "99+" : badgeCount}
             </Badge>
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent 
-        className="w-96 p-0" 
+      <PopoverContent
+        className="w-96 p-0"
         align="end"
         side="bottom"
         sideOffset={8}
@@ -144,7 +151,9 @@ export default function NotificationCenter() {
                   disabled={isRefreshing}
                   className="h-8 w-8 p-0"
                 >
-                  <RefreshCw className={`h-3 w-3 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  <RefreshCw
+                    className={`h-3 w-3 ${isRefreshing ? "animate-spin" : ""}`}
+                  />
                 </Button>
                 {notifications.length > 0 && (
                   <Button
@@ -158,19 +167,25 @@ export default function NotificationCenter() {
                 )}
               </div>
             </div>
-            
+
             {/* Statistics */}
             <div className="grid grid-cols-3 gap-2 mt-3">
               <div className="text-center p-2 bg-red-50 rounded-lg">
-                <div className="text-lg font-bold text-red-600">{stats.expired}</div>
+                <div className="text-lg font-bold text-red-600">
+                  {stats.expired}
+                </div>
                 <div className="text-xs text-red-600">منتهية</div>
               </div>
               <div className="text-center p-2 bg-yellow-50 rounded-lg">
-                <div className="text-lg font-bold text-yellow-600">{stats.expiringSoon}</div>
+                <div className="text-lg font-bold text-yellow-600">
+                  {stats.expiringSoon}
+                </div>
                 <div className="text-xs text-yellow-600">تنتهي قريباً</div>
               </div>
               <div className="text-center p-2 bg-blue-50 rounded-lg">
-                <div className="text-lg font-bold text-blue-600">{stats.expiringThisMonth}</div>
+                <div className="text-lg font-bold text-blue-600">
+                  {stats.expiringThisMonth}
+                </div>
                 <div className="text-xs text-blue-600">هذا الشهر</div>
               </div>
             </div>
@@ -192,7 +207,7 @@ export default function NotificationCenter() {
                     <div
                       key={notification.id}
                       className={`p-3 rounded-lg border-r-4 transition-colors ${getSeverityColor(notification.severity)} ${
-                        notification.isRead ? 'opacity-60' : ''
+                        notification.isRead ? "opacity-60" : ""
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
@@ -215,7 +230,7 @@ export default function NotificationCenter() {
                             </div>
                           </div>
                         </div>
-                        
+
                         {!notification.isRead && (
                           <Button
                             variant="ghost"
@@ -245,7 +260,7 @@ export default function NotificationCenter() {
                   onClick={() => {
                     setIsOpen(false);
                     // Navigate to inventory page with expiry filter
-                    window.location.hash = '#/inventory?filter=expiry';
+                    window.location.hash = "#/inventory?filter=expiry";
                   }}
                 >
                   عرض جميع المنتجات المنتهية الصلاحية

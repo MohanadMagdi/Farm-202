@@ -1,6 +1,21 @@
 import { useState, useEffect } from "react";
-import { TrendingUp, TrendingDown, Activity, AlertTriangle, BarChart3, PieChart, LineChart, Target } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  TrendingUp,
+  TrendingDown,
+  Activity,
+  AlertTriangle,
+  BarChart3,
+  PieChart,
+  LineChart,
+  Target,
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -28,7 +43,7 @@ import {
   Cell,
   Pie,
   Area,
-  AreaChart
+  AreaChart,
 } from "recharts";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -40,26 +55,35 @@ import {
   type AnalyticsDashboardData,
   type GrowthCurveData,
   type MortalityAnalytics,
-  type GrowthAnalytics
+  type GrowthAnalytics,
 } from "@/lib/advanced-analytics";
 import { dataService } from "@/lib/data-service";
 import { formatArabicDate } from "@/lib/arabic-utils";
 
 // Chart colors
 const CHART_COLORS = {
-  primary: '#10b981',
-  secondary: '#3b82f6',
-  danger: '#ef4444',
-  warning: '#f59e0b',
-  info: '#06b6d4',
-  success: '#22c55e'
+  primary: "#10b981",
+  secondary: "#3b82f6",
+  danger: "#ef4444",
+  warning: "#f59e0b",
+  info: "#06b6d4",
+  success: "#22c55e",
 };
 
-const PIE_COLORS = ['#10b981', '#3b82f6', '#ef4444', '#f59e0b', '#06b6d4', '#8b5cf6'];
+const PIE_COLORS = [
+  "#10b981",
+  "#3b82f6",
+  "#ef4444",
+  "#f59e0b",
+  "#06b6d4",
+  "#8b5cf6",
+];
 
 export default function AdvancedAnalyticsDashboard() {
-  const [dashboardData, setDashboardData] = useState<AnalyticsDashboardData | null>(null);
-  const [selectedAnimalGrowth, setSelectedAnimalGrowth] = useState<GrowthCurveData | null>(null);
+  const [dashboardData, setDashboardData] =
+    useState<AnalyticsDashboardData | null>(null);
+  const [selectedAnimalGrowth, setSelectedAnimalGrowth] =
+    useState<GrowthCurveData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -73,7 +97,7 @@ export default function AdvancedAnalyticsDashboard() {
       const data = await getAnalyticsDashboardData();
       setDashboardData(data);
     } catch (error) {
-      console.error('Error loading analytics data:', error);
+      console.error("Error loading analytics data:", error);
       toast({
         title: "خطأ في تحميل البيانات",
         description: "حدث خطأ أثناء تحميل بيانات التحليلات",
@@ -92,7 +116,7 @@ export default function AdvancedAnalyticsDashboard() {
         setSelectedAnimalGrowth(growthData);
       }
     } catch (error) {
-      console.error('Error loading animal growth data:', error);
+      console.error("Error loading animal growth data:", error);
       toast({
         title: "خطأ في تحميل بيانات النمو",
         description: "حدث خطأ أثناء تحميل بيانات نمو الحيوان",
@@ -133,39 +157,43 @@ export default function AdvancedAnalyticsDashboard() {
   const { mortalityAnalytics, growthAnalytics, healthMetrics } = dashboardData;
 
   // Prepare chart data
-  const mortalityByMonthData = mortalityAnalytics.deathsByMonth.map(item => ({
-    month: item.month.split(' ')[1], // Get month name only
+  const mortalityByMonthData = mortalityAnalytics.deathsByMonth.map((item) => ({
+    month: item.month.split(" ")[1], // Get month name only
     deaths: item.count,
-    rate: item.rate
+    rate: item.rate,
   }));
 
-  const growthTrendsData = growthAnalytics.growthTrends.map(item => ({
-    month: item.month.split(' ')[1],
+  const growthTrendsData = growthAnalytics.growthTrends.map((item) => ({
+    month: item.month.split(" ")[1],
     adg: item.averageADG,
     benchmark: GROWTH_BENCHMARKS.male.expectedADG, // Use male benchmark as reference
-    count: item.count
+    count: item.count,
   }));
 
-  const mortalityCauseData = Object.entries(mortalityAnalytics.deathsByCause).map(([cause, count]) => ({
+  const mortalityCauseData = Object.entries(
+    mortalityAnalytics.deathsByCause,
+  ).map(([cause, count]) => ({
     name: getCauseLabel(cause),
     value: count,
-    percentage: ((count / mortalityAnalytics.totalDeaths) * 100).toFixed(1)
+    percentage: ((count / mortalityAnalytics.totalDeaths) * 100).toFixed(1),
   }));
 
-  const weightDistributionData = growthAnalytics.weightDistribution.map(item => ({
-    range: item.range,
-    count: item.count,
-    percentage: item.percentage
-  }));
+  const weightDistributionData = growthAnalytics.weightDistribution.map(
+    (item) => ({
+      range: item.range,
+      count: item.count,
+      percentage: item.percentage,
+    }),
+  );
 
   function getCauseLabel(cause: string): string {
     const labels: Record<string, string> = {
-      illness: 'مرض',
-      accident: 'حادث',
-      birth_complications: 'مضاعفات ولادة',
-      old_age: 'كبر السن',
-      unknown: 'غير معروف',
-      other: 'أخرى'
+      illness: "مرض",
+      accident: "حادث",
+      birth_complications: "مضاعفات ولادة",
+      old_age: "كبر السن",
+      unknown: "غير معروف",
+      other: "أخرى",
     };
     return labels[cause] || cause;
   }
@@ -175,7 +203,9 @@ export default function AdvancedAnalyticsDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-farm-800">التحليلات المتقدمة</h1>
+          <h1 className="text-3xl font-bold text-farm-800">
+            التحليلات المتقدمة
+          </h1>
           <p className="text-muted-foreground">
             تحليل النمو والوفيات ومؤشرات الأداء
           </p>
@@ -189,7 +219,9 @@ export default function AdvancedAnalyticsDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">معدل النمو اليومي</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              معدل النمو اليومي
+            </CardTitle>
             <TrendingUp className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
@@ -219,7 +251,9 @@ export default function AdvancedAnalyticsDashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">الخسائر المالية</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              الخسائر المالية
+            </CardTitle>
             <TrendingDown className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
@@ -234,7 +268,9 @@ export default function AdvancedAnalyticsDashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">الحيوانات السليمة</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              الحيوانات السليمة
+            </CardTitle>
             <Activity className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
@@ -242,14 +278,19 @@ export default function AdvancedAnalyticsDashboard() {
               {healthMetrics.healthyCount}
             </div>
             <p className="text-xs text-muted-foreground">
-              {healthMetrics.sickCount} مريض • {healthMetrics.isolatedCount} معزول
+              {healthMetrics.sickCount} مريض • {healthMetrics.isolatedCount}{" "}
+              معزول
             </p>
           </CardContent>
         </Card>
       </div>
 
       {/* Analytics Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-4"
+      >
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview">نظرة عامة</TabsTrigger>
           <TabsTrigger value="growth">تحليل النمو</TabsTrigger>
@@ -263,7 +304,9 @@ export default function AdvancedAnalyticsDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle>اتجاهات النمو الشهرية</CardTitle>
-                <CardDescription>معدل النمو اليومي مقارنة بالمعيار</CardDescription>
+                <CardDescription>
+                  معدل النمو اليومي مقارنة بالمعيار
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -271,24 +314,24 @@ export default function AdvancedAnalyticsDashboard() {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis />
-                    <Tooltip 
+                    <Tooltip
                       formatter={(value, name) => [
-                        `${value} جرام/يوم`, 
-                        name === 'adg' ? 'معدل النمو الفعلي' : 'المعيار'
+                        `${value} جرام/يوم`,
+                        name === "adg" ? "معدل النمو الفعلي" : "المعيار",
                       ]}
                     />
                     <Legend />
-                    <Line 
-                      type="monotone" 
-                      dataKey="adg" 
-                      stroke={CHART_COLORS.primary} 
+                    <Line
+                      type="monotone"
+                      dataKey="adg"
+                      stroke={CHART_COLORS.primary}
                       strokeWidth={2}
                       name="معدل النمو الفعلي"
                     />
-                    <Line 
-                      type="monotone" 
-                      dataKey="benchmark" 
-                      stroke={CHART_COLORS.warning} 
+                    <Line
+                      type="monotone"
+                      dataKey="benchmark"
+                      stroke={CHART_COLORS.warning}
                       strokeDasharray="5 5"
                       name="المعيار المطلوب"
                     />
@@ -309,14 +352,18 @@ export default function AdvancedAnalyticsDashboard() {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis />
-                    <Tooltip 
+                    <Tooltip
                       formatter={(value, name) => [
-                        name === 'deaths' ? `${value} حالة` : `${value}%`,
-                        name === 'deaths' ? 'عدد الوفيات' : 'معدل الوفيات'
+                        name === "deaths" ? `${value} حالة` : `${value}%`,
+                        name === "deaths" ? "عدد الوفيات" : "معدل الوفيات",
                       ]}
                     />
                     <Legend />
-                    <Bar dataKey="deaths" fill={CHART_COLORS.danger} name="عدد الوفيات" />
+                    <Bar
+                      dataKey="deaths"
+                      fill={CHART_COLORS.danger}
+                      name="عدد الوفيات"
+                    />
                   </RechartsBarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -330,7 +377,9 @@ export default function AdvancedAnalyticsDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle>توزيع الأوزان</CardTitle>
-                <CardDescription>توزيع الحيوانات حسب فئات الوزن</CardDescription>
+                <CardDescription>
+                  توزيع الحيوانات حسب فئات الوزن
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -338,7 +387,9 @@ export default function AdvancedAnalyticsDashboard() {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="range" />
                     <YAxis />
-                    <Tooltip formatter={(value) => [`${value} حيوان`, 'العدد']} />
+                    <Tooltip
+                      formatter={(value) => [`${value} حيوان`, "العدد"]}
+                    />
                     <Bar dataKey="count" fill={CHART_COLORS.info} />
                   </RechartsBarChart>
                 </ResponsiveContainer>
@@ -349,15 +400,22 @@ export default function AdvancedAnalyticsDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle>أفضل أداء في النمو</CardTitle>
-                <CardDescription>الحيوانات ذات أعلى معدل نمو يومي</CardDescription>
+                <CardDescription>
+                  الحيوانات ذات أعلى معدل نمو يومي
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   {growthAnalytics.topPerformers.map((performer, index) => (
-                    <div key={performer.animalId} className="flex items-center justify-between">
+                    <div
+                      key={performer.animalId}
+                      className="flex items-center justify-between"
+                    >
                       <div className="flex items-center space-x-3 space-x-reverse">
                         <Badge variant="outline">#{index + 1}</Badge>
-                        <span className="font-medium">{performer.earTagId}</span>
+                        <span className="font-medium">
+                          {performer.earTagId}
+                        </span>
                       </div>
                       <div className="text-right">
                         <div className="font-bold text-green-600">
@@ -397,10 +455,15 @@ export default function AdvancedAnalyticsDashboard() {
                       cx="50%"
                       cy="50%"
                       outerRadius={80}
-                      label={({ name, percentage }) => `${name}: ${percentage}%`}
+                      label={({ name, percentage }) =>
+                        `${name}: ${percentage}%`
+                      }
                     >
                       {mortalityCauseData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={PIE_COLORS[index % PIE_COLORS.length]}
+                        />
                       ))}
                     </Pie>
                     <Tooltip />
@@ -413,7 +476,9 @@ export default function AdvancedAnalyticsDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle>عوامل الخطر</CardTitle>
-                <CardDescription>العوامل الأكثر تأثيراً في الوفيات</CardDescription>
+                <CardDescription>
+                  العوامل الأكثر تأثيراً في الوفيات
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -453,19 +518,25 @@ export default function AdvancedAnalyticsDashboard() {
                   <div className="text-2xl font-bold text-orange-600">
                     {mortalityAnalytics.preventableDeaths}
                   </div>
-                  <div className="text-sm text-orange-600">وفيات قابلة للمنع</div>
+                  <div className="text-sm text-orange-600">
+                    وفيات قابلة للمنع
+                  </div>
                 </div>
                 <div className="text-center p-4 bg-blue-50 rounded-lg">
                   <div className="text-2xl font-bold text-blue-600">
                     {mortalityAnalytics.averageAgeAtDeath.toFixed(1)}
                   </div>
-                  <div className="text-sm text-blue-600">متوسط العمر عند الوفاة (شهر)</div>
+                  <div className="text-sm text-blue-600">
+                    متوسط العمر عند الوفاة (شهر)
+                  </div>
                 </div>
                 <div className="text-center p-4 bg-purple-50 rounded-lg">
                   <div className="text-2xl font-bold text-purple-600">
                     {mortalityAnalytics.totalFinancialLoss.toLocaleString()}
                   </div>
-                  <div className="text-sm text-purple-600">الخسائر المالية (ج.م)</div>
+                  <div className="text-sm text-purple-600">
+                    الخسائر المالية (ج.م)
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -477,43 +548,49 @@ export default function AdvancedAnalyticsDashboard() {
           {selectedAnimalGrowth && (
             <Card>
               <CardHeader>
-                <CardTitle>منحنى النمو - {selectedAnimalGrowth.earTagId}</CardTitle>
+                <CardTitle>
+                  منحنى النمو - {selectedAnimalGrowth.earTagId}
+                </CardTitle>
                 <CardDescription>
-                  تطور الوزن ومعدل النمو اليومي • 
-                  كفاءة النمو: {selectedAnimalGrowth.growthEfficiency.toFixed(1)}%
+                  تطور الوزن ومعدل النمو اليومي • كفاءة النمو:{" "}
+                  {selectedAnimalGrowth.growthEfficiency.toFixed(1)}%
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={400}>
                   <RechartsLineChart data={selectedAnimalGrowth.dataPoints}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      dataKey="ageInDays" 
-                      formatter={(value) => `${Math.floor(value/30)}م`}
+                    <XAxis
+                      dataKey="ageInDays"
+                      formatter={(value) => `${Math.floor(value / 30)}م`}
                     />
                     <YAxis yAxisId="weight" orientation="left" />
                     <YAxis yAxisId="adg" orientation="right" />
-                    <Tooltip 
+                    <Tooltip
                       formatter={(value, name) => [
-                        name === 'weight' ? `${value} كيلو` : `${value} جرام/يوم`,
-                        name === 'weight' ? 'الوزن' : 'معدل النمو اليومي'
+                        name === "weight"
+                          ? `${value} كيلو`
+                          : `${value} جرام/يوم`,
+                        name === "weight" ? "الوزن" : "معدل النمو اليومي",
                       ]}
-                      labelFormatter={(value) => `العمر: ${Math.floor(Number(value)/30)} شهر`}
+                      labelFormatter={(value) =>
+                        `العمر: ${Math.floor(Number(value) / 30)} شهر`
+                      }
                     />
                     <Legend />
-                    <Line 
+                    <Line
                       yAxisId="weight"
-                      type="monotone" 
-                      dataKey="weight" 
-                      stroke={CHART_COLORS.primary} 
+                      type="monotone"
+                      dataKey="weight"
+                      stroke={CHART_COLORS.primary}
                       strokeWidth={2}
                       name="الوزن (كيلو)"
                     />
-                    <Line 
+                    <Line
                       yAxisId="adg"
-                      type="monotone" 
-                      dataKey="adg" 
-                      stroke={CHART_COLORS.secondary} 
+                      type="monotone"
+                      dataKey="adg"
+                      stroke={CHART_COLORS.secondary}
                       strokeWidth={2}
                       name="معدل النمو اليومي (جرام)"
                     />
@@ -543,7 +620,7 @@ export default function AdvancedAnalyticsDashboard() {
                   {growthAnalytics.poorPerformers.map((performer) => {
                     const benchmark = GROWTH_BENCHMARKS.male.expectedADG;
                     const efficiency = (performer.adg / benchmark) * 100;
-                    
+
                     return (
                       <TableRow key={performer.animalId}>
                         <TableCell className="font-medium">
@@ -555,7 +632,11 @@ export default function AdvancedAnalyticsDashboard() {
                           </span>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={efficiency < 60 ? "destructive" : "secondary"}>
+                          <Badge
+                            variant={
+                              efficiency < 60 ? "destructive" : "secondary"
+                            }
+                          >
                             {efficiency.toFixed(0)}% من المعيار
                           </Badge>
                         </TableCell>

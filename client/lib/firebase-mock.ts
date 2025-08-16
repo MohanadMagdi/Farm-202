@@ -16,8 +16,8 @@ import type {
   FeedingSchedule,
   MortalityRecord,
   AnimalCategory,
-  WarehouseType
-} from '@shared/types';
+  WarehouseType,
+} from "@shared/types";
 
 // Legacy types for backward compatibility
 export interface LegacyAnimal {
@@ -90,7 +90,7 @@ class MockFirestore {
           createdAt: new Date("2023-03-15"),
           updatedAt: now,
           createdBy: "user_001",
-          updatedBy: "user_001"
+          updatedBy: "user_001",
         },
         {
           id: "anim_002",
@@ -109,7 +109,7 @@ class MockFirestore {
           createdAt: new Date("2022-08-10"),
           updatedAt: now,
           createdBy: "user_001",
-          updatedBy: "user_001"
+          updatedBy: "user_001",
         },
         {
           id: "anim_003",
@@ -133,7 +133,7 @@ class MockFirestore {
           createdAt: new Date("2022-11-08"),
           updatedAt: now,
           createdBy: "user_001",
-          updatedBy: "user_001"
+          updatedBy: "user_001",
         },
         {
           id: "anim_004",
@@ -153,7 +153,7 @@ class MockFirestore {
           createdBy: "user_001",
           updatedBy: "user_001",
           purchaseDate: new Date("2024-01-10"),
-          purchasePrice: 0
+          purchasePrice: 0,
         },
         {
           id: "anim_005",
@@ -173,8 +173,8 @@ class MockFirestore {
           createdBy: "user_001",
           updatedBy: "user_001",
           purchaseDate: new Date("2024-01-10"),
-          purchasePrice: 0
-        }
+          purchasePrice: 0,
+        },
       ] as Animal[],
 
       barns: [
@@ -187,7 +187,7 @@ class MockFirestore {
           description: "حظيرة مجهزة بأنظمة تهوية حديثة",
           isActive: true,
           createdAt: new Date("2023-01-01"),
-          updatedAt: now
+          updatedAt: now,
         },
         {
           id: "barn_002",
@@ -198,7 +198,7 @@ class MockFirestore {
           description: "مخصصة للإناث الحوامل والمرضعات",
           isActive: true,
           createdAt: new Date("2023-01-01"),
-          updatedAt: now
+          updatedAt: now,
         },
         {
           id: "barn_003",
@@ -209,8 +209,8 @@ class MockFirestore {
           description: "مجهزة بأنظمة تدفئة للصغار",
           isActive: true,
           createdAt: new Date("2023-01-01"),
-          updatedAt: now
-        }
+          updatedAt: now,
+        },
       ] as Barn[],
 
       warehouseItems: [
@@ -229,7 +229,7 @@ class MockFirestore {
           supplier: "مزرعة الوادي الأخضر",
           isActive: true,
           createdAt: new Date("2023-01-01"),
-          updatedAt: now
+          updatedAt: now,
         },
         {
           id: "wh_002",
@@ -246,7 +246,7 @@ class MockFirestore {
           supplier: "تجار الأعلاف المتحدة",
           isActive: true,
           createdAt: new Date("2023-01-01"),
-          updatedAt: now
+          updatedAt: now,
         },
         {
           id: "wh_003",
@@ -266,7 +266,7 @@ class MockFirestore {
           supplier: "شركة الأعلاف المتطورة",
           isActive: true,
           createdAt: new Date("2023-01-01"),
-          updatedAt: now
+          updatedAt: now,
         },
         {
           id: "wh_004",
@@ -286,8 +286,8 @@ class MockFirestore {
           supplier: "شركة الأدوية البيطرية",
           isActive: true,
           createdAt: new Date("2023-01-01"),
-          updatedAt: now
-        }
+          updatedAt: now,
+        },
       ] as WarehouseItem[],
 
       stockMovements: [
@@ -301,10 +301,10 @@ class MockFirestore {
           date: new Date("2024-01-16"),
           reason: "تغذية الحظيرة الرئيسية",
           recordedBy: "user_002",
-          notes: "توزيع علف الصباح"
+          notes: "توزيع علف الصباح",
         },
         {
-          id: "mov_002", 
+          id: "mov_002",
           itemId: "wh_002",
           type: "in" as const,
           quantity: 500,
@@ -314,8 +314,8 @@ class MockFirestore {
           reason: "مشتر��ات جديدة",
           recordedBy: "user_001",
           billNumber: "INV-2024-001",
-          notes: "دفعة جديدة من التبن"
-        }
+          notes: "دفعة جديدة من التبن",
+        },
       ] as StockMovement[],
 
       feedingRecords: [
@@ -331,8 +331,8 @@ class MockFirestore {
           date: new Date(),
           time: "07:00",
           recordedBy: "user_002",
-          notes: "تغذية الصباح"
-        }
+          notes: "تغذية الصباح",
+        },
       ] as FeedingRecord[],
 
       weightRecords: [
@@ -343,7 +343,7 @@ class MockFirestore {
           weight: 45.2,
           date: new Date("2023-08-01"),
           recordedBy: "user_001",
-          notes: "وزن البداية"
+          notes: "وزن البداية",
         },
         {
           id: "weight_002",
@@ -351,7 +351,7 @@ class MockFirestore {
           weight: 52.8,
           date: new Date("2023-09-01"),
           recordedBy: "user_001",
-          notes: "وزن شهري"
+          notes: "وزن شهري",
         },
         {
           id: "weight_003",
@@ -359,7 +359,7 @@ class MockFirestore {
           weight: 61.5,
           date: new Date("2023-10-01"),
           recordedBy: "user_001",
-          notes: "وزن شهري"
+          notes: "وزن شهري",
         },
         {
           id: "weight_004",
@@ -367,7 +367,7 @@ class MockFirestore {
           weight: 68.2,
           date: new Date("2023-11-01"),
           recordedBy: "user_001",
-          notes: "وزن شهري"
+          notes: "وزن شهري",
         },
         {
           id: "weight_005",
@@ -375,7 +375,7 @@ class MockFirestore {
           weight: 75.5,
           date: new Date("2023-12-01"),
           recordedBy: "user_001",
-          notes: "وزن حالي"
+          notes: "وزن حالي",
         },
         // Weight records for animal M002
         {
@@ -384,7 +384,7 @@ class MockFirestore {
           weight: 38.5,
           date: new Date("2023-06-01"),
           recordedBy: "user_001",
-          notes: "وزن البداية"
+          notes: "وزن البداية",
         },
         {
           id: "weight_007",
@@ -392,7 +392,7 @@ class MockFirestore {
           weight: 47.2,
           date: new Date("2023-07-01"),
           recordedBy: "user_001",
-          notes: "وزن شهري"
+          notes: "وزن شهري",
         },
         {
           id: "weight_008",
@@ -400,7 +400,7 @@ class MockFirestore {
           weight: 55.8,
           date: new Date("2023-08-01"),
           recordedBy: "user_001",
-          notes: "وزن شهري"
+          notes: "وزن شهري",
         },
         {
           id: "weight_009",
@@ -408,7 +408,7 @@ class MockFirestore {
           weight: 63.5,
           date: new Date("2023-09-01"),
           recordedBy: "user_001",
-          notes: "وزن حالي"
+          notes: "وزن حالي",
         },
         // Weight records for female F047
         {
@@ -417,7 +417,7 @@ class MockFirestore {
           weight: 42.0,
           date: new Date("2023-05-01"),
           recordedBy: "user_001",
-          notes: "قبل الحمل"
+          notes: "قبل الحمل",
         },
         {
           id: "weight_011",
@@ -425,7 +425,7 @@ class MockFirestore {
           weight: 48.5,
           date: new Date("2023-08-01"),
           recordedBy: "user_001",
-          notes: "أثناء الحمل"
+          notes: "أثناء الحمل",
         },
         {
           id: "weight_012",
@@ -433,7 +433,7 @@ class MockFirestore {
           weight: 45.2,
           date: new Date("2024-01-15"),
           recordedBy: "user_001",
-          notes: "بعد الولادة"
+          notes: "بعد الولادة",
         },
         // Weight records for newborn N012
         {
@@ -442,7 +442,7 @@ class MockFirestore {
           weight: 3.5,
           date: new Date("2024-01-10"),
           recordedBy: "user_001",
-          notes: "وزن الميلاد"
+          notes: "وزن الميلاد",
         },
         {
           id: "weight_014",
@@ -450,7 +450,7 @@ class MockFirestore {
           weight: 8.2,
           date: new Date("2024-02-10"),
           recordedBy: "user_001",
-          notes: "وزن شهري"
+          notes: "وزن شهري",
         },
         {
           id: "weight_015",
@@ -458,7 +458,7 @@ class MockFirestore {
           weight: 12.3,
           date: new Date("2024-03-10"),
           recordedBy: "user_001",
-          notes: "وزن حالي"
+          notes: "وزن حالي",
         },
         // Weight records for newborn N013
         {
@@ -467,7 +467,7 @@ class MockFirestore {
           weight: 3.2,
           date: new Date("2024-01-10"),
           recordedBy: "user_001",
-          notes: "وزن الميلاد"
+          notes: "وزن الميلاد",
         },
         {
           id: "weight_017",
@@ -475,7 +475,7 @@ class MockFirestore {
           weight: 7.8,
           date: new Date("2024-02-10"),
           recordedBy: "user_001",
-          notes: "وزن شهري"
+          notes: "وزن شهري",
         },
         {
           id: "weight_018",
@@ -483,8 +483,8 @@ class MockFirestore {
           weight: 11.8,
           date: new Date("2024-03-10"),
           recordedBy: "user_001",
-          notes: "وزن حالي"
-        }
+          notes: "وزن حالي",
+        },
       ] as WeightRecord[],
 
       healthRecords: [
@@ -497,8 +497,8 @@ class MockFirestore {
           dosage: "2 مل",
           cost: 25,
           date: new Date("2024-01-15"),
-          recordedBy: "user_003"
-        }
+          recordedBy: "user_003",
+        },
       ] as HealthRecord[],
 
       barnMovements: [
@@ -509,8 +509,8 @@ class MockFirestore {
           toBarnId: "barn_001",
           date: new Date("2023-06-01"),
           reason: "نقل بعد الفطام",
-          recordedBy: "user_001"
-        }
+          recordedBy: "user_001",
+        },
       ] as BarnMovement[],
 
       feedingSchedules: [
@@ -523,8 +523,8 @@ class MockFirestore {
           scheduledTime: "07:00,13:00,18:00",
           isActive: true,
           createdAt: new Date(),
-          updatedAt: now
-        }
+          updatedAt: now,
+        },
       ] as FeedingSchedule[],
 
       mortalityRecords: [
@@ -544,7 +544,7 @@ class MockFirestore {
           financialLoss: 8500, // EGP
           recordedBy: "user_001",
           createdAt: new Date("2024-01-15"),
-          notes: "حالة مؤسفة ��ان من الممكن تجنبها بالعلاج المبكر"
+          notes: "حالة مؤسفة ��ان من الممكن تجنبها بالعلاج المبكر",
         },
         {
           id: "mort_002",
@@ -562,7 +562,7 @@ class MockFirestore {
           financialLoss: 12000, // EGP
           recordedBy: "user_001",
           createdAt: new Date("2024-02-03"),
-          notes: "حالة طبيعية صعبة رغم المتابعة المكثفة"
+          notes: "حالة طبيعية صعبة رغم المتابعة المكثفة",
         },
         {
           id: "mort_003",
@@ -580,7 +580,7 @@ class MockFirestore {
           financialLoss: 2500, // EGP
           recordedBy: "user_001",
           createdAt: new Date("2024-02-20"),
-          notes: "يجب تحسين إجراءات السلامة في حظيرة الصغار"
+          notes: "يجب تحسين إجراءات السلامة في حظيرة الصغار",
         },
         {
           id: "mort_004",
@@ -598,7 +598,7 @@ class MockFirestore {
           financialLoss: 9500, // EGP
           recordedBy: "user_001",
           createdAt: new Date("2024-03-10"),
-          notes: "حالة نادرة تتطلب مزيد من الفحوصات المخبرية"
+          notes: "حالة نادرة تتطلب مزيد من الفحوصات المخبرية",
         },
         {
           id: "mort_005",
@@ -616,9 +616,9 @@ class MockFirestore {
           financialLoss: 6000, // EGP (lower due to age)
           recordedBy: "user_001",
           createdAt: new Date("2024-03-25"),
-          notes: "عاشت حياة مثمرة وأنجبت 15 مولوداً"
-        }
-      ] as MortalityRecord[]
+          notes: "عاشت حياة مثمرة وأنجبت 15 مولوداً",
+        },
+      ] as MortalityRecord[],
     };
   }
 
@@ -627,11 +627,12 @@ class MockFirestore {
     return {
       get: () => {
         return Promise.resolve({
-          docs: (this.data as any)[name]?.map((item: any) => ({
-            id: item.id,
-            data: () => item,
-            exists: true
-          })) || []
+          docs:
+            (this.data as any)[name]?.map((item: any) => ({
+              id: item.id,
+              data: () => item,
+              exists: true,
+            })) || [],
         });
       },
       add: (doc: any) => {
@@ -640,28 +641,32 @@ class MockFirestore {
           ...doc,
           id,
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         };
         (this.data as any)[name].push(newDoc);
         return Promise.resolve({ id });
       },
       doc: (id: string) => ({
         get: () => {
-          const item = (this.data as any)[name]?.find((item: any) => item.id === id);
+          const item = (this.data as any)[name]?.find(
+            (item: any) => item.id === id,
+          );
           return Promise.resolve({
             exists: !!item,
             id,
-            data: () => item
+            data: () => item,
           });
         },
         set: (doc: any) => {
-          const index = (this.data as any)[name]?.findIndex((item: any) => item.id === id);
+          const index = (this.data as any)[name]?.findIndex(
+            (item: any) => item.id === id,
+          );
           const newDoc = {
             ...doc,
             id,
-            updatedAt: new Date()
+            updatedAt: new Date(),
           };
-          
+
           if (index !== -1) {
             (this.data as any)[name][index] = newDoc;
           } else {
@@ -670,23 +675,27 @@ class MockFirestore {
           return Promise.resolve();
         },
         update: (updates: any) => {
-          const index = (this.data as any)[name]?.findIndex((item: any) => item.id === id);
+          const index = (this.data as any)[name]?.findIndex(
+            (item: any) => item.id === id,
+          );
           if (index !== -1) {
             (this.data as any)[name][index] = {
               ...(this.data as any)[name][index],
               ...updates,
-              updatedAt: new Date()
+              updatedAt: new Date(),
             };
           }
           return Promise.resolve();
         },
         delete: () => {
-          const index = (this.data as any)[name]?.findIndex((item: any) => item.id === id);
+          const index = (this.data as any)[name]?.findIndex(
+            (item: any) => item.id === id,
+          );
           if (index !== -1) {
             (this.data as any)[name].splice(index, 1);
           }
           return Promise.resolve();
-        }
+        },
       }),
       where: (field: string, operator: string, value: any) => ({
         get: () => {
@@ -695,56 +704,56 @@ class MockFirestore {
           switch (operator) {
             case "==":
               filtered = filtered.filter((item: any) => {
-                const fieldValue = field.includes('.') 
-                  ? field.split('.').reduce((obj, key) => obj?.[key], item)
+                const fieldValue = field.includes(".")
+                  ? field.split(".").reduce((obj, key) => obj?.[key], item)
                   : item[field];
                 return fieldValue === value;
               });
               break;
             case "!=":
               filtered = filtered.filter((item: any) => {
-                const fieldValue = field.includes('.') 
-                  ? field.split('.').reduce((obj, key) => obj?.[key], item)
+                const fieldValue = field.includes(".")
+                  ? field.split(".").reduce((obj, key) => obj?.[key], item)
                   : item[field];
                 return fieldValue !== value;
               });
               break;
             case ">":
               filtered = filtered.filter((item: any) => {
-                const fieldValue = field.includes('.') 
-                  ? field.split('.').reduce((obj, key) => obj?.[key], item)
+                const fieldValue = field.includes(".")
+                  ? field.split(".").reduce((obj, key) => obj?.[key], item)
                   : item[field];
                 return fieldValue > value;
               });
               break;
             case ">=":
               filtered = filtered.filter((item: any) => {
-                const fieldValue = field.includes('.') 
-                  ? field.split('.').reduce((obj, key) => obj?.[key], item)
+                const fieldValue = field.includes(".")
+                  ? field.split(".").reduce((obj, key) => obj?.[key], item)
                   : item[field];
                 return fieldValue >= value;
               });
               break;
             case "<":
               filtered = filtered.filter((item: any) => {
-                const fieldValue = field.includes('.') 
-                  ? field.split('.').reduce((obj, key) => obj?.[key], item)
+                const fieldValue = field.includes(".")
+                  ? field.split(".").reduce((obj, key) => obj?.[key], item)
                   : item[field];
                 return fieldValue < value;
               });
               break;
             case "<=":
               filtered = filtered.filter((item: any) => {
-                const fieldValue = field.includes('.') 
-                  ? field.split('.').reduce((obj, key) => obj?.[key], item)
+                const fieldValue = field.includes(".")
+                  ? field.split(".").reduce((obj, key) => obj?.[key], item)
                   : item[field];
                 return fieldValue <= value;
               });
               break;
             case "array-contains":
               filtered = filtered.filter((item: any) => {
-                const fieldValue = field.includes('.') 
-                  ? field.split('.').reduce((obj, key) => obj?.[key], item)
+                const fieldValue = field.includes(".")
+                  ? field.split(".").reduce((obj, key) => obj?.[key], item)
                   : item[field];
                 return Array.isArray(fieldValue) && fieldValue.includes(value);
               });
@@ -755,39 +764,38 @@ class MockFirestore {
             docs: filtered.map((item: any) => ({
               id: item.id,
               data: () => item,
-              exists: true
-            }))
+              exists: true,
+            })),
           });
-        }
-      })
+        },
+      }),
     };
   }
 
   // Helper methods
   getCurrentStock(itemId: string): number {
-    const item = this.data.warehouseItems.find(item => item.id === itemId);
+    const item = this.data.warehouseItems.find((item) => item.id === itemId);
     return item?.currentStock || 0;
   }
 
   getBarnOccupancy(barnId: string): number {
-    return this.data.animals.filter(animal => 
-      animal.barnId === barnId
-    ).length;
+    return this.data.animals.filter((animal) => animal.barnId === barnId)
+      .length;
   }
 
   calculateADG(animalId: string): number {
-    const animal = this.data.animals.find(a => a.id === animalId);
+    const animal = this.data.animals.find((a) => a.id === animalId);
     if (!animal) return 0;
 
     const birthDate = animal.birthDate || animal.purchaseDate;
     const daysSinceBirth = Math.floor(
-      (new Date().getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24)
+      (new Date().getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24),
     );
-    
+
     // Assuming birth weight was around 3.5kg for sheep
     const estimatedBirthWeight = 3.5;
-    return daysSinceBirth > 0 
-      ? (animal.weight - estimatedBirthWeight) / daysSinceBirth 
+    return daysSinceBirth > 0
+      ? (animal.weight - estimatedBirthWeight) / daysSinceBirth
       : 0;
   }
 
