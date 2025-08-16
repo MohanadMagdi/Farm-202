@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/table";
 import { formatArabicDate } from "@/lib/arabic-utils";
 import { dataService, farmHelpers } from "@/lib/data-service";
+import { exportAnimalsReport } from "@/lib/export-utils";
 import type { Animal, AnimalCategory } from "@shared/types";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -135,7 +136,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
         loadAnimals();
         toast({
           title: "تم الحذف بنجاح",
-          description: `تم حذف الحيوان ${animal.earTagId} بنجاح`,
+          description: `تم ��ذف الحيوان ${animal.earTagId} بنجاح`,
         });
       } catch (error) {
         console.error("Error deleting animal:", error);
