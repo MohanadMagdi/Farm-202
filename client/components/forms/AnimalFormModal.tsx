@@ -153,7 +153,7 @@ export default function AnimalFormModal({
       offspringCount: animalData.offspringCount?.toString() || "",
       
       // For newborns
-      motherId: animalData.motherId || "",
+      motherId: animalData.motherId || "none",
       birthDate: animalData.birthDate?.toISOString().split("T")[0] || 
                  animalData.purchaseDate.toISOString().split("T")[0],
       weaningDate: animalData.weaningDate?.toISOString().split("T")[0] || "",
