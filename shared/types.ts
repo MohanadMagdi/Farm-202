@@ -31,9 +31,11 @@ export interface Animal {
   aiDate?: Date; // AI = Artificial Insemination
   expectedBirthDate?: Date;
   offspringCount?: number;
-  
+  offspringIds?: string[]; // Array of offspring IDs for bidirectional link
+
   // For newborns
   motherId?: string;
+  motherEarTagId?: string; // Denormalized for easier display
   birthDate?: Date;
   weaningDate?: Date;
   
