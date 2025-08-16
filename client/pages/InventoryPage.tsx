@@ -232,13 +232,10 @@ export default function InventoryPage() {
         return item.currentStock <= item.minStockLevel;
       if (statusFilter === "out_of_stock") return item.currentStock === 0;
       if (statusFilter === "expired")
-        return item.hasExpiry && item.expiryDate && item.expiryDate < new Date();
+        return item.hasExpiry && item.remainingDays !== undefined && item.remainingDays < 0;
       if (statusFilter === "expiring") {
-        if (!item.hasExpiry || !item.expiryDate) return false;
-        const daysUntilExpiry = Math.ceil(
-          (item.expiryDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
-        );
-        return daysUntilExpiry > 0 && daysUntilExpiry <= 7;
+        return item.hasExpiry && item.remainingDays !== undefined &&
+               item.remainingDays >= 0 && item.remainingDays <= 7;
       }
       return true;
     });
@@ -612,7 +609,7 @@ export default function InventoryPage() {
                       <TableHead className="text-right">اسم الصنف</TableHead>
                       <TableHead className="text-right">المستودع</TableHead>
                       <TableHead className="text-right">المخزون الحالي</TableHead>
-                      <TableHead className="text-right">الحد الأدنى</TableHead>
+                      <TableHead className="text-right">ا��حد الأدنى</TableHead>
                       <TableHead className="text-right">سعر الوحدة</TableHead>
                       <TableHead className="text-right">الحالة</TableHead>
                       <TableHead className="text-right">انتهاء الصلاحية</TableHead>
