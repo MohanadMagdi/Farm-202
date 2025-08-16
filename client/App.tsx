@@ -171,16 +171,37 @@ const App = () => {
   useEffect(() => {
     // Suppress ResizeObserver loop error
     const handleResizeObserverError = (e: ErrorEvent) => {
-      if (e.message.includes('ResizeObserver loop completed with undelivered notifications')) {
+      if (e.message && e.message.includes('ResizeObserver loop completed with undelivered notifications')) {
         e.stopImmediatePropagation();
+        e.preventDefault();
         return false;
       }
     };
 
+    const handleUnhandledRejection = (e: PromiseRejectionEvent) => {
+      if (e.reason && e.reason.message && e.reason.message.includes('ResizeObserver')) {
+        e.preventDefault();
+        return false;
+      }
+    };
+
+    // Override console.error to filter ResizeObserver warnings
+    const originalConsoleError = console.error;
+    console.error = (...args: any[]) => {
+      const message = args[0];
+      if (typeof message === 'string' && message.includes('ResizeObserver loop completed')) {
+        return; // Suppress this specific error
+      }
+      originalConsoleError.apply(console, args);
+    };
+
     window.addEventListener('error', handleResizeObserverError);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
 
     return () => {
       window.removeEventListener('error', handleResizeObserverError);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+      console.error = originalConsoleError; // Restore original console.error
     };
   }, []);
 
