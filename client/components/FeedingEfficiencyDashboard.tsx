@@ -50,6 +50,7 @@ import {
   type FeedingTrends
 } from "@/lib/feeding-analytics";
 import { exportFeedingReport } from "@/lib/export-utils";
+import { toast } from "@/hooks/use-toast";
 import type { FeedingRecord, Animal, Barn, WarehouseItem, WeightRecord } from "@shared/types";
 
 interface FeedingEfficiencyDashboardProps {
