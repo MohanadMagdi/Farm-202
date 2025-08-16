@@ -293,17 +293,42 @@ export default function AnimalFormModal({
       }
 
       if (mode === "edit" && animal) {
+        // Handle relationship changes for existing animals
+        if (formData.category === "newborn") {
+          const newMotherId = formData.motherId === "none" || !formData.motherId ? null : formData.motherId;
+          const oldMotherId = animal.motherId || null;
+
+          if (newMotherId !== oldMotherId) {
+            const relationshipResult = await updateMotherChildRelationship(animal.id, newMotherId, oldMotherId);
+            if (!relationshipResult.success) {
+              throw new Error(relationshipResult.errors.join(', '));
+            }
+          }
+        }
+
         await dataService.animals.update(animal.id, animalData);
         toast({
           title: "تم التحديث بنجاح",
           description: `تم تحديث بيانات الحيوان ${formData.earTagId}`,
         });
       } else {
-        await dataService.animals.create(animalData);
-        toast({
-          title: "تم الإضافة بنجاح",
-          description: `تم إضافة الحيوان ${formData.earTagId} بنجاح`,
-        });
+        // Handle new animal creation with relationships
+        if (formData.category === "newborn" && formData.motherId && formData.motherId !== "none") {
+          const relationshipResult = await createMotherChildRelationship(formData.motherId, animalData);
+          if (!relationshipResult.success) {
+            throw new Error(relationshipResult.errors.join(', '));
+          }
+          toast({
+            title: "تم الإضافة بنجاح",
+            description: `تم إضافة المولود ${formData.earTagId} وربطه بالأم بنجاح`,
+          });
+        } else {
+          await dataService.animals.create(animalData);
+          toast({
+            title: "تم الإضافة بنجاح",
+            description: `تم إضافة الحيوان ${formData.earTagId} بنجاح`,
+          });
+        }
       }
 
       onSave();
@@ -575,7 +600,7 @@ export default function AnimalFormModal({
 
                     {formData.weight && (
                       <div className="bg-blue-50 p-3 rounded-lg border">
-                        <p className="text-sm font-medium text-blue-800 mb-1">السعر المحسوب:</p>
+                        <p className="text-sm font-medium text-blue-800 mb-1">ال��عر المحسوب:</p>
                         <p className="text-lg font-bold text-blue-900">
                           {formatEGP(calculateCurrentPrice({
                             ...formData,
