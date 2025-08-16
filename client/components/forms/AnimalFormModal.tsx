@@ -125,6 +125,16 @@ export default function AnimalFormModal({
     }
   }, [formData.weight, formData.pricingMethod, formData.formulaMultiplier, formData.purchasePrice]);
 
+  // Validate mother selection in real-time
+  useEffect(() => {
+    if (formData.category === "newborn" && formData.motherId && formData.motherId !== "none" && animals.length > 0) {
+      const validation = validateMotherChildRelationship(formData.motherId, formData.category, animals);
+      setMotherValidation(validation);
+    } else {
+      setMotherValidation({ isValid: true, errors: [], warnings: [] });
+    }
+  }, [formData.motherId, formData.category, animals]);
+
   const loadSelectData = async () => {
     try {
       const [barnsData, animalsData] = await Promise.all([
