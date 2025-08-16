@@ -454,7 +454,7 @@ export default function AnimalFormModal({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="healthStatus">الحالة الصحية *</Label>
+                <Label htmlFor="healthStatus">الحا��ة الصحية *</Label>
                 <Select
                   value={formData.healthStatus}
                   onValueChange={(value) =>
@@ -611,13 +611,7 @@ export default function AnimalFormModal({
                       <div className="bg-blue-50 p-3 rounded-lg border">
                         <p className="text-sm font-medium text-blue-800 mb-1">ال��عر المحسوب:</p>
                         <p className="text-lg font-bold text-blue-900">
-                          {formatEGP(calculateCurrentPrice({
-                            ...formData,
-                            weight: parseFloat(formData.weight) || 0,
-                            purchasePrice: parseFloat(formData.purchasePrice) || 0,
-                            pricingMethod: formData.pricingMethod as any,
-                            formulaMultiplier: formData.formulaMultiplier ? parseFloat(formData.formulaMultiplier) : undefined
-                          } as any))}
+                          {formatEGP(calculateCurrentPrice(createAnimalFromFormData(formData) as any))}
                         </p>
                         <p className="text-xs text-blue-600 mt-1">
                           سيتم تحديث السعر تلقائياً عند الحفظ
