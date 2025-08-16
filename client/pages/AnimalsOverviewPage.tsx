@@ -11,14 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  formatEGP,
-  formatWeight,
-  formatArabicNumber,
-  animalTypes,
-  healthStatus,
-} from "@/lib/arabic-utils";
-import { db, Animal } from "@/lib/firebase-mock";
+import { formatArabicDate } from "@/lib/arabic-utils";
+import { dataService, farmHelpers } from "@/lib/data-service";
+import BreedingWorkflowDashboard from "@/components/BreedingWorkflowDashboard";
+import type { Animal, AnimalCategory } from "@shared/types";
 import {
   CircleDot,
   TrendingUp,
@@ -32,11 +28,26 @@ import {
   Plus,
   Eye,
   BarChart3,
+  Truck,
+  Baby,
 } from "lucide-react";
 
 export default function AnimalsOverviewPage() {
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [analytics, setAnalytics] = useState({
+    totalAnimals: 0,
+    maleCount: 0,
+    femaleCount: 0,
+    newbornCount: 0,
+    healthyCount: 0,
+    sickCount: 0,
+    pregnantCount: 0,
+    isolatedCount: 0,
+    totalValue: 0,
+    averageWeight: 0,
+    averageADG: 0,
+  });
 
   useEffect(() => {
     loadAnimals();
@@ -44,14 +55,67 @@ export default function AnimalsOverviewPage() {
 
   const loadAnimals = async () => {
     try {
-      const snapshot = await db.collection("animals").get();
-      const animalsData = snapshot.docs.map((doc) => doc.data() as Animal);
+      const animalsData = await dataService.animals.getAll();
       setAnimals(animalsData);
+      calculateAnalytics(animalsData);
     } catch (error) {
       console.error("Error loading animals:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const calculateAnalytics = (animalsData: Animal[]) => {
+    const totalAnimals = animalsData.length;
+    const maleCount = animalsData.filter((a) => a.category === "male").length;
+    const femaleCount = animalsData.filter(
+      (a) => a.category === "female",
+    ).length;
+    const newbornCount = animalsData.filter(
+      (a) => a.category === "newborn",
+    ).length;
+
+    const healthyStatuses = ["سليم", "سليمة", "healthy"];
+    const healthyCount = animalsData.filter((a) =>
+      healthyStatuses.includes(a.healthStatus),
+    ).length;
+    const sickCount = totalAnimals - healthyCount;
+
+    const pregnantCount = animalsData.filter((a) => a.isPregnant).length;
+    const isolatedCount = animalsData.filter((a) => a.isIsolated).length;
+
+    const totalValue = animalsData.reduce(
+      (sum, animal) => sum + (animal.currentPrice || animal.purchasePrice || 0),
+      0,
+    );
+
+    const averageWeight =
+      totalAnimals > 0
+        ? animalsData.reduce((sum, animal) => sum + animal.weight, 0) /
+          totalAnimals
+        : 0;
+
+    const averageADG =
+      totalAnimals > 0
+        ? animalsData.reduce(
+            (sum, animal) => sum + farmHelpers.calculateADG(animal),
+            0,
+          ) / totalAnimals
+        : 0;
+
+    setAnalytics({
+      totalAnimals,
+      maleCount,
+      femaleCount,
+      newbornCount,
+      healthyCount,
+      sickCount,
+      pregnantCount,
+      isolatedCount,
+      totalValue,
+      averageWeight,
+      averageADG,
+    });
   };
 
   if (loading) {
@@ -69,83 +133,57 @@ export default function AnimalsOverviewPage() {
     );
   }
 
-  // Calculate statistics
-  const totalAnimals = animals.length;
-  const maleCount = animals.filter(
-    (a) => a.type === "male" && a.status === "active",
-  ).length;
-  const femaleCount = animals.filter(
-    (a) => a.type === "female" && a.status === "active",
-  ).length;
-  const newbornCount = animals.filter(
-    (a) => a.type === "newborn" && a.status === "active",
-  ).length;
+  // Animals by barn
+  const animalsByBarn = animals.reduce(
+    (acc, animal) => {
+      if (!acc[animal.barnId]) {
+        acc[animal.barnId] = [];
+      }
+      acc[animal.barnId].push(animal);
+      return acc;
+    },
+    {} as Record<string, Animal[]>,
+  );
 
-  const healthyCount = animals.filter(
-    (a) => a.healthStatus === "healthy" && a.status === "active",
-  ).length;
-  const sickCount = animals.filter(
-    (a) => a.healthStatus !== "healthy" && a.status === "active",
-  ).length;
-
-  const totalValue = animals
-    .filter((a) => a.status === "active")
-    .reduce((sum, animal) => sum + (animal.purchase?.priceEGP || 0), 0);
-
-  const averageWeight =
-    animals.filter((a) => a.status === "active").length > 0
-      ? animals
-          .filter((a) => a.status === "active")
-          .reduce((sum, animal) => sum + animal.currentWeightKg, 0) /
-        animals.filter((a) => a.status === "active").length
-      : 0;
-
-  const averageADG =
-    animals.filter((a) => a.status === "active").length > 0
-      ? animals
-          .filter((a) => a.status === "active")
-          .reduce((sum, animal) => sum + animal.metrics.adg, 0) /
-        animals.filter((a) => a.status === "active").length
-      : 0;
-
-  // Recent activities (mock data)
+  // Recent activities (mock data based on real animals)
   const recentActivities = [
     {
       id: "1",
       type: "birth",
-      animal: animals.find((a) => a.type === "newborn"),
+      animal: animals.find((a) => a.category === "newborn"),
       message: "ولادة جديدة",
       time: "منذ ساعتين",
+      icon: Baby,
+      color: "text-green-600",
     },
     {
       id: "2",
       type: "weight",
-      animal: animals.find((a) => a.type === "male"),
+      animal: animals.find((a) => a.category === "male"),
       message: "تسجيل وزن جديد",
       time: "منذ 4 ساعات",
+      icon: Scale,
+      color: "text-blue-600",
     },
     {
       id: "3",
       type: "health",
-      animal: animals.find((a) => a.type === "female"),
+      animal: animals.find((a) => a.category === "female"),
       message: "فحص صحي",
       time: "أمس",
+      icon: Heart,
+      color: "text-pink-600",
+    },
+    {
+      id: "4",
+      type: "isolation",
+      animal: animals.find((a) => a.isIsolated),
+      message: "نقل إلى العزل",
+      time: "منذ يومين",
+      icon: AlertTriangle,
+      color: "text-orange-600",
     },
   ].filter((activity) => activity.animal);
-
-  // Animals by barn
-  const animalsByBarn = animals
-    .filter((a) => a.status === "active")
-    .reduce(
-      (acc, animal) => {
-        if (!acc[animal.barnId]) {
-          acc[animal.barnId] = [];
-        }
-        acc[animal.barnId].push(animal);
-        return acc;
-      },
-      {} as Record<string, Animal[]>,
-    );
 
   return (
     <div className="space-y-6">
@@ -164,15 +202,11 @@ export default function AnimalsOverviewPage() {
             <BarChart3 className="h-4 w-4 ml-2" />
             تقرير مفصل
           </Button>
-          <Button>
-            <Plus className="h-4 w-4 ml-2" />
-            إضافة حيوان جديد
-          </Button>
         </div>
       </div>
 
       {/* Main Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -182,11 +216,11 @@ export default function AnimalsOverviewPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-farm-800">
-              {formatArabicNumber(totalAnimals)}
+              {analytics.totalAnimals}
             </div>
             <div className="flex items-center space-x-2 space-x-reverse text-xs text-muted-foreground">
               <TrendingUp className="h-3 w-3 text-green-500" />
-              <span>+{formatArabicNumber(5)}% هذا الشهر</span>
+              <span>نمو مستقر</span>
             </div>
           </CardContent>
         </Card>
@@ -200,13 +234,15 @@ export default function AnimalsOverviewPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-farm-800">
-              {formatEGP(totalValue)}
+              {farmHelpers.formatCurrency(analytics.totalValue)}
             </div>
             <p className="text-xs text-muted-foreground">
               متوسط القيمة:{" "}
-              {totalAnimals > 0
-                ? formatEGP(Math.round(totalValue / totalAnimals))
-                : formatEGP(0)}
+              {analytics.totalAnimals > 0
+                ? farmHelpers.formatCurrency(
+                    Math.round(analytics.totalValue / analytics.totalAnimals),
+                  )
+                : farmHelpers.formatCurrency(0)}
             </p>
           </CardContent>
         </Card>
@@ -218,10 +254,10 @@ export default function AnimalsOverviewPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-farm-800">
-              {formatWeight(averageWeight)}
+              {farmHelpers.formatWeight(analytics.averageWeight)}
             </div>
             <p className="text-xs text-muted-foreground">
-              معدل النمو: {averageADG.toFixed(2)} كيلو/يوم
+              معدل النمو: {analytics.averageADG.toFixed(2)} كيلو/يوم
             </p>
           </CardContent>
         </Card>
@@ -233,22 +269,45 @@ export default function AnimalsOverviewPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {formatArabicNumber(healthyCount)}
+              {analytics.healthyCount}
             </div>
             <div className="flex items-center space-x-2 space-x-reverse">
-              {sickCount > 0 && (
+              {analytics.sickCount > 0 && (
                 <>
                   <AlertTriangle className="h-3 w-3 text-yellow-500" />
                   <span className="text-xs text-muted-foreground">
-                    {formatArabicNumber(sickCount)} يحتاج رعاية
+                    {analytics.sickCount} ي��تاج رعاية
                   </span>
                 </>
               )}
-              {sickCount === 0 && (
+              {analytics.sickCount === 0 && (
                 <span className="text-xs text-green-600">
-                  جميع الحيوانات سليمة
+                  ج��يع الحيوانات سليمة
                 </span>
               )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">حالات خاصة</CardTitle>
+            <Activity className="h-4 w-4 text-farm-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-1">
+              <div className="flex justify-between text-sm">
+                <span>حوامل:</span>
+                <span className="font-semibold text-pink-600">
+                  {analytics.pregnantCount}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>في العزل:</span>
+                <span className="font-semibold text-orange-600">
+                  {analytics.isolatedCount}
+                </span>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -264,119 +323,180 @@ export default function AnimalsOverviewPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Link to="/animals/males" className="block">
-              <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent transition-colors">
-                <div className="flex items-center space-x-3 space-x-reverse">
-                  <div className="h-3 w-3 rounded-full bg-blue-500"></div>
-                  <div>
-                    <span className="font-medium">{animalTypes.male}</span>
-                    <p className="text-sm text-muted-foreground">
-                      متوسط الوزن:{" "}
-                      {maleCount > 0
-                        ? formatWeight(
-                            animals
-                              .filter(
-                                (a) =>
-                                  a.type === "male" && a.status === "active",
-                              )
-                              .reduce(
-                                (sum, animal) => sum + animal.currentWeightKg,
-                                0,
-                              ) / maleCount,
-                          )
-                        : "0 كيلو"}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-left">
-                  <div className="text-lg font-semibold">
-                    {formatArabicNumber(maleCount)}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {totalAnimals > 0
-                      ? Math.round((maleCount / totalAnimals) * 100)
-                      : 0}
-                    %
-                  </div>
-                </div>
-              </div>
-            </Link>
+            <Tabs defaultValue="overview" className="w-full">
+              <TabsList className="grid w-full grid-cols-5">
+                <TabsTrigger value="overview">نظرة عامة</TabsTrigger>
+                <TabsTrigger value="males">الذكور</TabsTrigger>
+                <TabsTrigger value="females">الإناث</TabsTrigger>
+                <TabsTrigger value="newborns">الصغار</TabsTrigger>
+                <TabsTrigger value="breeding">سير التربية</TabsTrigger>
+              </TabsList>
 
-            <Link to="/animals/females" className="block">
-              <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent transition-colors">
-                <div className="flex items-center space-x-3 space-x-reverse">
-                  <div className="h-3 w-3 rounded-full bg-pink-500"></div>
-                  <div>
-                    <span className="font-medium">{animalTypes.female}</span>
-                    <p className="text-sm text-muted-foreground">
-                      متوسط الوزن:{" "}
-                      {femaleCount > 0
-                        ? formatWeight(
-                            animals
-                              .filter(
-                                (a) =>
-                                  a.type === "female" && a.status === "active",
+              <TabsContent value="overview" className="space-y-3">
+                <Link to="/animals/males" className="block">
+                  <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent transition-colors">
+                    <div className="flex items-center space-x-3 space-x-reverse">
+                      <div className="h-3 w-3 rounded-full bg-blue-500"></div>
+                      <div>
+                        <span className="font-medium">الذكور</span>
+                        <p className="text-sm text-muted-foreground">
+                          متوسط الوزن:{" "}
+                          {analytics.maleCount > 0
+                            ? farmHelpers.formatWeight(
+                                animals
+                                  .filter((a) => a.category === "male")
+                                  .reduce(
+                                    (sum, animal) => sum + animal.weight,
+                                    0,
+                                  ) / analytics.maleCount,
                               )
-                              .reduce(
-                                (sum, animal) => sum + animal.currentWeightKg,
-                                0,
-                              ) / femaleCount,
-                          )
-                        : "0 كيلو"}
-                    </p>
+                            : "0 كيلو"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-left">
+                      <div className="text-lg font-semibold">
+                        {analytics.maleCount}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {analytics.totalAnimals > 0
+                          ? Math.round(
+                              (analytics.maleCount / analytics.totalAnimals) *
+                                100,
+                            )
+                          : 0}
+                        %
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="text-left">
-                  <div className="text-lg font-semibold">
-                    {formatArabicNumber(femaleCount)}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {totalAnimals > 0
-                      ? Math.round((femaleCount / totalAnimals) * 100)
-                      : 0}
-                    %
-                  </div>
-                </div>
-              </div>
-            </Link>
+                </Link>
 
-            <Link to="/animals/newborns" className="block">
-              <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent transition-colors">
-                <div className="flex items-center space-x-3 space-x-reverse">
-                  <div className="h-3 w-3 rounded-full bg-green-500"></div>
-                  <div>
-                    <span className="font-medium">{animalTypes.newborn}</span>
-                    <p className="text-sm text-muted-foreground">
-                      متوسط الوزن:{" "}
-                      {newbornCount > 0
-                        ? formatWeight(
-                            animals
-                              .filter(
-                                (a) =>
-                                  a.type === "newborn" && a.status === "active",
+                <Link to="/animals/females" className="block">
+                  <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent transition-colors">
+                    <div className="flex items-center space-x-3 space-x-reverse">
+                      <div className="h-3 w-3 rounded-full bg-pink-500"></div>
+                      <div>
+                        <span className="font-medium">الإناث</span>
+                        <p className="text-sm text-muted-foreground">
+                          متوسط الوزن:{" "}
+                          {analytics.femaleCount > 0
+                            ? farmHelpers.formatWeight(
+                                animals
+                                  .filter((a) => a.category === "female")
+                                  .reduce(
+                                    (sum, animal) => sum + animal.weight,
+                                    0,
+                                  ) / analytics.femaleCount,
                               )
-                              .reduce(
-                                (sum, animal) => sum + animal.currentWeightKg,
-                                0,
-                              ) / newbornCount,
-                          )
-                        : "0 كيلو"}
-                    </p>
+                            : "0 كيلو"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-left">
+                      <div className="text-lg font-semibold">
+                        {analytics.femaleCount}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {analytics.totalAnimals > 0
+                          ? Math.round(
+                              (analytics.femaleCount / analytics.totalAnimals) *
+                                100,
+                            )
+                          : 0}
+                        %
+                      </div>
+                    </div>
                   </div>
+                </Link>
+
+                <Link to="/animals/newborns" className="block">
+                  <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent transition-colors">
+                    <div className="flex items-center space-x-3 space-x-reverse">
+                      <div className="h-3 w-3 rounded-full bg-green-500"></div>
+                      <div>
+                        <span className="font-medium">الصغار</span>
+                        <p className="text-sm text-muted-foreground">
+                          متوسط الوزن:{" "}
+                          {analytics.newbornCount > 0
+                            ? farmHelpers.formatWeight(
+                                animals
+                                  .filter((a) => a.category === "newborn")
+                                  .reduce(
+                                    (sum, animal) => sum + animal.weight,
+                                    0,
+                                  ) / analytics.newbornCount,
+                              )
+                            : "0 كيلو"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-left">
+                      <div className="text-lg font-semibold">
+                        {analytics.newbornCount}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {analytics.totalAnimals > 0
+                          ? Math.round(
+                              (analytics.newbornCount /
+                                analytics.totalAnimals) *
+                                100,
+                            )
+                          : 0}
+                        %
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              </TabsContent>
+
+              <TabsContent value="males">
+                <div className="text-center py-4">
+                  <div className="text-3xl font-bold text-blue-600">
+                    {analytics.maleCount}
+                  </div>
+                  <p className="text-muted-foreground">إجمالي الذكور</p>
+                  <Link to="/animals/males">
+                    <Button className="mt-2">عرض جميع الذكور</Button>
+                  </Link>
                 </div>
-                <div className="text-left">
-                  <div className="text-lg font-semibold">
-                    {formatArabicNumber(newbornCount)}
+              </TabsContent>
+
+              <TabsContent value="females">
+                <div className="space-y-2">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-pink-600">
+                      {analytics.femaleCount}
+                    </div>
+                    <p className="text-muted-foreground">��جمالي الإناث</p>
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    {totalAnimals > 0
-                      ? Math.round((newbornCount / totalAnimals) * 100)
-                      : 0}
-                    %
+                  <div className="flex justify-between text-sm">
+                    <span>حوامل:</span>
+                    <span className="font-semibold">
+                      {analytics.pregnantCount}
+                    </span>
                   </div>
+                  <Link to="/animals/females">
+                    <Button className="w-full mt-2">عرض جميع الإناث</Button>
+                  </Link>
                 </div>
-              </div>
-            </Link>
+              </TabsContent>
+
+              <TabsContent value="newborns">
+                <div className="text-center py-4">
+                  <div className="text-3xl font-bold text-green-600">
+                    {analytics.newbornCount}
+                  </div>
+                  <p className="text-muted-foreground">إجمالي الصغار</p>
+                  <Link to="/animals/newborns">
+                    <Button className="mt-2">عرض جميع الصغار</Button>
+                  </Link>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="breeding" className="space-y-4">
+                <BreedingWorkflowDashboard />
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
 
@@ -395,11 +515,15 @@ export default function AnimalsOverviewPage() {
                   key={activity.id}
                   className="flex items-start space-x-3 space-x-reverse"
                 >
-                  <div className="h-2 w-2 rounded-full bg-farm-500 mt-2"></div>
+                  <div
+                    className={`h-8 w-8 rounded-full flex items-center justify-center bg-gray-100 ${activity.color}`}
+                  >
+                    <activity.icon className="h-4 w-4" />
+                  </div>
                   <div className="flex-1 space-y-1">
                     <p className="text-sm font-medium">{activity.message}</p>
                     <p className="text-sm text-muted-foreground">
-                      {activity.animal?.tagId} - {activity.time}
+                      {activity.animal?.earTagId} - {activity.time}
                     </p>
                   </div>
                   <Button variant="outline" size="sm">
@@ -432,34 +556,32 @@ export default function AnimalsOverviewPage() {
               <div key={barnId} className="p-4 border rounded-lg">
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="font-medium">{barnId}</h4>
-                  <Badge variant="outline">
-                    {formatArabicNumber(barnAnimals.length)}
-                  </Badge>
+                  <Badge variant="outline">{barnAnimals.length}</Badge>
                 </div>
 
                 <div className="space-y-1 text-sm text-muted-foreground">
                   <div className="flex justify-between">
                     <span>ذكور:</span>
                     <span>
-                      {formatArabicNumber(
-                        barnAnimals.filter((a) => a.type === "male").length,
-                      )}
+                      {barnAnimals.filter((a) => a.category === "male").length}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>إناث:</span>
                     <span>
-                      {formatArabicNumber(
-                        barnAnimals.filter((a) => a.type === "female").length,
-                      )}
+                      {
+                        barnAnimals.filter((a) => a.category === "female")
+                          .length
+                      }
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>صغار:</span>
                     <span>
-                      {formatArabicNumber(
-                        barnAnimals.filter((a) => a.type === "newborn").length,
-                      )}
+                      {
+                        barnAnimals.filter((a) => a.category === "newborn")
+                          .length
+                      }
                     </span>
                   </div>
                 </div>
@@ -476,7 +598,7 @@ export default function AnimalsOverviewPage() {
       </Card>
 
       {/* Health Alerts */}
-      {sickCount > 0 && (
+      {analytics.sickCount > 0 && (
         <Card className="border-yellow-200 bg-yellow-50">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2 space-x-reverse text-yellow-800">
@@ -488,18 +610,21 @@ export default function AnimalsOverviewPage() {
             <div className="space-y-2">
               {animals
                 .filter(
-                  (a) => a.healthStatus !== "healthy" && a.status === "active",
+                  (a) => !["سليم", "سليمة", "healthy"].includes(a.healthStatus),
                 )
                 .map((animal) => (
                   <div
                     key={animal.id}
                     className="flex items-center justify-between p-2 bg-white rounded"
                   >
-                    <div>
-                      <span className="font-medium">{animal.tagId}</span>
-                      <Badge className="mr-2" variant="outline">
-                        {healthStatus[animal.healthStatus]}
-                      </Badge>
+                    <div className="flex items-center space-x-2 space-x-reverse">
+                      <span className="font-medium">{animal.earTagId}</span>
+                      <Badge variant="outline">{animal.healthStatus}</Badge>
+                      {animal.isIsolated && (
+                        <Badge className="bg-orange-100 text-orange-800">
+                          في العزل
+                        </Badge>
+                      )}
                     </div>
                     <Button size="sm" variant="outline">
                       عرض التفاصيل

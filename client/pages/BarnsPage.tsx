@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -18,14 +18,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { formatArabicNumber, animalTypes } from "@/lib/arabic-utils";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { dataService, farmHelpers } from "@/lib/data-service";
+import type { Barn, Animal, BarnType } from "@shared/types";
+import { toast } from "@/hooks/use-toast";
 import {
   Search,
   Plus,
@@ -37,122 +42,147 @@ import {
   ArrowRightLeft,
   AlertTriangle,
   CheckCircle,
+  Activity,
+  TrendingUp,
+  Scale,
+  Trash2,
+  Home,
 } from "lucide-react";
 
-interface Barn {
-  id: string;
-  name: string;
-  type: "male" | "female" | "newborn" | "mixed";
-  capacity: number;
-  currentOccupancy: number;
-  location: string;
-  notes?: string;
-  active: boolean;
-  animals: Array<{
-    id: string;
-    tagId: string;
-    type: "male" | "female" | "newborn";
-  }>;
-}
-
-// Mock data
-const mockBarns: Barn[] = [
-  {
-    id: "B001",
-    name: "الحظيرة الرئيسية - ذكور",
-    type: "male",
-    capacity: 50,
-    currentOccupancy: 35,
-    location: "الجانب الشرقي",
-    notes: "حظيرة مجهزة بأنظمة تهوية حديثة",
-    active: true,
-    animals: [
-      { id: "1", tagId: "M001", type: "male" },
-      { id: "2", tagId: "M015", type: "male" },
-    ],
-  },
-  {
-    id: "B002",
-    name: "حظيرة الإناث الرئيسية",
-    type: "female",
-    capacity: 60,
-    currentOccupancy: 45,
-    location: "الجانب الغربي",
-    notes: "مخصصة للإناث الحوامل والمرضعات",
-    active: true,
-    animals: [
-      { id: "3", tagId: "F047", type: "female" },
-      { id: "4", tagId: "F023", type: "female" },
-    ],
-  },
-  {
-    id: "B003",
-    name: "حظيرة الصغار",
-    type: "newborn",
-    capacity: 30,
-    currentOccupancy: 18,
-    location: "المنطقة الوسطى",
-    notes: "مجهزة بأنظمة تدفئة للصغار",
-    active: true,
-    animals: [
-      { id: "5", tagId: "N012", type: "newborn" },
-      { id: "6", tagId: "N008", type: "newborn" },
-    ],
-  },
-  {
-    id: "B004",
-    name: "حظيرة الحجر الصحي",
-    type: "mixed",
-    capacity: 20,
-    currentOccupancy: 3,
-    location: "منطقة منفصلة",
-    notes: "للحيوانات الجديدة أو المريضة",
-    active: true,
-    animals: [],
-  },
-  {
-    id: "B005",
-    name: "الحظيرة الاحتياطية",
-    type: "mixed",
-    capacity: 40,
-    currentOccupancy: 0,
-    location: "الجانب الجنوبي",
-    notes: "حظيرة احتياطية للحالات الطارئة",
-    active: false,
-    animals: [],
-  },
-];
-
-const barnTypeLabels = {
+const barnTypeLabels: Record<BarnType, string> = {
   male: "ذكور",
   female: "إناث",
   newborn: "صغار",
   mixed: "مختلط",
 };
 
+const barnTypeIcons: Record<BarnType, any> = {
+  male: Users,
+  female: Users,
+  newborn: Home,
+  mixed: Building2,
+};
+
+const barnTypeColors: Record<BarnType, string> = {
+  male: "text-blue-600",
+  female: "text-pink-600",
+  newborn: "text-green-600",
+  mixed: "text-purple-600",
+};
+
+interface BarnFormData {
+  name: string;
+  type: BarnType;
+  capacity: string;
+  location: string;
+  description: string;
+  isActive: boolean;
+}
+
 export default function BarnsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [barns, setBarns] = useState<Barn[]>([]);
+  const [animals, setAnimals] = useState<Animal[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Analytics
+  const [analytics, setAnalytics] = useState({
+    totalBarns: 0,
+    activeBarns: 0,
+    totalCapacity: 0,
+    totalOccupancy: 0,
+    fullBarns: 0,
+    nearFullBarns: 0,
+    avgOccupancyRate: 0,
+  });
 
-  const filteredBarns = mockBarns
-    .filter(
-      (barn) =>
-        barn.name.includes(searchTerm) ||
-        barn.location.includes(searchTerm) ||
-        barn.id.toLowerCase().includes(searchTerm.toLowerCase()),
-    )
-    .filter((barn) => typeFilter === "all" || barn.type === typeFilter)
-    .filter((barn) => {
-      if (statusFilter === "all") return true;
-      if (statusFilter === "active") return barn.active;
-      if (statusFilter === "inactive") return !barn.active;
-      if (statusFilter === "full")
-        return barn.currentOccupancy >= barn.capacity;
-      if (statusFilter === "near_full")
-        return barn.currentOccupancy / barn.capacity > 0.8;
-      return true;
+  // Barn form modal
+  const [showBarnModal, setShowBarnModal] = useState(false);
+  const [selectedBarn, setSelectedBarn] = useState<Barn | null>(null);
+  const [barnFormMode, setBarnFormMode] = useState<"add" | "edit">("add");
+  const [barnFormData, setBarnFormData] = useState<BarnFormData>({
+    name: "",
+    type: "male",
+    capacity: "",
+    location: "",
+    description: "",
+    isActive: true,
+  });
+  const [formLoading, setFormLoading] = useState(false);
+
+  // Animal transfer modal
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [transferData, setTransferData] = useState({
+    animalId: "",
+    fromBarnId: "",
+    toBarnId: "",
+    reason: "",
+  });
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const [barnsData, animalsData] = await Promise.all([
+        dataService.barns.getAll(),
+        dataService.animals.getAll(),
+      ]);
+
+      setBarns(barnsData);
+      setAnimals(animalsData);
+      calculateAnalytics(barnsData, animalsData);
+    } catch (error) {
+      console.error("Error loading barn data:", error);
+      toast({
+        title: "خطأ في تحميل البيانات",
+        description: "حدث خطأ أثناء تحميل بيانات الحظائر",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const calculateAnalytics = (barnsData: Barn[], animalsData: Animal[]) => {
+    const totalBarns = barnsData.length;
+    const activeBarns = barnsData.filter(barn => barn.isActive).length;
+    const totalCapacity = barnsData.reduce((sum, barn) => sum + barn.capacity, 0);
+    
+    // Calculate occupancy for each barn
+    const barnOccupancy = barnsData.map(barn => {
+      const occupancy = animalsData.filter(animal => animal.barnId === barn.id).length;
+      return { ...barn, currentOccupancy: occupancy };
     });
+
+    const totalOccupancy = barnOccupancy.reduce((sum, barn) => sum + barn.currentOccupancy, 0);
+    const fullBarns = barnOccupancy.filter(barn => barn.currentOccupancy >= barn.capacity).length;
+    const nearFullBarns = barnOccupancy.filter(barn => 
+      barn.currentOccupancy / barn.capacity >= 0.8 && barn.currentOccupancy < barn.capacity
+    ).length;
+    const avgOccupancyRate = totalCapacity > 0 ? (totalOccupancy / totalCapacity) * 100 : 0;
+
+    setAnalytics({
+      totalBarns,
+      activeBarns,
+      totalCapacity,
+      totalOccupancy,
+      fullBarns,
+      nearFullBarns,
+      avgOccupancyRate,
+    });
+  };
+
+  const getBarnOccupancy = (barnId: string) => {
+    return animals.filter(animal => animal.barnId === barnId).length;
+  };
+
+  const getBarnAnimals = (barnId: string) => {
+    return animals.filter(animal => animal.barnId === barnId);
+  };
 
   const getOccupancyColor = (occupancy: number, capacity: number) => {
     const percentage = (occupancy / capacity) * 100;
@@ -172,15 +202,189 @@ export default function BarnsPage() {
     return { text: "متاحة", color: "bg-green-100 text-green-800" };
   };
 
-  const totalCapacity = mockBarns.reduce((sum, barn) => sum + barn.capacity, 0);
-  const totalOccupancy = mockBarns.reduce(
-    (sum, barn) => sum + barn.currentOccupancy,
-    0,
-  );
-  const activeBarns = mockBarns.filter((barn) => barn.active).length;
-  const fullBarns = mockBarns.filter(
-    (barn) => barn.currentOccupancy >= barn.capacity,
-  ).length;
+  const handleAddBarn = () => {
+    setBarnFormData({
+      name: "",
+      type: "male",
+      capacity: "",
+      location: "",
+      description: "",
+      isActive: true,
+    });
+    setBarnFormMode("add");
+    setSelectedBarn(null);
+    setShowBarnModal(true);
+  };
+
+  const handleEditBarn = (barn: Barn) => {
+    setBarnFormData({
+      name: barn.name,
+      type: barn.type,
+      capacity: barn.capacity.toString(),
+      location: barn.location,
+      description: barn.description || "",
+      isActive: barn.isActive,
+    });
+    setBarnFormMode("edit");
+    setSelectedBarn(barn);
+    setShowBarnModal(true);
+  };
+
+  const handleSaveBarn = async () => {
+    setFormLoading(true);
+    try {
+      const barnData: Omit<Barn, 'id'> = {
+        name: barnFormData.name,
+        type: barnFormData.type,
+        capacity: parseInt(barnFormData.capacity),
+        location: barnFormData.location,
+        description: barnFormData.description || undefined,
+        isActive: barnFormData.isActive,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      if (barnFormMode === "edit" && selectedBarn) {
+        await dataService.barns.update(selectedBarn.id, barnData);
+        toast({
+          title: "تم التحديث بنجاح",
+          description: `تم تحديث بيانات الحظيرة ${barnFormData.name}`,
+        });
+      } else {
+        await dataService.barns.create(barnData);
+        toast({
+          title: "تم الإضافة بنجاح",
+          description: `تم إضافة الحظيرة ${barnFormData.name} بنجاح`,
+        });
+      }
+
+      setShowBarnModal(false);
+      loadData();
+    } catch (error) {
+      console.error("Error saving barn:", error);
+      toast({
+        title: "خطأ في الحفظ",
+        description: "حدث خطأ أثناء حفظ بيانات الحظيرة",
+        variant: "destructive",
+      });
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const handleDeleteBarn = async (barn: Barn) => {
+    const occupancy = getBarnOccupancy(barn.id);
+    
+    if (occupancy > 0) {
+      toast({
+        title: "لا يمكن حذف الحظيرة",
+        description: "يجب نقل جميع الحيوانات من الحظيرة قبل حذفها",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (window.confirm(`هل أنت متأكد من حذف الحظيرة ${barn.name}؟`)) {
+      try {
+        await dataService.barns.delete(barn.id);
+        toast({
+          title: "تم الحذف بنجاح",
+          description: `تم حذف الحظيرة ${barn.name} بنجاح`,
+        });
+        loadData();
+      } catch (error) {
+        console.error("Error deleting barn:", error);
+        toast({
+          title: "خطأ في الحذف",
+          description: "حدث خطأ أثناء حذف الحظيرة",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  const openTransferModal = (barn: Barn) => {
+    setTransferData({
+      animalId: "",
+      fromBarnId: barn.id,
+      toBarnId: "",
+      reason: "",
+    });
+    setShowTransferModal(true);
+  };
+
+  const handleTransferAnimal = async () => {
+    try {
+      const movement = {
+        animalId: transferData.animalId,
+        fromBarnId: transferData.fromBarnId,
+        toBarnId: transferData.toBarnId,
+        date: new Date(),
+        reason: transferData.reason,
+        recordedBy: "مدير المزرعة", // TODO: Get from auth context
+      };
+
+      await dataService.barnMovements.create(movement);
+
+      // Update animal's barn
+      await dataService.animals.update(transferData.animalId, {
+        barnId: transferData.toBarnId,
+        updatedAt: new Date(),
+        updatedBy: "مدير المزرعة",
+      });
+
+      toast({
+        title: "تم النقل بنجاح",
+        description: "تم نقل الحيوان إلى الحظيرة الجديدة",
+      });
+
+      setShowTransferModal(false);
+      loadData();
+    } catch (error) {
+      console.error("Error transferring animal:", error);
+      toast({
+        title: "خطأ في النقل",
+        description: "حدث خطأ أثناء نقل الحيوان",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const filteredBarns = barns
+    .filter(
+      (barn) =>
+        barn.name.includes(searchTerm) ||
+        barn.location.includes(searchTerm) ||
+        barn.id.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .filter((barn) => typeFilter === "all" || barn.type === typeFilter)
+    .filter((barn) => {
+      if (statusFilter === "all") return true;
+      if (statusFilter === "active") return barn.isActive;
+      if (statusFilter === "inactive") return !barn.isActive;
+      
+      const occupancy = getBarnOccupancy(barn.id);
+      if (statusFilter === "full") return occupancy >= barn.capacity;
+      if (statusFilter === "near_full") return occupancy / barn.capacity >= 0.8;
+      if (statusFilter === "empty") return occupancy === 0;
+      
+      return true;
+    });
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="grid gap-4 md:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-32 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -193,11 +397,11 @@ export default function BarnsPage() {
           </p>
         </div>
         <div className="flex items-center space-x-3 space-x-reverse">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => setShowTransferModal(true)}>
             <ArrowRightLeft className="h-4 w-4 ml-2" />
             نقل الحيوانات
           </Button>
-          <Button>
+          <Button onClick={handleAddBarn}>
             <Plus className="h-4 w-4 ml-2" />
             إضافة حظيرة جديدة
           </Button>
@@ -205,32 +409,28 @@ export default function BarnsPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-5">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              إجمالي الحظائر
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">إجمالي الحظائر</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-farm-800">
-              {formatArabicNumber(mockBarns.length)}
+              {analytics.totalBarns}
             </div>
             <p className="text-xs text-muted-foreground">
-              {formatArabicNumber(activeBarns)} حظيرة نشطة
+              {analytics.activeBarns} حظيرة نشطة
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              السعة الإجمالية
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">السعة الإجمالية</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-farm-800">
-              {formatArabicNumber(totalCapacity)}
+              {analytics.totalCapacity}
             </div>
             <p className="text-xs text-muted-foreground">حيوان كحد أقصى</p>
           </CardContent>
@@ -238,21 +438,31 @@ export default function BarnsPage() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              الإشغال الحالي
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">الإشغال الحالي</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-farm-800">
-              {formatArabicNumber(totalOccupancy)}
+              {analytics.totalOccupancy}
             </div>
-            <Progress
-              value={(totalOccupancy / totalCapacity) * 100}
-              className="mt-2"
-            />
+            <Progress value={analytics.avgOccupancyRate} className="mt-2" />
             <p className="text-xs text-muted-foreground mt-1">
-              {Math.round((totalOccupancy / totalCapacity) * 100)}% من السعة
+              {Math.round(analytics.avgOccupancyRate)}% من السعة
             </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">معدل الإشغال</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-farm-800">
+              {Math.round(analytics.avgOccupancyRate)}%
+            </div>
+            <div className="flex items-center text-xs text-muted-foreground">
+              <TrendingUp className="h-3 w-3 ml-1 text-green-500" />
+              <span>كفاءة عالية</span>
+            </div>
           </CardContent>
         </Card>
 
@@ -262,16 +472,14 @@ export default function BarnsPage() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center space-x-2 space-x-reverse">
-              {fullBarns > 0 ? (
+              {analytics.fullBarns > 0 ? (
                 <>
                   <AlertTriangle className="h-5 w-5 text-red-500" />
                   <div>
                     <div className="text-2xl font-bold text-red-600">
-                      {formatArabicNumber(fullBarns)}
+                      {analytics.fullBarns}
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      حظيرة ممتلئة
-                    </p>
+                    <p className="text-xs text-muted-foreground">حظيرة ممتلئة</p>
                   </div>
                 </>
               ) : (
@@ -279,9 +487,7 @@ export default function BarnsPage() {
                   <CheckCircle className="h-5 w-5 text-green-500" />
                   <div>
                     <div className="text-2xl font-bold text-green-600">0</div>
-                    <p className="text-xs text-muted-foreground">
-                      لا توجد تنبيهات
-                    </p>
+                    <p className="text-xs text-muted-foreground">لا توجد تنبيهات</p>
                   </div>
                 </>
               )}
@@ -315,10 +521,11 @@ export default function BarnsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">جميع الأنواع</SelectItem>
-                <SelectItem value="male">ذكور</SelectItem>
-                <SelectItem value="female">إناث</SelectItem>
-                <SelectItem value="newborn">صغار</SelectItem>
-                <SelectItem value="mixed">مختلط</SelectItem>
+                {Object.entries(barnTypeLabels).map(([type, label]) => (
+                  <SelectItem key={type} value={type}>
+                    {label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
@@ -330,8 +537,9 @@ export default function BarnsPage() {
                 <SelectItem value="all">جميع الحالات</SelectItem>
                 <SelectItem value="active">نشطة</SelectItem>
                 <SelectItem value="inactive">غير نشطة</SelectItem>
-                <SelectItem value="full">ممتلئة</SelectItem>
+                <SelectItem value="empty">فارغة</SelectItem>
                 <SelectItem value="near_full">شبه ممتلئة</SelectItem>
+                <SelectItem value="full">ممتلئة</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -341,32 +549,39 @@ export default function BarnsPage() {
       {/* Barns Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {filteredBarns.map((barn) => {
-          const occupancyPercentage =
-            (barn.currentOccupancy / barn.capacity) * 100;
-          const occupancyBadge = getOccupancyBadge(
-            barn.currentOccupancy,
-            barn.capacity,
-          );
+          const occupancy = getBarnOccupancy(barn.id);
+          const occupancyPercentage = (occupancy / barn.capacity) * 100;
+          const occupancyBadge = getOccupancyBadge(occupancy, barn.capacity);
+          const barnAnimals = getBarnAnimals(barn.id);
+          const TypeIcon = barnTypeIcons[barn.type];
 
           return (
             <Card
               key={barn.id}
-              className={`${!barn.active ? "opacity-60" : ""}`}
+              className={`${!barn.isActive ? "opacity-60" : ""} hover:shadow-lg transition-shadow`}
             >
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <CardTitle className="text-lg">{barn.name}</CardTitle>
+                    <CardTitle className="text-lg flex items-center">
+                      <TypeIcon className={`h-5 w-5 ml-2 ${barnTypeColors[barn.type]}`} />
+                      {barn.name}
+                    </CardTitle>
                     <CardDescription className="flex items-center space-x-2 space-x-reverse mt-1">
                       <MapPin className="h-4 w-4" />
                       <span>{barn.location}</span>
                     </CardDescription>
                   </div>
                   <div className="flex flex-col space-y-1">
-                    <Badge variant="outline">{barnTypeLabels[barn.type]}</Badge>
+                    <Badge variant="outline" className={barnTypeColors[barn.type]}>
+                      {barnTypeLabels[barn.type]}
+                    </Badge>
                     <Badge className={occupancyBadge.color}>
                       {occupancyBadge.text}
                     </Badge>
+                    {!barn.isActive && (
+                      <Badge variant="secondary">غير نشطة</Badge>
+                    )}
                   </div>
                 </div>
               </CardHeader>
@@ -376,11 +591,8 @@ export default function BarnsPage() {
                 <div>
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm font-medium">الإشغال</span>
-                    <span
-                      className={`text-sm font-bold ${getOccupancyColor(barn.currentOccupancy, barn.capacity)}`}
-                    >
-                      {formatArabicNumber(barn.currentOccupancy)} /{" "}
-                      {formatArabicNumber(barn.capacity)}
+                    <span className={`text-sm font-bold ${getOccupancyColor(occupancy, barn.capacity)}`}>
+                      {occupancy} / {barn.capacity}
                     </span>
                   </div>
                   <Progress value={occupancyPercentage} className="h-2" />
@@ -389,32 +601,58 @@ export default function BarnsPage() {
                   </p>
                 </div>
 
-                {/* Notes */}
-                {barn.notes && (
+                {/* Analytics */}
+                {barnAnimals.length > 0 && (
+                  <div className="grid grid-cols-3 gap-2 text-xs">
+                    <div className="text-center p-2 bg-blue-50 rounded">
+                      <div className="font-bold text-blue-600">
+                        {farmHelpers.formatWeight(
+                          barnAnimals.reduce((sum, animal) => sum + animal.weight, 0) / barnAnimals.length
+                        )}
+                      </div>
+                      <div className="text-muted-foreground">متوسط الوزن</div>
+                    </div>
+                    <div className="text-center p-2 bg-green-50 rounded">
+                      <div className="font-bold text-green-600">
+                        {barnAnimals.filter(a => ["سليم", "سليمة", "healthy"].includes(a.healthStatus)).length}
+                      </div>
+                      <div className="text-muted-foreground">سليمة</div>
+                    </div>
+                    <div className="text-center p-2 bg-orange-50 rounded">
+                      <div className="font-bold text-orange-600">
+                        {barnAnimals.filter(a => a.isIsolated).length}
+                      </div>
+                      <div className="text-muted-foreground">في العزل</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Description */}
+                {barn.description && (
                   <div>
                     <p className="text-sm text-muted-foreground">
-                      {barn.notes}
+                      {barn.description}
                     </p>
                   </div>
                 )}
 
                 {/* Animals List */}
-                {barn.animals.length > 0 && (
+                {barnAnimals.length > 0 && (
                   <div>
                     <p className="text-sm font-medium mb-2">الحيوانات:</p>
                     <div className="flex flex-wrap gap-1">
-                      {barn.animals.slice(0, 3).map((animal) => (
+                      {barnAnimals.slice(0, 3).map((animal) => (
                         <Badge
                           key={animal.id}
                           variant="secondary"
                           className="text-xs"
                         >
-                          {animal.tagId}
+                          {animal.earTagId}
                         </Badge>
                       ))}
-                      {barn.animals.length > 3 && (
+                      {barnAnimals.length > 3 && (
                         <Badge variant="secondary" className="text-xs">
-                          +{formatArabicNumber(barn.animals.length - 3)} أخرى
+                          +{barnAnimals.length - 3} أخرى
                         </Badge>
                       )}
                     </div>
@@ -427,13 +665,33 @@ export default function BarnsPage() {
                     <Eye className="h-3 w-3 ml-1" />
                     عرض
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={() => handleEditBarn(barn)}
+                  >
                     <Edit className="h-3 w-3 ml-1" />
                     تعديل
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={() => openTransferModal(barn)}
+                    disabled={barnAnimals.length === 0}
+                  >
                     <Users className="h-3 w-3 ml-1" />
                     نقل
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleDeleteBarn(barn)}
+                    className="text-red-600 hover:text-red-700"
+                    disabled={occupancy > 0}
+                  >
+                    <Trash2 className="h-3 w-3" />
                   </Button>
                 </div>
               </CardContent>
@@ -450,6 +708,251 @@ export default function BarnsPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Barn Form Modal */}
+      <Dialog open={showBarnModal} onOpenChange={setShowBarnModal}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {barnFormMode === "add" ? "إضافة حظيرة جديدة" : "تعديل بيانات الحظيرة"}
+            </DialogTitle>
+            <DialogDescription>
+              {barnFormMode === "add"
+                ? "إدخال بيانات الحظيرة الجديدة"
+                : "تعديل البيانات الأساسية للحظيرة"}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="barnName">اسم الحظيرة *</Label>
+                <Input
+                  id="barnName"
+                  value={barnFormData.name}
+                  onChange={(e) =>
+                    setBarnFormData({ ...barnFormData, name: e.target.value })
+                  }
+                  placeholder="مثال: الحظيرة الرئيسية - ذكور"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="barnType">نوع الحظيرة *</Label>
+                <Select
+                  value={barnFormData.type}
+                  onValueChange={(value: BarnType) =>
+                    setBarnFormData({ ...barnFormData, type: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(barnTypeLabels).map(([type, label]) => (
+                      <SelectItem key={type} value={type}>
+                        {label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="capacity">السعة (عدد الحيوانات) *</Label>
+                <Input
+                  id="capacity"
+                  type="number"
+                  min="1"
+                  value={barnFormData.capacity}
+                  onChange={(e) =>
+                    setBarnFormData({ ...barnFormData, capacity: e.target.value })
+                  }
+                  placeholder="50"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="location">الموقع *</Label>
+                <Input
+                  id="location"
+                  value={barnFormData.location}
+                  onChange={(e) =>
+                    setBarnFormData({ ...barnFormData, location: e.target.value })
+                  }
+                  placeholder="الجانب الشرقي"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="description">الوصف</Label>
+              <Textarea
+                id="description"
+                value={barnFormData.description}
+                onChange={(e) =>
+                  setBarnFormData({ ...barnFormData, description: e.target.value })
+                }
+                placeholder="وصف الحظيرة والمرافق المتاحة..."
+                rows={3}
+              />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="isActive"
+                checked={barnFormData.isActive}
+                onCheckedChange={(checked) =>
+                  setBarnFormData({ ...barnFormData, isActive: checked as boolean })
+                }
+              />
+              <Label htmlFor="isActive">حظيرة نشطة</Label>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowBarnModal(false)}>
+              إلغاء
+            </Button>
+            <Button
+              onClick={handleSaveBarn}
+              disabled={
+                formLoading ||
+                !barnFormData.name ||
+                !barnFormData.capacity ||
+                !barnFormData.location
+              }
+            >
+              {formLoading
+                ? "جاري الحفظ..."
+                : barnFormMode === "add"
+                  ? "إضافة الحظيرة"
+                  : "حفظ التعديلات"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Animal Transfer Modal */}
+      <Dialog open={showTransferModal} onOpenChange={setShowTransferModal}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>نقل حيوان بين الحظائر</DialogTitle>
+            <DialogDescription>
+              اختر الحيوان والحظيرة المقصودة للنقل
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-4">
+            <div>
+              <Label htmlFor="fromBarn">من الحظيرة</Label>
+              <Select
+                value={transferData.fromBarnId}
+                onValueChange={(value) =>
+                  setTransferData({ ...transferData, fromBarnId: value, animalId: "" })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر الحظيرة المصدر" />
+                </SelectTrigger>
+                <SelectContent>
+                  {barns.filter(barn => getBarnOccupancy(barn.id) > 0).map((barn) => (
+                    <SelectItem key={barn.id} value={barn.id}>
+                      {barn.name} ({getBarnOccupancy(barn.id)} حيوان)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {transferData.fromBarnId && (
+              <div>
+                <Label htmlFor="animal">الحيوان</Label>
+                <Select
+                  value={transferData.animalId}
+                  onValueChange={(value) =>
+                    setTransferData({ ...transferData, animalId: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="اختر الحيوان" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getBarnAnimals(transferData.fromBarnId).map((animal) => (
+                      <SelectItem key={animal.id} value={animal.id}>
+                        {animal.earTagId} - {farmHelpers.formatWeight(animal.weight)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div>
+              <Label htmlFor="toBarn">إلى الحظيرة</Label>
+              <Select
+                value={transferData.toBarnId}
+                onValueChange={(value) =>
+                  setTransferData({ ...transferData, toBarnId: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر الحظيرة المقصودة" />
+                </SelectTrigger>
+                <SelectContent>
+                  {barns
+                    .filter(barn => barn.id !== transferData.fromBarnId && barn.isActive)
+                    .map((barn) => {
+                      const occupancy = getBarnOccupancy(barn.id);
+                      const isFullOrNearFull = occupancy >= barn.capacity;
+                      
+                      return (
+                        <SelectItem 
+                          key={barn.id} 
+                          value={barn.id}
+                          disabled={isFullOrNearFull}
+                        >
+                          {barn.name} ({occupancy}/{barn.capacity})
+                          {isFullOrNearFull && " - ممتلئة"}
+                        </SelectItem>
+                      );
+                    })}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="reason">سبب النقل</Label>
+              <Input
+                id="reason"
+                value={transferData.reason}
+                onChange={(e) =>
+                  setTransferData({ ...transferData, reason: e.target.value })
+                }
+                placeholder="مثال: نقل بعد الفطام"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowTransferModal(false)}>
+              إلغاء
+            </Button>
+            <Button
+              onClick={handleTransferAnimal}
+              disabled={
+                !transferData.animalId ||
+                !transferData.toBarnId ||
+                !transferData.reason
+              }
+            >
+              تأكيد النقل
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

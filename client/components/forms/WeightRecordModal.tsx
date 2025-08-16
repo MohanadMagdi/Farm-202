@@ -18,8 +18,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { formatWeight, formatArabicDate } from "@/lib/arabic-utils";
-import { db, Animal, Barn } from "@/lib/firebase-mock";
+import { formatArabicDate } from "@/lib/arabic-utils";
+import { dataService, farmHelpers } from "@/lib/data-service";
+import type { Animal, WeightRecord } from "@shared/types";
+import { toast } from "@/hooks/use-toast";
 
 interface WeightRecordModalProps {
   isOpen: boolean;
@@ -66,11 +68,7 @@ export default function WeightRecordModal({
 
   const loadAnimals = async () => {
     try {
-      const snapshot = await db
-        .collection("animals")
-        .where("status", "==", "active")
-        .get();
-      const animalsData = snapshot.docs.map((doc) => doc.data() as Animal);
+      const animalsData = await dataService.animals.getAll();
       setAnimals(animalsData);
     } catch (error) {
       console.error("Error loading animals:", error);
@@ -90,22 +88,22 @@ export default function WeightRecordModal({
 
   const calculateWeightGain = () => {
     if (!selectedAnimal || !formData.newWeight) return 0;
-    return parseFloat(formData.newWeight) - selectedAnimal.currentWeightKg;
+    return parseFloat(formData.newWeight) - selectedAnimal.weight;
   };
 
   const calculateNewADG = () => {
     if (!selectedAnimal || !formData.newWeight) return 0;
 
+    const birthDate = selectedAnimal.birthDate || selectedAnimal.purchaseDate;
     const daysSinceBirth = Math.floor(
-      (new Date(formData.recordDate).getTime() -
-        selectedAnimal.birthDate.getTime()) /
-        (1000 * 60 * 60 * 24),
+      (new Date(formData.recordDate).getTime() - birthDate.getTime()) /
+        (1000 * 60 * 60 * 24)
     );
 
     if (daysSinceBirth <= 0) return 0;
 
-    const totalGain =
-      parseFloat(formData.newWeight) - selectedAnimal.birthWeightKg;
+    const estimatedBirthWeight = 3.5; // kg for sheep
+    const totalGain = parseFloat(formData.newWeight) - estimatedBirthWeight;
     return totalGain / daysSinceBirth;
   };
 
@@ -115,24 +113,43 @@ export default function WeightRecordModal({
     setLoading(true);
     try {
       const newWeight = parseFloat(formData.newWeight);
-      const weightGain = newWeight - selectedAnimal.currentWeightKg;
+      const weightGain = newWeight - selectedAnimal.weight;
       const newADG = calculateNewADG();
-      const newTotalGain = newWeight - selectedAnimal.birthWeightKg;
 
-      // Update animal weight and metrics
-      await db.collection("animals").doc(selectedAnimal.id).update({
-        currentWeightKg: newWeight,
-        "metrics.adg": newADG,
-        "metrics.totalGainKg": newTotalGain,
+      // Update animal weight
+      await dataService.animals.update(selectedAnimal.id, {
+        weight: newWeight,
+        updatedAt: new Date(),
+        updatedBy: formData.recordedBy,
       });
 
-      // Create a weight record (this would be a separate collection in a real app)
-      await db.collection("healthRecords").add({
+      // Create a weight record
+      const weightRecord: Omit<WeightRecord, 'id'> = {
         animalId: selectedAnimal.id,
-        type: "diagnosis" as const,
+        weight: newWeight,
         date: new Date(formData.recordDate),
-        notes: `تسجيل وزن: ${newWeight} كيلو (زيادة: ${weightGain > 0 ? "+" : ""}${weightGain.toFixed(1)} كيلو)${formData.notes ? ` - ${formData.notes}` : ""}`,
-        vetId: formData.recordedBy,
+        recordedBy: formData.recordedBy,
+        notes: formData.notes || undefined,
+      };
+
+      await dataService.weightRecords.create(weightRecord);
+
+      // Also create a health record entry for tracking
+      const healthRecord = {
+        animalId: selectedAnimal.id,
+        type: "checkup" as const,
+        description: `تسجيل وزن: ${newWeight} كيلو`,
+        cost: 0,
+        date: new Date(formData.recordDate),
+        recordedBy: formData.recordedBy,
+        notes: `زيادة في الوزن: ${weightGain > 0 ? "+" : ""}${weightGain.toFixed(1)} كيلو. معدل النمو: ${newADG.toFixed(2)} كيلو/يوم${formData.notes ? `. ${formData.notes}` : ""}`,
+      };
+
+      await dataService.healthRecords.create(healthRecord);
+
+      toast({
+        title: "تم تسجيل الوزن بنجاح",
+        description: `تم تسجيل وزن ${newWeight} كيلو ل��حيوان ${selectedAnimal.earTagId}`,
       });
 
       onSave();
@@ -140,6 +157,11 @@ export default function WeightRecordModal({
       resetForm();
     } catch (error) {
       console.error("Error saving weight record:", error);
+      toast({
+        title: "خطأ في تسجيل الوزن",
+        description: "حدث خطأ أثناء تسجيل الوزن الجديد",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -147,6 +169,7 @@ export default function WeightRecordModal({
 
   const weightGain = calculateWeightGain();
   const newADG = calculateNewADG();
+  const currentADG = selectedAnimal ? farmHelpers.calculateADG(selectedAnimal) : 0;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -174,7 +197,7 @@ export default function WeightRecordModal({
               <SelectContent>
                 {animals.map((animal) => (
                   <SelectItem key={animal.id} value={animal.id}>
-                    {animal.tagId} - {formatWeight(animal.currentWeightKg)}
+                    {animal.earTagId} - {farmHelpers.formatWeight(animal.weight)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -189,25 +212,28 @@ export default function WeightRecordModal({
                 <div>
                   <span className="text-muted-foreground">الوزن الحالي:</span>
                   <span className="font-medium mr-1">
-                    {formatWeight(selectedAnimal.currentWeightKg)}
+                    {farmHelpers.formatWeight(selectedAnimal.weight)}
                   </span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">وزن الميلاد:</span>
+                  <span className="text-muted-foreground">العمر:</span>
                   <span className="font-medium mr-1">
-                    {formatWeight(selectedAnimal.birthWeightKg)}
+                    {Math.floor(
+                      (new Date().getTime() - (selectedAnimal.birthDate || selectedAnimal.purchaseDate).getTime()) /
+                        (1000 * 60 * 60 * 24)
+                    )} يوم
                   </span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">معدل النمو:</span>
                   <span className="font-medium mr-1">
-                    {selectedAnimal.metrics.adg.toFixed(2)} كيلو/يوم
+                    {currentADG.toFixed(2)} كيلو/يوم
                   </span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">إجمالي النمو:</span>
+                  <span className="text-muted-foreground">الحظيرة:</span>
                   <span className="font-medium mr-1">
-                    {formatWeight(selectedAnimal.metrics.totalGainKg)}
+                    {selectedAnimal.barnId}
                   </span>
                 </div>
               </div>
@@ -251,6 +277,18 @@ export default function WeightRecordModal({
                   </span>
                   <span className="font-medium mr-1">
                     {newADG.toFixed(2)} كيلو/يوم
+                  </span>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-muted-foreground">
+                    حالة النمو:
+                  </span>
+                  <span className={`font-medium mr-1 ${
+                    newADG > currentADG ? "text-green-600" : 
+                    newADG < currentADG ? "text-red-600" : "text-yellow-600"
+                  }`}>
+                    {newADG > currentADG ? "تحسن في النمو" : 
+                     newADG < currentADG ? "تراجع في النمو" : "نمو مستقر"}
                   </span>
                 </div>
               </div>
