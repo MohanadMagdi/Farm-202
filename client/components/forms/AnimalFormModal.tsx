@@ -83,6 +83,11 @@ export default function AnimalFormModal({
   const [loading, setLoading] = useState(false);
   const [earTagSuggestion, setEarTagSuggestion] = useState("");
   const [earTagExists, setEarTagExists] = useState(false);
+  const [motherValidation, setMotherValidation] = useState({
+    isValid: true,
+    errors: [] as string[],
+    warnings: [] as string[]
+  });
 
   useEffect(() => {
     if (isOpen) {
@@ -330,7 +335,7 @@ export default function AnimalFormModal({
           <DialogDescription>
             {mode === "add"
               ? "إدخال بيانات الحيوان الجديد بالمزرعة"
-              : "تعديل البيانات الأساسية للحيوان"}
+              : "تعديل البيانات الأساس��ة للحيوان"}
           </DialogDescription>
         </DialogHeader>
 
