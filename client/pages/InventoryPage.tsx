@@ -103,15 +103,25 @@ export default function InventoryPage() {
         dataService.stockMovements.getAll(),
       ]);
 
-      setWarehouseItems(itemsData);
+      // Update expiry countdown for all items
+      const updatedItems = updateItemExpiryCountdown(itemsData);
+      setWarehouseItems(updatedItems);
       setStockMovements(movementsData);
-      
-      // Update expiry days
-      await dataService.warehouseItems.updateRemainingDays();
-      
-      // Calculate analytics
+
+      // Calculate expiry statistics
+      const stats = calculateExpiryStats(updatedItems);
+      setAnalytics(prev => ({
+        ...prev,
+        expiredCount: stats.expired,
+        expiringCount: stats.expiringSoon
+      }));
+
+      // Calculate other analytics
       const warehouseAnalytics = await farmHelpers.getWarehouseAnalytics();
-      setAnalytics(warehouseAnalytics);
+      setAnalytics(prev => ({
+        ...prev,
+        ...warehouseAnalytics
+      }));
     } catch (error) {
       console.error("Error loading warehouse data:", error);
       toast({
