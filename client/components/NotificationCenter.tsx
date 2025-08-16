@@ -41,7 +41,7 @@ export default function NotificationCenter() {
     if (showRefreshing) setIsRefreshing(true);
 
     try {
-      const items = await dataService.getWarehouseItems();
+      const items = await dataService.warehouseItems.getAll();
       const updatedItems = updateItemExpiryCountdown(items);
       setWarehouseItems(updatedItems);
 
