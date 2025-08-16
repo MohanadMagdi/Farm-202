@@ -267,6 +267,8 @@ const App = () => {
   );
 };
 
+export default App;
+
 // Fix for React createRoot warning during HMR
 const container = document.getElementById("root")!;
 let root = (container as any)._reactRoot;
