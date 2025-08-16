@@ -112,6 +112,12 @@ export default function LoginPage() {
           </CardHeader>
           
           <CardContent>
+            <Alert className="mb-4">
+              <AlertDescription>
+                <strong>وضع التجريب:</strong> النظام يعمل حالياً بوضع تجريبي مع بيانات وهمية. استخدم أي من الحسابات التجريبية أدناه بكلمة المرور: demo123
+              </AlertDescription>
+            </Alert>
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <Label htmlFor="email">البريد الإلكتروني</Label>
