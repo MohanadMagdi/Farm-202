@@ -218,6 +218,8 @@ export default function AnimalFormModal({
         purchaseDate: new Date(formData.purchaseDate),
         purchasePrice: parseFloat(formData.purchasePrice) || 0,
         currentPrice: formData.currentPrice ? parseFloat(formData.currentPrice) : undefined,
+        pricingMethod: formData.pricingMethod as any,
+        formulaMultiplier: formData.formulaMultiplier ? parseFloat(formData.formulaMultiplier) : undefined,
         barnId: formData.barnId,
         healthStatus: formData.healthStatus,
         isIsolated: formData.isIsolated,
@@ -267,7 +269,7 @@ export default function AnimalFormModal({
       console.error("Error saving animal:", error);
       toast({
         title: "خطأ في الحفظ",
-        description: "حدث خطأ أثناء حفظ بيانات الحيوان",
+        description: "حدث خطأ أثنا�� حفظ بيانات الحيوان",
         variant: "destructive",
       });
     } finally {
