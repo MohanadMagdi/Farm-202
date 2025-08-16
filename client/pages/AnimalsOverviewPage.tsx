@@ -264,7 +264,7 @@ export default function AnimalsOverviewPage() {
               )}
               {analytics.sickCount === 0 && (
                 <span className="text-xs text-green-600">
-                  جميع الحيوانات سليمة
+                  ج��يع الحيوانات سليمة
                 </span>
               )}
             </div>
@@ -306,11 +306,12 @@ export default function AnimalsOverviewPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <Tabs defaultValue="overview" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="overview">نظرة عامة</TabsTrigger>
                 <TabsTrigger value="males">الذكور</TabsTrigger>
                 <TabsTrigger value="females">الإناث</TabsTrigger>
                 <TabsTrigger value="newborns">الصغار</TabsTrigger>
+                <TabsTrigger value="breeding">سير التربية</TabsTrigger>
               </TabsList>
 
               <TabsContent value="overview" className="space-y-3">
@@ -425,7 +426,7 @@ export default function AnimalsOverviewPage() {
                 <div className="space-y-2">
                   <div className="text-center">
                     <div className="text-3xl font-bold text-pink-600">{analytics.femaleCount}</div>
-                    <p className="text-muted-foreground">إجمالي الإناث</p>
+                    <p className="text-muted-foreground">��جمالي الإناث</p>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>حوامل:</span>
