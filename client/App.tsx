@@ -277,11 +277,17 @@ function initializeApp() {
   let root = (window as any).__reactRoot;
 
   if (!root) {
-    root = createRoot(container);
-    (window as any).__reactRoot = root;
+    // Additional check to prevent double initialization
+    if (!(container as any)._reactRootContainer) {
+      root = createRoot(container);
+      (window as any).__reactRoot = root;
+      (container as any)._reactRootContainer = true;
+    }
   }
 
-  root.render(<App />);
+  if (root) {
+    root.render(<App />);
+  }
 }
 
 // Initialize the app
