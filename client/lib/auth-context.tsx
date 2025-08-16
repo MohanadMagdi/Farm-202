@@ -114,13 +114,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    try {
-      // Try Firebase authentication first
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (error) {
-      console.error('Sign in error:', error);
-
-      // Fall back to mock authentication if Firebase fails
+    // Use mock authentication in development mode
+    if (import.meta.env.DEV) {
       const mockUser = mockUsers[email];
       if (mockUser && password === 'demo123') {
         setUser(mockUser);
@@ -131,8 +126,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } as FirebaseUser);
         return;
       }
-
       throw new Error('بيانات تسجيل الدخول غير صحيحة');
+    }
+
+    // Use Firebase authentication in production
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      console.error('Sign in error:', error);
+      throw error;
     }
   };
 
