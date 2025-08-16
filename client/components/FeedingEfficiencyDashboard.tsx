@@ -49,6 +49,7 @@ import {
   type BarnFeedingComparison,
   type FeedingTrends
 } from "@/lib/feeding-analytics";
+import { exportFeedingReport } from "@/lib/export-utils";
 import type { FeedingRecord, Animal, Barn, WarehouseItem, WeightRecord } from "@shared/types";
 
 interface FeedingEfficiencyDashboardProps {
@@ -271,7 +272,7 @@ export default function FeedingEfficiencyDashboard({ className }: FeedingEfficie
               <Progress value={metrics.optimizationScore} className="h-3" />
               
               <div className="text-sm text-muted-foreground">
-                مقار��ة بالمعايير الصناعية: 
+                مقارنة بالمعايير الصناعية: 
                 <span className={`font-semibold ml-1 ${metrics.benchmarkComparison >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {metrics.benchmarkComparison >= 0 ? '+' : ''}{metrics.benchmarkComparison.toFixed(1)}%
                 </span>
@@ -331,7 +332,7 @@ export default function FeedingEfficiencyDashboard({ className }: FeedingEfficie
                 توصيات تحسين الكفاءة
               </CardTitle>
               <CardDescription>
-                اقتراحات مبنية على تحليل ا��بيانات لتحسين كفاءة التغذية
+                اقتراحات مبنية على تحليل البيانات لتحسين كفاءة التغذية
               </CardDescription>
             </CardHeader>
             <CardContent>
