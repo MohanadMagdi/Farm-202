@@ -184,6 +184,20 @@ export async function generateGrowthCurve(animal: Animal): Promise<GrowthCurveDa
 export async function getMortalityAnalytics(): Promise<MortalityAnalytics> {
   try {
     const mortalityRecords = await dataService.mortalityRecords?.getAll() || [];
+    if (!mortalityRecords || mortalityRecords.length === 0) {
+      // Return empty analytics if no mortality data
+      return {
+        totalDeaths: 0,
+        mortalityRate: 0,
+        deathsByCause: {} as Record<MortalityCause, number>,
+        deathsByMonth: [],
+        deathsByCategory: {} as Record<AnimalCategory, number>,
+        preventableDeaths: 0,
+        totalFinancialLoss: 0,
+        averageAgeAtDeath: 0,
+        riskFactors: []
+      };
+    }
     const allAnimals = await dataService.animals.getAll();
     const totalAnimals = allAnimals.length + mortalityRecords.length; // Include dead animals
 
