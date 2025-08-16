@@ -94,6 +94,13 @@ export default function InventoryPage() {
 
   useEffect(() => {
     loadData();
+
+    // Check for URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const filterParam = urlParams.get('filter');
+    if (filterParam === 'expiry') {
+      setStatusFilter('expiring');
+    }
   }, []);
 
   const loadData = async () => {
@@ -390,7 +397,7 @@ export default function InventoryPage() {
                     <div className="text-2xl font-bold text-yellow-600">
                       {analytics.lowStockCount}
                     </div>
-                    <p className="text-xs text-muted-foreground">صنف مخ��ون منخفض</p>
+                    <p className="text-xs text-muted-foreground">صنف مخزون منخفض</p>
                   </div>
                 </>
               ) : (
