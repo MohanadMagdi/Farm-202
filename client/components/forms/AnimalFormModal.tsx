@@ -22,6 +22,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { formatArabicDate } from "@/lib/arabic-utils";
 import { dataService } from "@/lib/data-service";
+import { calculateCurrentPrice, formatEGP, getPricingBreakdown } from "@/lib/pricing-utils";
 import type { Animal, Barn, AnimalCategory } from "@shared/types";
 import { toast } from "@/hooks/use-toast";
 import { AlertTriangle, Lightbulb } from "lucide-react";
@@ -282,7 +283,7 @@ export default function AnimalFormModal({
     { value: "health_quarantine", label: "حجر صحي للوافدين الجدد" },
     { value: "illness", label: "عزل بسبب المرض" },
     { value: "post_birth", label: "عزل ما بعد الولادة" },
-    { value: "feeding", label: "عزل ��لتغذية الخاصة" },
+    { value: "feeding", label: "عزل للتغذية الخاصة" },
   ];
 
   return (
