@@ -443,7 +443,7 @@ export default function FeedingPage() {
                         barn.efficiency <= 5 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
                       }>
                         {barn.efficiency <= 3 ? 'ممتاز' :
-                         barn.efficiency <= 5 ? 'جيد' : 'يحتاج تحسين'}
+                         barn.efficiency <= 5 ? 'جيد' : 'يحت��ج تحسين'}
                       </Badge>
                     </div>
                   </div>
@@ -664,7 +664,8 @@ export default function FeedingPage() {
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-4" dir="rtl">
-          <div className="grid gap-6 md:grid-cols-2">
+          <FeedingEfficiencyDashboard />
+          <div className="grid gap-6 md:grid-cols-2" style={{ display: 'none' }}>
             {/* Feed Type Usage */}
             <Card>
               <CardHeader>
