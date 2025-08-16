@@ -318,7 +318,7 @@ export default function ReportsPage() {
 
       <Tabs defaultValue="animals" className="w-full" dir="rtl">
         <TabsList className="grid w-full grid-cols-5" dir="rtl">
-          <TabsTrigger value="animals">تقرير الحيوانات</TabsTrigger>
+          <TabsTrigger value="animals">تقرير ا��حيوانات</TabsTrigger>
           <TabsTrigger value="inventory">تقرير المخزون</TabsTrigger>
           <TabsTrigger value="feeding">تقرير التغذية</TabsTrigger>
           <TabsTrigger value="financial">التقرير المالي</TabsTrigger>
@@ -410,13 +410,7 @@ export default function ReportsPage() {
                         <div>
                           <div className="font-medium">{animal.earTagId}</div>
                           <div className="text-sm text-muted-foreground">
-                            معدل النمو: {(() => {
-                              const ageInDays = animal.birthDate ?
-                                Math.max(1, Math.floor((new Date().getTime() - animal.birthDate.getTime()) / (1000 * 60 * 60 * 24))) :
-                                Math.max(1, Math.floor((new Date().getTime() - animal.purchaseDate.getTime()) / (1000 * 60 * 60 * 24)));
-                              const weightGain = Math.max(0, animal.weight - (animal.birthDate ? 3.5 : animal.weight * 0.7));
-                              return weightGain / ageInDays;
-                            })().toFixed(2)} كيلو/��وم
+                            معدل النمو: {calculateADG(animal).toFixed(2)} كيلو/��وم
                           </div>
                         </div>
                       </div>
@@ -521,7 +515,7 @@ export default function ReportsPage() {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2 space-x-reverse">
                 <Package className="h-5 w-5 text-farm-600" />
-                <span>تحليل المخزو��</span>
+                <span>ت��ليل المخزو��</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
