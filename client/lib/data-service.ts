@@ -16,16 +16,17 @@ import {
 } from './firestore';
 
 import { mockFirestore } from './firebase-mock';
-import type { 
-  Animal, 
-  Barn, 
-  WarehouseItem, 
-  StockMovement, 
-  FeedingRecord, 
+import type {
+  Animal,
+  Barn,
+  WarehouseItem,
+  StockMovement,
+  FeedingRecord,
   WeightRecord,
   HealthRecord,
   BarnMovement,
   FeedingSchedule,
+  MortalityRecord,
   AnimalCategory,
   WarehouseType
 } from '@shared/types';
