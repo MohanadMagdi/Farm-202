@@ -76,7 +76,7 @@ export default function ReportsPage() {
   const exportPDF = () => {
     toast({
       title: "تصدير PDF",
-      description: "سيتم تنفيذ التصدير قريباً",
+      description: "سيتم تنفيذ التصدير ق��يباً",
     });
   };
 
@@ -328,7 +328,7 @@ export default function ReportsPage() {
           <TabsTrigger value="inventory">تقرير المخزون</TabsTrigger>
           <TabsTrigger value="feeding">تقرير التغذية</TabsTrigger>
           <TabsTrigger value="financial">التقرير المالي</TabsTrigger>
-          <TabsTrigger value="analytics">التحليلات المتقدمة</TabsTrigger>
+          <TabsTrigger value="analytics">التح��يلات المتقدمة</TabsTrigger>
         </TabsList>
 
         <TabsContent value="animals" className="space-y-4" dir="rtl">
@@ -384,7 +384,7 @@ export default function ReportsPage() {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>متوسط معدل ��لنمو اليومي</span>
+                  <span>متوسط معدل ��لنمو ��ليومي</span>
                   <span className="font-semibold">
                     {(
                       activeAnimals.reduce((sum, a) => sum + a.metrics.adg, 0) /
@@ -422,7 +422,7 @@ export default function ReportsPage() {
                       </div>
                       <div className="text-left">
                         <div className="font-semibold">
-                          {formatWeight(animal.currentWeightKg)}
+                          {formatWeight(animal.weight)}
                         </div>
                         <div className="text-sm text-green-600">
                           +{formatWeight(Math.max(0, animal.weight - (animal.birthDate ? 3.5 : animal.weight * 0.7)))}
@@ -486,7 +486,7 @@ export default function ReportsPage() {
                             {formatArabicNumber(ageInDays)}
                           </TableCell>
                           <TableCell className="text-right">
-                            {formatWeight(animal.currentWeightKg)}
+                            {formatWeight(animal.weight)}
                           </TableCell>
                           <TableCell className="text-right">
                             {formatWeight(animal.metrics.totalGainKg)}
@@ -676,7 +676,7 @@ export default function ReportsPage() {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>قيمة المخزون</span>
+                  <span>ق��مة المخزون</span>
                   <span className="font-semibold">
                     {formatEGP(totalInventoryValue)}
                   </span>
