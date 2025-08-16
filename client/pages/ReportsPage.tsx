@@ -384,7 +384,7 @@ export default function ReportsPage() {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>متوسط معدل ��لنمو ��ليومي</span>
+                  <span>م��وسط معدل ��لنمو ��ليومي</span>
                   <span className="font-semibold">
                     {(
                       activeAnimals.reduce((sum, a) => sum + a.metrics.adg, 0) /
@@ -638,17 +638,17 @@ export default function ReportsPage() {
                       <span className="font-medium">{animal.tagId}</span>
                       <div className="text-left">
                         <div className="text-sm font-semibold">
-                          {animal.metrics.feedConsumedKg > 0
+                          {(animal.weight * 3) > 0
                             ? (
                                 animal.metrics.totalGainKg /
-                                animal.metrics.feedConsumedKg
+                                (animal.weight * 3)
                               ).toFixed(2)
                             : "0.00"}{" "}
                           كيلو نمو/كيلو ��لف
                         </div>
                         <div className="text-xs text-muted-foreground">
                           إجمالي العل��:{" "}
-                          {formatWeight(animal.metrics.feedConsumedKg)}
+                          {formatWeight((animal.weight * 3))}
                         </div>
                       </div>
                     </div>
