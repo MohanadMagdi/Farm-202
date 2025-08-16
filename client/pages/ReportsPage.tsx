@@ -387,8 +387,14 @@ export default function ReportsPage() {
                   <span>متوسط مع��ل ��لنمو ��ليومي</span>
                   <span className="font-semibold">
                     {(
-                      activeAnimals.reduce((sum, a) => sum + a.metrics.adg, 0) /
-                      Math.max(1, activeAnimals.length)
+                      activeAnimals.reduce((sum, a) => {
+                        const ageInDays = a.birthDate ?
+                          Math.max(1, Math.floor((new Date().getTime() - a.birthDate.getTime()) / (1000 * 60 * 60 * 24))) :
+                          Math.max(1, Math.floor((new Date().getTime() - a.purchaseDate.getTime()) / (1000 * 60 * 60 * 24)));
+                        const weightGain = Math.max(0, a.weight - (a.birthDate ? 3.5 : a.weight * 0.7));
+                        const adg = weightGain / ageInDays;
+                        return sum + adg;
+                      }, 0) / Math.max(1, activeAnimals.length)
                     ).toFixed(2)}{" "}
                     كيلو/يوم
                   </span>
@@ -416,7 +422,7 @@ export default function ReportsPage() {
                         <div>
                           <div className="font-medium">{animal.earTagId}</div>
                           <div className="text-sm text-muted-foreground">
-                            معدل النمو: {animal.metrics.adg.toFixed(2)} كيلو/يوم
+                            معدل النمو: {animal.metrics.adg.toFixed(2)} كيلو/��وم
                           </div>
                         </div>
                       </div>
