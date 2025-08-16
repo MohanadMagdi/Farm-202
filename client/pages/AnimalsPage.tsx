@@ -410,7 +410,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                     )}
                     {animalType === "newborn" && (
                       <TableCell className="text-right">
-                        {animal.motherId || "-"}
+                        {animal.motherEarTagId || (animal.motherId ? "غير محدد" : "-")}
                       </TableCell>
                     )}
                     {animalType !== "newborn" && (
