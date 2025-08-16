@@ -20,6 +20,7 @@ import {
   formatRemainingDays,
   updateItemExpiryCountdown
 } from "@/lib/expiry-notifications";
+import { getBreedingWorkflowStats, getWeaningCandidates } from "@/lib/breeding-workflow";
 import { dataService } from "@/lib/data-service";
 import type { WarehouseItem } from "@shared/types";
 
