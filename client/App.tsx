@@ -273,11 +273,12 @@ export default App;
 function initializeApp() {
   const container = document.getElementById("root")!;
 
-  // Check if root already exists to prevent createRoot warning
+  // Prevent "createRoot() on a container that has already been passed to createRoot()" warning
+  // This can happen during development when HMR (Hot Module Replacement) re-executes this code
   let root = (window as any).__reactRoot;
 
   if (!root) {
-    // Additional check to prevent double initialization
+    // Double-check to prevent race conditions during HMR
     if (!(container as any)._reactRootContainer) {
       root = createRoot(container);
       (window as any).__reactRoot = root;
