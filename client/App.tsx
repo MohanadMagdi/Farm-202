@@ -185,14 +185,24 @@ const App = () => {
       }
     };
 
-    // Override console.error to filter ResizeObserver warnings
+    // Override console.error and console.warn to filter ResizeObserver warnings
     const originalConsoleError = console.error;
+    const originalConsoleWarn = console.warn;
+
     console.error = (...args: any[]) => {
       const message = args[0];
       if (typeof message === 'string' && message.includes('ResizeObserver loop completed')) {
         return; // Suppress this specific error
       }
       originalConsoleError.apply(console, args);
+    };
+
+    console.warn = (...args: any[]) => {
+      const message = args[0];
+      if (typeof message === 'string' && message.includes('ResizeObserver loop completed')) {
+        return; // Suppress this specific warning
+      }
+      originalConsoleWarn.apply(console, args);
     };
 
     window.addEventListener('error', handleResizeObserverError);
