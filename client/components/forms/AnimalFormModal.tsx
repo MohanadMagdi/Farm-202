@@ -454,7 +454,7 @@ export default function AnimalFormModal({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="healthStatus">الحا��ة الصحية *</Label>
+                <Label htmlFor="healthStatus">الحالة الصحية *</Label>
                 <Select
                   value={formData.healthStatus}
                   onValueChange={(value) =>
@@ -626,9 +626,7 @@ export default function AnimalFormModal({
                     <p className="text-sm font-medium text-green-800 mb-1">سعر السوق المقدر:</p>
                     <p className="text-lg font-bold text-green-900">
                       {formData.weight && formatEGP(calculateCurrentPrice({
-                        ...formData,
-                        weight: parseFloat(formData.weight) || 0,
-                        purchasePrice: parseFloat(formData.purchasePrice) || 0,
+                        ...createAnimalFromFormData(formData),
                         pricingMethod: 'market_rate'
                       } as any))}
                     </p>
@@ -781,7 +779,7 @@ export default function AnimalFormModal({
                                 ✅ اختيار الأم صحيح
                               </p>
                               <p className="text-sm text-green-700 mt-1">
-                                سيتم ربط المولود بالأم تلقائياً مع تحديث إ��صائيات الأم
+                                سيتم ربط المولود بالأم ��لقائياً مع تحديث إ��صائيات الأم
                               </p>
                             </div>
                           </div>
