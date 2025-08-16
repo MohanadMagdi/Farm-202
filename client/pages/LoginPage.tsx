@@ -55,7 +55,7 @@ export default function LoginPage() {
   const demoAccounts = [
     {
       email: 'admin@farm.com',
-      password: 'admin123',
+      password: 'demo123',
       role: 'مدير المزرعة',
       icon: Shield,
       color: 'text-red-600',
