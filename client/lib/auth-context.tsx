@@ -85,11 +85,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // In development mode, skip Firebase auth listener
+    if (import.meta.env.DEV) {
+      setLoading(false);
+      return () => {};
+    }
+
+    // In production, use Firebase auth listener
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setFirebaseUser(firebaseUser);
-      
+
       if (firebaseUser) {
-        // In development, map Firebase users to mock users
+        // In production, map Firebase users to mock users
         const mockUser = mockUsers[firebaseUser.email || ''];
         if (mockUser) {
           setUser(mockUser);
@@ -106,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setUser(null);
       }
-      
+
       setLoading(false);
     });
 
