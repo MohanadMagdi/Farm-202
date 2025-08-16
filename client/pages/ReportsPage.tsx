@@ -422,7 +422,13 @@ export default function ReportsPage() {
                         <div>
                           <div className="font-medium">{animal.earTagId}</div>
                           <div className="text-sm text-muted-foreground">
-                            معدل النمو: {animal.metrics.adg.toFixed(2)} كيلو/��وم
+                            معدل النمو: {(() => {
+                              const ageInDays = animal.birthDate ?
+                                Math.max(1, Math.floor((new Date().getTime() - animal.birthDate.getTime()) / (1000 * 60 * 60 * 24))) :
+                                Math.max(1, Math.floor((new Date().getTime() - animal.purchaseDate.getTime()) / (1000 * 60 * 60 * 24)));
+                              const weightGain = Math.max(0, animal.weight - (animal.birthDate ? 3.5 : animal.weight * 0.7));
+                              return weightGain / ageInDays;
+                            })().toFixed(2)} كيلو/��وم
                           </div>
                         </div>
                       </div>
