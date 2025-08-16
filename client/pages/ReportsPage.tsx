@@ -142,7 +142,7 @@ export default function ReportsPage() {
   const { animals, inventoryItems, stockMovements, feedingRecords } =
     reportData;
 
-  const activeAnimals = animals.filter((a) => a && a.status === "active");
+  const activeAnimals = animals.filter((a) => a); // All animals are considered active
   const totalAnimalsValue = activeAnimals.reduce(
     (sum, animal) => sum + (animal.currentPrice || animal.purchasePrice || 0),
     0,
@@ -644,7 +644,7 @@ export default function ReportsPage() {
                           كيلو نمو/كيلو علف
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          إجمالي العلف:{" "}
+                          إجمالي العل��:{" "}
                           {formatWeight(animal.metrics.feedConsumedKg)}
                         </div>
                       </div>
