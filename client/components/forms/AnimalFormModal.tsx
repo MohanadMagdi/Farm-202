@@ -183,7 +183,7 @@ export default function AnimalFormModal({
       offspringCount: "",
       
       // For newborns
-      motherId: "",
+      motherId: "none",
       birthDate: new Date().toISOString().split("T")[0],
       weaningDate: "",
     });
