@@ -143,6 +143,8 @@ export default function AnimalFormModal({
       purchaseDate: animalData.purchaseDate.toISOString().split("T")[0],
       purchasePrice: animalData.purchasePrice.toString(),
       currentPrice: animalData.currentPrice?.toString() || "",
+      pricingMethod: (animalData as any).pricingMethod || "formula",
+      formulaMultiplier: (animalData as any).formulaMultiplier?.toString() || "",
       barnId: animalData.barnId,
       healthStatus: animalData.healthStatus,
       isIsolated: animalData.isIsolated,
@@ -305,7 +307,7 @@ export default function AnimalFormModal({
         <div className="grid gap-6 py-4">
           {/* Basic Information */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">المعلومات الأساسية</h3>
+            <h3 className="text-lg font-semibold">المعلومات الأساس��ة</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
