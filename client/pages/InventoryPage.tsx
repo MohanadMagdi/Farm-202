@@ -28,6 +28,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { formatArabicDate } from "@/lib/arabic-utils";
 import { dataService, farmHelpers } from "@/lib/data-service";
+import { exportInventoryReport } from "@/lib/export-utils";
 import type { WarehouseItem, WarehouseType, StockMovement } from "@shared/types";
 import InventoryFormModal from "@/components/forms/InventoryFormModal";
 import StockMovementModal from "@/components/forms/StockMovementModal";
