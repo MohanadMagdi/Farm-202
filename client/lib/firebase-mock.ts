@@ -61,6 +61,7 @@ class MockFirestore {
     healthRecords: HealthRecord[];
     barnMovements: BarnMovement[];
     feedingSchedules: FeedingSchedule[];
+    mortalityRecords: MortalityRecord[];
   };
 
   constructor() {
