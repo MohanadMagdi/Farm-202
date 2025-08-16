@@ -489,7 +489,7 @@ export default function ReportsPage() {
                             {formatWeight(animal.weight)}
                           </TableCell>
                           <TableCell className="text-right">
-                            {formatWeight(animal.metrics.totalGainKg)}
+                            {formatWeight(Math.max(0, animal.weight - (animal.birthDate ? 3.5 : animal.weight * 0.7)))}
                           </TableCell>
                           <TableCell className="text-right">
                             {animal.metrics.adg.toFixed(2)} كيلو/يوم
