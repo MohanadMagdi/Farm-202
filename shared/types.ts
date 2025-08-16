@@ -17,6 +17,8 @@ export interface Animal {
   purchaseDate: Date;
   purchasePrice: number; // EGP
   currentPrice?: number; // EGP - calculated or manual
+  pricingMethod: PricingMethod; // How price is calculated
+  formulaMultiplier?: number; // EGP per kg for formula calculation
   barnId: string;
   healthStatus: string;
   isIsolated: boolean;
