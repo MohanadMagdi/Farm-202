@@ -187,19 +187,15 @@ export default function ReportsPage() {
   const stockOutMovements = stockMovements.filter((m) => m && m.type === "out");
   const stockInMovements = stockMovements.filter((m) => m && m.type === "in");
 
-  // Animals performance data
+  // Animals performance data (simplified since complex metrics aren't available)
   const animalPerformanceData = activeAnimals.map((animal) => ({
     ...animal,
-    profitability:
-      animal.currentWeightKg * 50 - (animal.purchase?.priceEGP || 0), // Estimated at 50 EGP/kg
-    feedEfficiency:
-      animal.metrics.feedConsumedKg > 0
-        ? animal.metrics.totalGainKg / animal.metrics.feedConsumedKg
-        : 0,
+    profitability: animal.weight * 50 - animal.purchasePrice, // Estimated at 50 EGP/kg
+    feedEfficiency: 0, // Would need feeding records to calculate
   }));
 
   const topPerformers = animalPerformanceData
-    .sort((a, b) => b.metrics.adg - a.metrics.adg)
+    .sort((a, b) => b.weight - a.weight) // Sort by weight as proxy for performance
     .slice(0, 5);
 
   // Inventory turnover
@@ -518,7 +514,7 @@ export default function ReportsPage() {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2 space-x-reverse">
                 <Package className="h-5 w-5 text-farm-600" />
-                <span>تحليل المخزون</span>
+                <span>تحليل المخزو��</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
