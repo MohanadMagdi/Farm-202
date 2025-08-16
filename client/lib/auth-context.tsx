@@ -147,6 +147,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOutUser = async () => {
     try {
+      // In development mode, just clear the state
+      if (import.meta.env.DEV) {
+        setUser(null);
+        setFirebaseUser(null);
+        return;
+      }
+
+      // In production, use Firebase signOut
       await signOut(auth);
       setUser(null);
       setFirebaseUser(null);
