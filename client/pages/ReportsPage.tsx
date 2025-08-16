@@ -184,8 +184,8 @@ export default function ReportsPage() {
       : 0;
 
   // Stock movements analysis
-  const stockOutMovements = stockMovements.filter((m) => m.direction === "out");
-  const stockInMovements = stockMovements.filter((m) => m.direction === "in");
+  const stockOutMovements = stockMovements.filter((m) => m && m.type === "out");
+  const stockInMovements = stockMovements.filter((m) => m && m.type === "in");
 
   // Animals performance data
   const animalPerformanceData = activeAnimals.map((animal) => ({
@@ -444,7 +444,7 @@ export default function ReportsPage() {
                     <TableRow>
                       <TableHead className="text-right">رقم الأذن</TableHead>
                       <TableHead className="text-right">النوع</TableHead>
-                      <TableHead className="text-right">العمر (أيام)</TableHead>
+                      <TableHead className="text-right">العمر (��يام)</TableHead>
                       <TableHead className="text-right">الوزن الحالي</TableHead>
                       <TableHead className="text-right">إجمالي النمو</TableHead>
                       <TableHead className="text-right">
@@ -641,7 +641,7 @@ export default function ReportsPage() {
                                 animal.metrics.feedConsumedKg
                               ).toFixed(2)
                             : "0.00"}{" "}
-                          كيلو نمو/كيلو علف
+                          كيلو نمو/كيلو ��لف
                         </div>
                         <div className="text-xs text-muted-foreground">
                           إجمالي العل��:{" "}
