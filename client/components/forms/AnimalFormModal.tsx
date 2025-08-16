@@ -52,6 +52,8 @@ export default function AnimalFormModal({
     purchaseDate: new Date().toISOString().split("T")[0],
     purchasePrice: "",
     currentPrice: "",
+    pricingMethod: "formula" as "manual" | "formula" | "market_rate",
+    formulaMultiplier: "",
     barnId: "",
     healthStatus: "سليم",
     isIsolated: false,
@@ -280,7 +282,7 @@ export default function AnimalFormModal({
     { value: "health_quarantine", label: "حجر صحي للوافدين الجدد" },
     { value: "illness", label: "عزل بسبب المرض" },
     { value: "post_birth", label: "عزل ما بعد الولادة" },
-    { value: "feeding", label: "عزل للتغذية الخاصة" },
+    { value: "feeding", label: "عزل ��لتغذية الخاصة" },
   ];
 
   return (
