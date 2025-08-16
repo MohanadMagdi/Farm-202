@@ -56,6 +56,25 @@ export interface WeightRecord {
   notes?: string;
 }
 
+export interface MortalityRecord {
+  id: string;
+  animalId: string;
+  animalEarTagId: string;
+  animalCategory: AnimalCategory;
+  deathDate: Date;
+  cause: MortalityCause;
+  causeDescription?: string;
+  ageAtDeath: number; // in months
+  weightAtDeath?: number; // kg
+  barnId: string;
+  veterinaryReport?: string;
+  preventable: boolean;
+  financialLoss: number; // EGP
+  recordedBy: string;
+  createdAt: Date;
+  notes?: string;
+}
+
 export interface PricingFormula {
   id: string;
   name: string; // e.g., "تسعير الذكور الأساسي"
