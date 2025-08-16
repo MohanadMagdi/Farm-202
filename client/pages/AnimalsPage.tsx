@@ -111,6 +111,33 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
     });
   };
 
+  const handleExport = async (format: 'pdf' | 'excel') => {
+    try {
+      setLoading(true);
+
+      // Filter animals based on current type
+      const filteredAnimals = animalType
+        ? animals.filter(animal => animal.category === animalType)
+        : animals;
+
+      await exportAnimalsReport(filteredAnimals, format, animalType);
+
+      toast({
+        title: "تم تصدير التقرير بنجاح",
+        description: `تم تصدير تقرير ${getAnimalTypeLabel(animalType)} بصيغة ${format === 'pdf' ? 'PDF' : 'Excel'}`,
+      });
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({
+        title: "خطأ في التصدير",
+        description: "حدث خطأ أثناء تصدير التقرير",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleEdit = (animal: Animal) => {
     setSelectedAnimal(animal);
     setIsEditModalOpen(true);
@@ -130,7 +157,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
   };
 
   const handleDelete = async (animal: Animal) => {
-    if (window.confirm(`هل أنت متأكد من حذف الحيوان ${animal.earTagId}؟`)) {
+    if (window.confirm(`هل أنت متأكد من حذ�� الحيوان ${animal.earTagId}؟`)) {
       try {
         await dataService.animals.delete(animal.id);
         loadAnimals();
