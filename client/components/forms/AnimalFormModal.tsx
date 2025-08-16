@@ -110,20 +110,13 @@ export default function AnimalFormModal({
   // Automatically update price when weight or pricing method changes
   useEffect(() => {
     if (formData.pricingMethod === 'formula' && formData.weight) {
-      const tempAnimal = {
-        ...formData,
-        weight: parseFloat(formData.weight) || 0,
-        purchasePrice: parseFloat(formData.purchasePrice) || 0,
-        pricingMethod: formData.pricingMethod as any,
-        formulaMultiplier: formData.formulaMultiplier ? parseFloat(formData.formulaMultiplier) : undefined
-      } as any;
-
-      const calculatedPrice = calculateCurrentPrice(tempAnimal);
+      const tempAnimal = createAnimalFromFormData(formData);
+      const calculatedPrice = calculateCurrentPrice(tempAnimal as any);
       if (calculatedPrice !== parseFloat(formData.currentPrice || '0')) {
         setFormData(prev => ({ ...prev, currentPrice: calculatedPrice.toString() }));
       }
     }
-  }, [formData.weight, formData.pricingMethod, formData.formulaMultiplier, formData.purchasePrice]);
+  }, [formData.weight, formData.pricingMethod, formData.formulaMultiplier, formData.purchasePrice, formData.birthDate]);
 
   // Validate mother selection in real-time
   useEffect(() => {
@@ -794,7 +787,7 @@ export default function AnimalFormModal({
                                 ✅ اختيار الأم صحيح
                               </p>
                               <p className="text-sm text-green-700 mt-1">
-                                سيتم ربط المولود با��أم تلقائياً مع تحديث إ��صائيات الأم
+                                سيتم ربط المولود بالأم تلقائياً مع تحديث إ��صائيات الأم
                               </p>
                             </div>
                           </div>
