@@ -13,6 +13,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatArabicDate } from "@/lib/arabic-utils";
 import { dataService, farmHelpers } from "@/lib/data-service";
+import BreedingWorkflowDashboard from "@/components/BreedingWorkflowDashboard";
 import type { Animal, AnimalCategory } from "@shared/types";
 import {
   CircleDot,
