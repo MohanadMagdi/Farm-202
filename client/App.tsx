@@ -10,6 +10,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { initializeDataSync } from "@/lib/data-sync";
 import { expiryCountdownService } from "@/lib/expiry-countdown-service";
+import { automaticWeaningService } from "@/lib/automatic-weaning-service";
 import Layout from "@/components/Layout";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
