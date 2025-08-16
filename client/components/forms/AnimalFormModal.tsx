@@ -97,6 +97,24 @@ export default function AnimalFormModal({
     }
   }, [formData.earTagId, mode]);
 
+  // Automatically update price when weight or pricing method changes
+  useEffect(() => {
+    if (formData.pricingMethod === 'formula' && formData.weight) {
+      const tempAnimal = {
+        ...formData,
+        weight: parseFloat(formData.weight) || 0,
+        purchasePrice: parseFloat(formData.purchasePrice) || 0,
+        pricingMethod: formData.pricingMethod as any,
+        formulaMultiplier: formData.formulaMultiplier ? parseFloat(formData.formulaMultiplier) : undefined
+      } as any;
+
+      const calculatedPrice = calculateCurrentPrice(tempAnimal);
+      if (calculatedPrice !== parseFloat(formData.currentPrice || '0')) {
+        setFormData(prev => ({ ...prev, currentPrice: calculatedPrice.toString() }));
+      }
+    }
+  }, [formData.weight, formData.pricingMethod, formData.formulaMultiplier, formData.purchasePrice]);
+
   const loadSelectData = async () => {
     try {
       const [barnsData, animalsData] = await Promise.all([
@@ -367,7 +385,7 @@ export default function AnimalFormModal({
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="اختر الحظيرة" />
+                    <SelectValue placeholder="اختر الحظي��ة" />
                   </SelectTrigger>
                   <SelectContent>
                     {filteredBarns.map((barn) => (
