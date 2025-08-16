@@ -29,6 +29,8 @@ import {
   formatWeight,
   formatArabicNumber,
   formatArabicDate,
+  calculateADG,
+  calculateWeightGain,
 } from "@/lib/arabic-utils";
 import AdvancedAnalyticsDashboard from "@/components/AdvancedAnalyticsDashboard";
 import {
@@ -407,7 +409,7 @@ export default function ReportsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2 space-x-reverse">
                   <TrendingUp className="h-5 w-5 text-farm-600" />
-                  <span>أفضل الحيوانات أداء��</span>
+                  <span>أفضل ال��يوانات أداء��</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
