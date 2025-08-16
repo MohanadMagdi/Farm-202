@@ -255,22 +255,18 @@ export default function InventoryPage() {
   };
 
   const getExpiryBadge = (item: WarehouseItem) => {
-    if (!item.hasExpiry || !item.expiryDate) return null;
-    
-    const now = new Date();
-    const daysUntilExpiry = Math.ceil(
-      (item.expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-    );
+    if (!item.hasExpiry || item.remainingDays === undefined) return null;
 
-    if (daysUntilExpiry < 0) {
-      return { text: "منتهي الصلاحية", color: "bg-red-100 text-red-800" };
-    } else if (daysUntilExpiry <= 7) {
-      return { text: `ينتهي خلال ${daysUntilExpiry} أيام`, color: "bg-orange-100 text-orange-800" };
-    } else if (daysUntilExpiry <= 30) {
-      return { text: `ينتهي خلال ${daysUntilExpiry} يوم`, color: "bg-yellow-100 text-yellow-800" };
-    }
-    
-    return null;
+    const remainingDays = item.remainingDays;
+    const badgeVariant = getExpiryBadgeVariant(remainingDays);
+    const text = formatRemainingDays(remainingDays);
+
+    return {
+      text,
+      color: badgeVariant === 'destructive' ? "bg-red-100 text-red-800" :
+             badgeVariant === 'default' ? "bg-orange-100 text-orange-800" :
+             "bg-yellow-100 text-yellow-800"
+    };
   };
 
   const lowStockItems = warehouseItems.filter(
@@ -394,7 +390,7 @@ export default function InventoryPage() {
                     <div className="text-2xl font-bold text-yellow-600">
                       {analytics.lowStockCount}
                     </div>
-                    <p className="text-xs text-muted-foreground">صنف مخزون منخفض</p>
+                    <p className="text-xs text-muted-foreground">صنف مخ��ون منخفض</p>
                   </div>
                 </>
               ) : (
@@ -609,7 +605,7 @@ export default function InventoryPage() {
                       <TableHead className="text-right">اسم الصنف</TableHead>
                       <TableHead className="text-right">المستودع</TableHead>
                       <TableHead className="text-right">المخزون الحالي</TableHead>
-                      <TableHead className="text-right">ا��حد الأدنى</TableHead>
+                      <TableHead className="text-right">الحد الأدنى</TableHead>
                       <TableHead className="text-right">سعر الوحدة</TableHead>
                       <TableHead className="text-right">الحالة</TableHead>
                       <TableHead className="text-right">انتهاء الصلاحية</TableHead>
