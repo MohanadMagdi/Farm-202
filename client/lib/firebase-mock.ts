@@ -152,6 +152,26 @@ class MockFirestore {
           updatedBy: "user_001",
           purchaseDate: new Date("2024-01-10"),
           purchasePrice: 0
+        },
+        {
+          id: "anim_005",
+          earTagId: "N013",
+          category: "newborn" as AnimalCategory,
+          sex: "female" as const,
+          weight: 11.8,
+          barnId: "barn_003",
+          healthStatus: "سليمة",
+          isIsolated: false,
+          motherId: "anim_003",
+          motherEarTagId: "F047",
+          birthDate: new Date("2024-01-10"),
+          pricingMethod: "formula" as any,
+          createdAt: new Date("2024-01-10"),
+          updatedAt: now,
+          createdBy: "user_001",
+          updatedBy: "user_001",
+          purchaseDate: new Date("2024-01-10"),
+          purchasePrice: 0
         }
       ] as Animal[],
 
