@@ -322,7 +322,7 @@ export default function ReportsPage() {
           <TabsTrigger value="animals">تقرير الحيوانات</TabsTrigger>
           <TabsTrigger value="inventory">تقرير المخزون</TabsTrigger>
           <TabsTrigger value="feeding">تقرير التغذية</TabsTrigger>
-          <TabsTrigger value="financial">التقرير المال��</TabsTrigger>
+          <TabsTrigger value="financial">التقرير المالي</TabsTrigger>
           <TabsTrigger value="analytics">التح��يلات المتقدمة</TabsTrigger>
         </TabsList>
 
@@ -442,7 +442,7 @@ export default function ReportsPage() {
                     <TableRow>
                       <TableHead className="text-right">رقم الأذن</TableHead>
                       <TableHead className="text-right">النوع</TableHead>
-                      <TableHead className="text-right">ال��مر (��يام)</TableHead>
+                      <TableHead className="text-right">العمر (��يام)</TableHead>
                       <TableHead className="text-right">الوزن الحالي</TableHead>
                       <TableHead className="text-right">إجمالي النمو</TableHead>
                       <TableHead className="text-right">
@@ -458,10 +458,7 @@ export default function ReportsPage() {
                   </TableHeader>
                   <TableBody>
                     {animalPerformanceData.slice(0, 10).map((animal) => {
-                      const ageInDays = Math.floor(
-                        (new Date().getTime() - animal.birthDate.getTime()) /
-                          (1000 * 60 * 60 * 24),
-                      );
+                      const ageInDays = calculateAgeInDays(animal);
 
                       return (
                         <TableRow key={animal.id}>
