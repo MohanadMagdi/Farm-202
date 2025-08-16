@@ -181,6 +181,12 @@ const App = () => {
       console.log('Expiry countdown service initialized');
     }
 
+    // Initialize automatic weaning service
+    if (!automaticWeaningService.isServiceRunning()) {
+      automaticWeaningService.start();
+      console.log('Automatic weaning service initialized');
+    }
+
     // Suppress ResizeObserver loop error
     const handleResizeObserverError = (e: ErrorEvent) => {
       if (e.message && e.message.includes('ResizeObserver loop completed with undelivered notifications')) {
