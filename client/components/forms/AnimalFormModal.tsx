@@ -484,17 +484,93 @@ export default function AnimalFormModal({
                 </div>
 
                 <div>
-                  <Label htmlFor="currentPrice">السعر الحالي (جنيه)</Label>
-                  <Input
-                    id="currentPrice"
-                    type="number"
-                    value={formData.currentPrice}
-                    onChange={(e) =>
-                      setFormData({ ...formData, currentPrice: e.target.value })
+                  <Label htmlFor="pricingMethod">طريقة التسعير</Label>
+                  <Select
+                    value={formData.pricingMethod}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, pricingMethod: value as any })
                     }
-                    placeholder="4500"
-                  />
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="اختر طريقة التسعير" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="formula">حساب تلقائي بالمعادلة</SelectItem>
+                      <SelectItem value="manual">تحديد يدوي</SelectItem>
+                      <SelectItem value="market_rate">سعر السوق</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
+
+                {formData.pricingMethod === "manual" && (
+                  <div>
+                    <Label htmlFor="currentPrice">السعر الحالي (جنيه)</Label>
+                    <Input
+                      id="currentPrice"
+                      type="number"
+                      value={formData.currentPrice}
+                      onChange={(e) =>
+                        setFormData({ ...formData, currentPrice: e.target.value })
+                      }
+                      placeholder="4500"
+                    />
+                  </div>
+                )}
+
+                {formData.pricingMethod === "formula" && (
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="formulaMultiplier">سعر الكيلو (جنيه) - اختياري</Label>
+                      <Input
+                        id="formulaMultiplier"
+                        type="number"
+                        value={formData.formulaMultiplier}
+                        onChange={(e) =>
+                          setFormData({ ...formData, formulaMultiplier: e.target.value })
+                        }
+                        placeholder="45"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        اتركه فارغاً لاستخدام المعادلة الافتراضية
+                      </p>
+                    </div>
+
+                    {formData.weight && (
+                      <div className="bg-blue-50 p-3 rounded-lg border">
+                        <p className="text-sm font-medium text-blue-800 mb-1">السعر المحسوب:</p>
+                        <p className="text-lg font-bold text-blue-900">
+                          {formatEGP(calculateCurrentPrice({
+                            ...formData,
+                            weight: parseFloat(formData.weight) || 0,
+                            purchasePrice: parseFloat(formData.purchasePrice) || 0,
+                            pricingMethod: formData.pricingMethod as any,
+                            formulaMultiplier: formData.formulaMultiplier ? parseFloat(formData.formulaMultiplier) : undefined
+                          } as any))}
+                        </p>
+                        <p className="text-xs text-blue-600 mt-1">
+                          سيتم تحديث السعر تلقائياً عند الحفظ
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {formData.pricingMethod === "market_rate" && (
+                  <div className="bg-green-50 p-3 rounded-lg border">
+                    <p className="text-sm font-medium text-green-800 mb-1">سعر السوق المقدر:</p>
+                    <p className="text-lg font-bold text-green-900">
+                      {formData.weight && formatEGP(calculateCurrentPrice({
+                        ...formData,
+                        weight: parseFloat(formData.weight) || 0,
+                        purchasePrice: parseFloat(formData.purchasePrice) || 0,
+                        pricingMethod: 'market_rate'
+                      } as any))}
+                    </p>
+                    <p className="text-xs text-green-600 mt-1">
+                      سيتم تحديث السعر تلقائياً حسب أسعار السوق
+                    </p>
+                  </div>
+                )}
 
                 <div>
                   <Label htmlFor="supplier">المورد</Label>
@@ -552,7 +628,7 @@ export default function AnimalFormModal({
                     />
                   </div>
                   <div>
-                    <Label htmlFor="offspringCount">عدد المواليد السابقة</Label>
+                    <Label htmlFor="offspringCount">عدد الموا��يد السابقة</Label>
                     <Input
                       id="offspringCount"
                       type="number"
