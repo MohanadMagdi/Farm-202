@@ -76,7 +76,7 @@ export default function ReportsPage() {
   const exportPDF = () => {
     toast({
       title: "تصدير PDF",
-      description: "سيتم تنف��ذ التصدير ق��يباً",
+      description: "سيتم تنفيذ التصدير ق��يباً",
     });
   };
 
@@ -384,7 +384,7 @@ export default function ReportsPage() {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>متوسط معدل ��لنمو ��ليومي</span>
+                  <span>متوسط مع��ل ��لنمو ��ليومي</span>
                   <span className="font-semibold">
                     {(
                       activeAnimals.reduce((sum, a) => sum + a.metrics.adg, 0) /
@@ -414,7 +414,7 @@ export default function ReportsPage() {
                       <div className="flex items-center space-x-2 space-x-reverse">
                         <Badge variant="outline">{index + 1}</Badge>
                         <div>
-                          <div className="font-medium">{animal.tagId}</div>
+                          <div className="font-medium">{animal.earTagId}</div>
                           <div className="text-sm text-muted-foreground">
                             معدل النمو: {animal.metrics.adg.toFixed(2)} كيلو/يوم
                           </div>
@@ -471,7 +471,7 @@ export default function ReportsPage() {
                       return (
                         <TableRow key={animal.id}>
                           <TableCell className="font-medium text-right">
-                            {animal.tagId}
+                            {animal.earTagId}
                           </TableCell>
                           <TableCell className="text-right">
                             <Badge variant="outline">
@@ -608,7 +608,7 @@ export default function ReportsPage() {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>متوسط الاس��هلاك اليومي</span>
+                  <span>م��وسط الاس��هلاك اليومي</span>
                   <span className="font-semibold">
                     {formatWeight(
                       feedingRecords.reduce((sum, r) => sum + r.qtyKg, 0) / 30,
@@ -635,7 +635,7 @@ export default function ReportsPage() {
                       key={animal.id}
                       className="flex items-center justify-between"
                     >
-                      <span className="font-medium">{animal.tagId}</span>
+                      <span className="font-medium">{animal.earTagId}</span>
                       <div className="text-left">
                         <div className="text-sm font-semibold">
                           {(animal.weight * 3) > 0
