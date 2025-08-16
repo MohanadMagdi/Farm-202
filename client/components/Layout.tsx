@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/lib/auth-context";
 import { dataMode } from "@/lib/data-service";
+import NotificationCenter from "@/components/NotificationCenter";
 import {
   Home,
   Users,
@@ -27,7 +28,6 @@ import {
   LogOut,
   Shield,
   Database,
-  Bell,
 } from "lucide-react";
 
 const navigation = [
