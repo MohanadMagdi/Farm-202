@@ -146,11 +146,29 @@ export default function InventoryPage() {
     });
   };
 
-  const exportReport = () => {
-    toast({
-      title: "تصدير التقرير",
-      description: "سيتم تنفيذ التصدير قريباً",
-    });
+  const exportReport = async (format: 'pdf' | 'excel') => {
+    try {
+      setLoading(true);
+
+      // Get stock movements for additional data
+      const stockMovements = await dataService.stockMovements.getAll();
+
+      await exportInventoryReport(warehouseItems, stockMovements, format);
+
+      toast({
+        title: "تم تصدير التقرير بنجاح",
+        description: `تم تصدير تقرير المخزون بصيغة ${format === 'pdf' ? 'PDF' : 'Excel'}`,
+      });
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({
+        title: "خطأ في التصدير",
+        description: "حدث خطأ أثناء تصدير التقرير",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const createDispatchOrder = () => {
@@ -364,7 +382,7 @@ export default function InventoryPage() {
                   <Package className="h-5 w-5 text-green-500" />
                   <div>
                     <div className="text-2xl font-bold text-green-600">0</div>
-                    <p className="text-xs text-muted-foreground">لا توجد تنبيهات</p>
+                    <p className="text-xs text-muted-foreground">لا ��وجد تنبيهات</p>
                   </div>
                 </>
               )}
