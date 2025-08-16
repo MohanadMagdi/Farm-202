@@ -572,7 +572,7 @@ export default function AnimalFormModal({
                       <SelectValue placeholder="اختر الأم" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">بدون أم محددة</SelectItem>
+                      <SelectItem value="none">بدون أم محددة</SelectItem>
                       {potentialMothers.map((mother) => (
                         <SelectItem key={mother.id} value={mother.id}>
                           {mother.earTagId}
