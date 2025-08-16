@@ -4,16 +4,17 @@
  */
 
 import { formatArabicDate } from "./arabic-utils";
-import type { 
-  Animal, 
-  Barn, 
-  WarehouseItem, 
-  StockMovement, 
-  FeedingRecord, 
+import type {
+  Animal,
+  Barn,
+  WarehouseItem,
+  StockMovement,
+  FeedingRecord,
   WeightRecord,
   HealthRecord,
   BarnMovement,
   FeedingSchedule,
+  MortalityRecord,
   AnimalCategory,
   WarehouseType
 } from '@shared/types';
