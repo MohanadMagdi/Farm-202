@@ -167,18 +167,36 @@ function AppRoutes() {
   );
 }
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <AppRoutes />
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  useEffect(() => {
+    // Suppress ResizeObserver loop error
+    const handleResizeObserverError = (e: ErrorEvent) => {
+      if (e.message.includes('ResizeObserver loop completed with undelivered notifications')) {
+        e.stopImmediatePropagation();
+        return false;
+      }
+    };
+
+    window.addEventListener('error', handleResizeObserverError);
+
+    return () => {
+      window.removeEventListener('error', handleResizeObserverError);
+    };
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <AppRoutes />
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 createRoot(document.getElementById("root")!).render(<App />);
