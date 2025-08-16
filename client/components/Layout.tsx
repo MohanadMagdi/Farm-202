@@ -264,15 +264,7 @@ export default function Layout({ children }: LayoutProps) {
 
           {/* Footer */}
           <div className="absolute bottom-4 right-4 left-4">
-            <div className="text-xs text-muted-foreground text-center space-y-1">
-              <p>نظام إدارة المزرعة v1.0</p>
-              <p>Firebase + React</p>
-              {dataMode === 'mock' && (
-                <Badge variant="outline" className="text-xs w-full justify-center">
-                  بيانات تجريبية
-                </Badge>
-              )}
-            </div>
+            <div className="text-xs text-muted-foreground text-center space-y-1" />
           </div>
         </aside>
 
