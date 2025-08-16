@@ -118,6 +118,14 @@ export function calculateWeightGain(animal: { weight: number; birthDate?: Date }
 }
 
 /**
+ * Calculate age in days for an animal
+ */
+export function calculateAgeInDays(animal: { birthDate?: Date; purchaseDate: Date }): number {
+  const referenceDate = animal.birthDate || animal.purchaseDate;
+  return Math.max(1, Math.floor((new Date().getTime() - referenceDate.getTime()) / (1000 * 60 * 60 * 24)));
+}
+
+/**
  * Feed types
  */
 export const feedTypes = {
