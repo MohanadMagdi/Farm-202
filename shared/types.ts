@@ -53,6 +53,24 @@ export interface WeightRecord {
   notes?: string;
 }
 
+export interface PricingFormula {
+  id: string;
+  name: string; // e.g., "تسعير الذكور الأساسي"
+  description: string;
+  animalCategory: AnimalCategory;
+  basePrice: number; // EGP - minimum price
+  pricePerKg: number; // EGP per kg
+  minWeight: number; // kg - minimum weight for formula
+  maxWeight?: number; // kg - maximum weight (optional)
+  ageMultiplier?: number; // multiplier based on age in months
+  qualityMultiplier?: number; // multiplier for quality grade
+  seasonalMultiplier?: number; // multiplier for market seasons
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy: string;
+}
+
 export interface Barn {
   id: string;
   name: string;
