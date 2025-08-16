@@ -443,7 +443,7 @@ export default function ReportsPage() {
                       <TableHead className="text-right">رقم الأذن</TableHead>
                       <TableHead className="text-right">النوع</TableHead>
                       <TableHead className="text-right">العمر (��يام)</TableHead>
-                      <TableHead className="text-right">الوزن الحالي</TableHead>
+                      <TableHead className="text-right">الوزن الحال��</TableHead>
                       <TableHead className="text-right">إجمالي النمو</TableHead>
                       <TableHead className="text-right">
                         معدل النمو اليومي
@@ -484,7 +484,7 @@ export default function ReportsPage() {
                             {formatWeight(calculateWeightGain(animal))}
                           </TableCell>
                           <TableCell className="text-right">
-                            {(calculateWeightGain(animal) / Math.max(1, ageInDays)).toFixed(2)} كيلو/يوم
+                            {calculateADG(animal).toFixed(2)} كيلو/يوم
                           </TableCell>
                           <TableCell className="text-right">
                             {animal.feedEfficiency.toFixed(2)}
