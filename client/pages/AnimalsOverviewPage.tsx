@@ -447,6 +447,10 @@ export default function AnimalsOverviewPage() {
                   </Link>
                 </div>
               </TabsContent>
+
+              <TabsContent value="breeding" className="space-y-4">
+                <BreedingWorkflowDashboard />
+              </TabsContent>
             </Tabs>
           </CardContent>
         </Card>
