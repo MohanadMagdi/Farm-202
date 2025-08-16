@@ -8,16 +8,16 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
-import { 
-  Sheep, 
-  Lock, 
-  Mail, 
-  User, 
-  Shield, 
-  Stethoscope, 
-  Package, 
-  Building2, 
-  Calculator, 
+import {
+  Home,
+  Lock,
+  Mail,
+  User,
+  Shield,
+  Stethoscope,
+  Package,
+  Building2,
+  Calculator,
   ShoppingCart 
 } from 'lucide-react';
 
