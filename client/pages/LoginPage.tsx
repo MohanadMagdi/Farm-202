@@ -63,7 +63,7 @@ export default function LoginPage() {
     },
     {
       email: 'manager@farm.com',
-      password: 'manager123',
+      password: 'demo123',
       role: 'مدير العمليات',
       icon: User,
       color: 'text-blue-600',
@@ -71,7 +71,7 @@ export default function LoginPage() {
     },
     {
       email: 'vet@farm.com',
-      password: 'vet123',
+      password: 'demo123',
       role: 'الطبيب البيطري',
       icon: Stethoscope,
       color: 'text-green-600',
@@ -79,7 +79,7 @@ export default function LoginPage() {
     },
     {
       email: 'inventory@farm.com',
-      password: 'inventory123',
+      password: 'demo123',
       role: 'مسؤول ا��مخزون',
       icon: Package,
       color: 'text-purple-600',
