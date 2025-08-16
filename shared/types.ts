@@ -1,6 +1,7 @@
 export type AnimalCategory = 'male' | 'female' | 'newborn';
 export type AnimalStatus = 'active' | 'sold' | 'dead' | 'isolated';
 export type IsolationType = 'health_quarantine' | 'illness' | 'post_birth' | 'feeding';
+export type MortalityCause = 'illness' | 'accident' | 'birth_complications' | 'old_age' | 'unknown' | 'other';
 export type BarnType = 'male' | 'female' | 'newborn' | 'mixed';
 export type WarehouseType = 'chemicals' | 'medicines' | 'medical_supplies' | 'equipment' | 'maintenance';
 export type UserRole = 'owner' | 'manager' | 'vet' | 'inventory' | 'barn_manager' | 'accountant' | 'sales';
