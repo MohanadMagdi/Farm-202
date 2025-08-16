@@ -318,11 +318,12 @@ export default function ReportsPage() {
       </div>
 
       <Tabs defaultValue="animals" className="w-full" dir="rtl">
-        <TabsList className="grid w-full grid-cols-4" dir="rtl">
+        <TabsList className="grid w-full grid-cols-5" dir="rtl">
           <TabsTrigger value="animals">تقرير الحيوانات</TabsTrigger>
           <TabsTrigger value="inventory">تقرير المخزون</TabsTrigger>
           <TabsTrigger value="feeding">تقرير التغذية</TabsTrigger>
           <TabsTrigger value="financial">التقرير المالي</TabsTrigger>
+          <TabsTrigger value="analytics">التحليلات المتقدمة</TabsTrigger>
         </TabsList>
 
         <TabsContent value="animals" className="space-y-4" dir="rtl">
@@ -337,7 +338,7 @@ export default function ReportsPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span>إجمالي الحيوانات النشطة</span>
+                  <span>إ��مالي الحيوانات النشطة</span>
                   <span className="font-semibold">
                     {formatArabicNumber(activeAnimals.length)}
                   </span>
@@ -395,7 +396,7 @@ export default function ReportsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2 space-x-reverse">
                   <TrendingUp className="h-5 w-5 text-farm-600" />
-                  <span>أفضل الحيوانات أداءً</span>
+                  <span>أفضل الحيوانات أداء��</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
