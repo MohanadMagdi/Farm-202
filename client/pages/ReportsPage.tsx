@@ -736,6 +736,10 @@ export default function ReportsPage() {
             </Card>
           </div>
         </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-4" dir="rtl">
+          <AdvancedAnalyticsDashboard />
+        </TabsContent>
       </Tabs>
     </div>
   );
