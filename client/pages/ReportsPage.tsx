@@ -31,6 +31,7 @@ import {
   formatArabicDate,
   calculateADG,
   calculateWeightGain,
+  calculateAgeInDays,
 } from "@/lib/arabic-utils";
 import AdvancedAnalyticsDashboard from "@/components/AdvancedAnalyticsDashboard";
 import {
@@ -321,7 +322,7 @@ export default function ReportsPage() {
           <TabsTrigger value="animals">تقرير الحيوانات</TabsTrigger>
           <TabsTrigger value="inventory">تقرير المخزون</TabsTrigger>
           <TabsTrigger value="feeding">تقرير التغذية</TabsTrigger>
-          <TabsTrigger value="financial">التقرير المالي</TabsTrigger>
+          <TabsTrigger value="financial">التقرير المال��</TabsTrigger>
           <TabsTrigger value="analytics">التح��يلات المتقدمة</TabsTrigger>
         </TabsList>
 
@@ -441,7 +442,7 @@ export default function ReportsPage() {
                     <TableRow>
                       <TableHead className="text-right">رقم الأذن</TableHead>
                       <TableHead className="text-right">النوع</TableHead>
-                      <TableHead className="text-right">العمر (��يام)</TableHead>
+                      <TableHead className="text-right">ال��مر (��يام)</TableHead>
                       <TableHead className="text-right">الوزن الحالي</TableHead>
                       <TableHead className="text-right">إجمالي النمو</TableHead>
                       <TableHead className="text-right">
