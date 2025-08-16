@@ -220,26 +220,29 @@ export default function StockMovementModal({
             {mode === "in" ? "إضافة للمخزون" : "صرف من المخزون"}
           </DialogTitle>
           <DialogDescription>
-            {warehouseItem && (
-              <div className="space-y-2">
-                <div>
-                  <span className="font-medium">{warehouseItem.name}</span>
-                  <Badge variant="outline" className="mr-2">{warehouseItem.category}</Badge>
-                </div>
-                <div className="text-sm">
-                  المخزون الحالي: 
+            {warehouseItem?.name} - تفاصيل المنتج
+          </DialogDescription>
+          {warehouseItem && (
+            <div className="space-y-2 -mt-2">
+              <div className="flex items-center gap-2">
+                <span className="font-medium">{warehouseItem.name}</span>
+                <Badge variant="outline">{warehouseItem.category}</Badge>
+              </div>
+              <div className="text-sm flex items-center gap-2">
+                <span>
+                  المخزون الحالي:
                   <span className={`font-bold mr-1 ${getStockStatusColor(currentStock)}`}>
                     {currentStock} {warehouseItem.unit}
                   </span>
-                  {currentStock <= warehouseItem.minStockLevel && (
-                    <Badge variant="destructive" className="mr-2">
-                      أقل من الحد الأدنى
-                    </Badge>
-                  )}
-                </div>
+                </span>
+                {currentStock <= warehouseItem.minStockLevel && (
+                  <Badge variant="destructive">
+                    أقل من الحد الأدنى
+                  </Badge>
+                )}
               </div>
-            )}
-          </DialogDescription>
+            </div>
+          )}
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
@@ -272,7 +275,7 @@ export default function StockMovementModal({
                   {mode === "out" && newStock >= 0 && newStock <= warehouseItem.minStockLevel && (
                     <div className="flex items-center text-yellow-600">
                       <AlertTriangle className="h-3 w-3 ml-1" />
-                      <span>سيصبح المخزون أقل من الحد الأدنى</span>
+                      <span>س��صبح المخزون أقل من الحد الأدنى</span>
                     </div>
                   )}
                 </div>
@@ -412,7 +415,7 @@ export default function StockMovementModal({
 
           {/* Requested By */}
           <div>
-            <Label htmlFor="requestedBy">المسؤول *</Label>
+            <Label htmlFor="requestedBy">المس��ول *</Label>
             <Input
               id="requestedBy"
               value={formData.requestedBy}
