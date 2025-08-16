@@ -5,6 +5,7 @@ export type BarnType = 'male' | 'female' | 'newborn' | 'mixed';
 export type WarehouseType = 'chemicals' | 'medicines' | 'medical_supplies' | 'equipment' | 'maintenance';
 export type UserRole = 'owner' | 'manager' | 'vet' | 'inventory' | 'barn_manager' | 'accountant' | 'sales';
 export type MovementType = 'in' | 'out' | 'transfer';
+export type PricingMethod = 'manual' | 'formula' | 'market_rate';
 
 export interface Animal {
   id: string;
