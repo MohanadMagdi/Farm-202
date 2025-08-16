@@ -135,6 +135,22 @@ export default function AnimalFormModal({
     }
   }, [formData.motherId, formData.category, animals]);
 
+  // Helper function to convert form data to Animal-like object for pricing
+  const createAnimalFromFormData = (data: typeof formData) => {
+    const animalLike = {
+      ...data,
+      weight: parseFloat(data.weight) || 0,
+      purchasePrice: parseFloat(data.purchasePrice) || 0,
+      currentPrice: parseFloat(data.currentPrice) || undefined,
+      pricingMethod: data.pricingMethod as any,
+      formulaMultiplier: data.formulaMultiplier ? parseFloat(data.formulaMultiplier) : undefined,
+      birthDate: data.birthDate ? new Date(data.birthDate) : undefined,
+      purchaseDate: new Date(data.purchaseDate),
+      offspringCount: data.offspringCount ? parseInt(data.offspringCount) : undefined
+    };
+    return animalLike;
+  };
+
   const loadSelectData = async () => {
     try {
       const [barnsData, animalsData] = await Promise.all([
@@ -778,7 +794,7 @@ export default function AnimalFormModal({
                                 ✅ اختيار الأم صحيح
                               </p>
                               <p className="text-sm text-green-700 mt-1">
-                                سيتم ربط المولود بالأم تلقائياً مع تحديث إ��صائيات الأم
+                                سيتم ربط المولود با��أم تلقائياً مع تحديث إ��صائيات الأم
                               </p>
                             </div>
                           </div>
