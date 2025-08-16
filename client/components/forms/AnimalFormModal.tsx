@@ -249,6 +249,11 @@ export default function AnimalFormModal({
         animalData.isolationDate = new Date();
       }
 
+      // Calculate current price if using formula method
+      if (animalData.pricingMethod === 'formula') {
+        animalData.currentPrice = calculateCurrentPrice(animalData as Animal);
+      }
+
       if (mode === "edit" && animal) {
         await dataService.animals.update(animal.id, animalData);
         toast({
