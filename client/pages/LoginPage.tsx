@@ -94,7 +94,7 @@ export default function LoginPage() {
     {
       email: 'inventory@farm.com',
       password: 'inventory123',
-      role: 'مسؤول المخ��ون',
+      role: 'مسؤول ا��مخزون',
       icon: Package,
       color: 'text-purple-600',
       permissions: 'المخزون، التغذية، التقارير'
@@ -225,7 +225,7 @@ export default function LoginPage() {
               <h4 className="font-medium text-sm">مميزات النظام:</h4>
               <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
                 <div className="flex items-center">
-                  <Sheep className="h-3 w-3 ml-1" />
+                  <Home className="h-3 w-3 ml-1" />
                   إدارة الحيوانات
                 </div>
                 <div className="flex items-center">
