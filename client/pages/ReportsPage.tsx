@@ -180,15 +180,7 @@ export default function ReportsPage() {
   // Weight gain analysis (using weight difference as approximation)
   const averageWeightGain =
     activeAnimals.length > 0
-      ? activeAnimals.reduce(
-          (sum, animal) => {
-            // Calculate weight gain as current weight minus estimated birth/purchase weight
-            const estimatedInitialWeight = animal.birthDate ? 3.5 : animal.weight * 0.7; // Rough estimate
-            const weightGain = Math.max(0, animal.weight - estimatedInitialWeight);
-            return sum + weightGain;
-          },
-          0,
-        ) / activeAnimals.length
+      ? activeAnimals.reduce((sum, animal) => sum + calculateWeightGain(animal), 0) / activeAnimals.length
       : 0;
 
   // Stock movements analysis
@@ -624,7 +616,7 @@ export default function ReportsPage() {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>تكلفة التغذية الشهرية</span>
+                  <span>تكلفة التغذية الشه��ية</span>
                   <span className="font-semibold">
                     {formatEGP(monthlyFeedingCost)}
                   </span>
