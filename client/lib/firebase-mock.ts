@@ -141,7 +141,9 @@ class MockFirestore {
           healthStatus: "سليم",
           isIsolated: false,
           motherId: "anim_003",
+          motherEarTagId: "F047",
           birthDate: new Date("2024-01-10"),
+          pricingMethod: "formula" as any,
           createdAt: new Date("2024-01-10"),
           updatedAt: now,
           createdBy: "user_001",
@@ -176,7 +178,7 @@ class MockFirestore {
         },
         {
           id: "barn_003",
-          name: "حظيرة ال��غار",
+          name: "حظيرة الصغار",
           type: "newborn",
           capacity: 30,
           location: "المنطقة الوسطى",
