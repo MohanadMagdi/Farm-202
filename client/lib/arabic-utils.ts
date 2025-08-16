@@ -92,7 +92,7 @@ export const animalStatus = {
  * Inventory categories
  */
 export const inventoryCategories = {
-  feed: "أعلاف",
+  feed: "أعل��ف",
   medicine: "أدوية",
   medical_supply: "مستلزمات طبية",
   equipment: "معدات",
@@ -103,10 +103,8 @@ export const inventoryCategories = {
  * Calculate Average Daily Gain (ADG) for an animal
  */
 export function calculateADG(animal: { weight: number; birthDate?: Date; purchaseDate: Date }): number {
-  const ageInDays = animal.birthDate ?
-    Math.max(1, Math.floor((new Date().getTime() - animal.birthDate.getTime()) / (1000 * 60 * 60 * 24))) :
-    Math.max(1, Math.floor((new Date().getTime() - animal.purchaseDate.getTime()) / (1000 * 60 * 60 * 24)));
-  const weightGain = Math.max(0, animal.weight - (animal.birthDate ? 3.5 : animal.weight * 0.7));
+  const ageInDays = calculateAgeInDays(animal);
+  const weightGain = calculateWeightGain(animal);
   return weightGain / ageInDays;
 }
 
