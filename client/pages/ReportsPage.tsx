@@ -492,7 +492,7 @@ export default function ReportsPage() {
                             {formatWeight(Math.max(0, animal.weight - (animal.birthDate ? 3.5 : animal.weight * 0.7)))}
                           </TableCell>
                           <TableCell className="text-right">
-                            {animal.metrics.adg.toFixed(2)} كيلو/يوم
+                            {(Math.max(0, animal.weight - (animal.birthDate ? 3.5 : animal.weight * 0.7)) / Math.max(1, ageInDays)).toFixed(2)} كيلو/يوم
                           </TableCell>
                           <TableCell className="text-right">
                             {animal.feedEfficiency.toFixed(2)}
@@ -608,7 +608,7 @@ export default function ReportsPage() {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>متوسط الاستهلاك اليومي</span>
+                  <span>متوسط الاس��هلاك اليومي</span>
                   <span className="font-semibold">
                     {formatWeight(
                       feedingRecords.reduce((sum, r) => sum + r.qtyKg, 0) / 30,
