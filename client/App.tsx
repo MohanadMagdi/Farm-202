@@ -174,6 +174,12 @@ const App = () => {
     // Initialize data synchronization
     initializeDataSync();
 
+    // Initialize expiry countdown service
+    if (!expiryCountdownService.isServiceRunning()) {
+      expiryCountdownService.start();
+      console.log('Expiry countdown service initialized');
+    }
+
     // Suppress ResizeObserver loop error
     const handleResizeObserverError = (e: ErrorEvent) => {
       if (e.message && e.message.includes('ResizeObserver loop completed with undelivered notifications')) {
