@@ -240,7 +240,7 @@ export default function ReportsPage() {
             <SelectContent>
               <SelectItem value="week">أسبوعي</SelectItem>
               <SelectItem value="month">شهري</SelectItem>
-              <SelectItem value="quarter">ربع سنوي</SelectItem>
+              <SelectItem value="quarter">ربع سن��ي</SelectItem>
               <SelectItem value="year">سنوي</SelectItem>
             </SelectContent>
           </Select>
@@ -305,7 +305,7 @@ export default function ReportsPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">
-              معدل الن��و الشهري
+              معدل النمو الشهري
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -357,7 +357,7 @@ export default function ReportsPage() {
                   <span>الإناث</span>
                   <span className="font-semibold">
                     {formatArabicNumber(
-                      activeAnimals.filter((a) => a.type === "female").length,
+                      activeAnimals.filter((a) => a && a.category === "female").length,
                     )}
                   </span>
                 </div>
