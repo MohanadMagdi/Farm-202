@@ -220,15 +220,6 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
     }
   };
 
-  const getAnimalTypeLabel = (type?: AnimalCategory) => {
-    switch (type) {
-      case "male": return "الذكور";
-      case "female": return "الإناث";
-      case "newborn": return "المواليد";
-      default: return "جميع الحيوانات";
-    }
-  };
-
   if (loading) {
     return (
       <div className="space-y-6">
