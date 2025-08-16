@@ -269,13 +269,27 @@ const App = () => {
 
 export default App;
 
-// Fix for React createRoot warning during HMR
-const container = document.getElementById("root")!;
-let root = (container as any)._reactRoot;
+// Initialize React app with HMR support
+function initializeApp() {
+  const container = document.getElementById("root")!;
 
-if (!root) {
-  root = createRoot(container);
-  (container as any)._reactRoot = root;
+  // Check if root already exists to prevent createRoot warning
+  let root = (window as any).__reactRoot;
+
+  if (!root) {
+    root = createRoot(container);
+    (window as any).__reactRoot = root;
+  }
+
+  root.render(<App />);
 }
 
-root.render(<App />);
+// Initialize the app
+initializeApp();
+
+// HMR support for development
+if (import.meta.hot) {
+  import.meta.hot.accept(() => {
+    initializeApp();
+  });
+}
