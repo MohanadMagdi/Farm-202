@@ -167,11 +167,11 @@ export default function ReportsPage() {
   const thisMonth = new Date();
   thisMonth.setDate(1);
   const monthlyFeedingRecords = feedingRecords.filter(
-    (r) => r.time > thisMonth,
+    (r) => r && r.date && r.date > thisMonth,
   );
   const monthlyFeedingCost = monthlyFeedingRecords.reduce((sum, record) => {
-    const item = inventoryItems.find((i) => i.id === record.feedItemId);
-    return sum + record.qtyKg * (item?.pricePerUnitEGP || 0);
+    const item = inventoryItems.find((i) => i.id === record.feedType);
+    return sum + (record.quantityIssued || 0) * (item?.unitPrice || 0);
   }, 0);
 
   // Weight gain analysis
@@ -526,7 +526,7 @@ export default function ReportsPage() {
                 <Table dir="rtl">
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-right">اسم الصنف</TableHead>
+                      <TableHead className="text-right">��سم الصنف</TableHead>
                       <TableHead className="text-right">
                         المخزون الحالي
                       </TableHead>
