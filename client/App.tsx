@@ -212,6 +212,7 @@ const App = () => {
       window.removeEventListener('error', handleResizeObserverError);
       window.removeEventListener('unhandledrejection', handleUnhandledRejection);
       console.error = originalConsoleError; // Restore original console.error
+      console.warn = originalConsoleWarn; // Restore original console.warn
     };
   }, []);
 
