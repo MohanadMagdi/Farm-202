@@ -142,7 +142,7 @@ export default function ReportsPage() {
   const { animals, inventoryItems, stockMovements, feedingRecords } =
     reportData;
 
-  const activeAnimals = animals.filter((a) => a.status === "active");
+  const activeAnimals = animals.filter((a) => a && a.status === "active");
   const totalAnimalsValue = activeAnimals.reduce(
     (sum, animal) => sum + (animal.currentPrice || animal.purchasePrice || 0),
     0,
@@ -240,7 +240,7 @@ export default function ReportsPage() {
             <SelectContent>
               <SelectItem value="week">أسبوعي</SelectItem>
               <SelectItem value="month">شهري</SelectItem>
-              <SelectItem value="quarter">ربع ��نوي</SelectItem>
+              <SelectItem value="quarter">ربع سنوي</SelectItem>
               <SelectItem value="year">سنوي</SelectItem>
             </SelectContent>
           </Select>
