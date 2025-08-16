@@ -82,7 +82,7 @@ export default function ReportsPage() {
   const exportExcel = () => {
     toast({
       title: "تصدير Excel",
-      description: "سيتم تنفيذ التصدير قريباً",
+      description: "سيتم تن��يذ التصدير قريباً",
     });
   };
 
@@ -201,10 +201,10 @@ export default function ReportsPage() {
   // Inventory turnover
   const inventoryTurnover = inventoryItems.map((item) => {
     const outMovements = stockOutMovements.filter(
-      (m) => m.inventoryItemId === item.id,
+      (m) => m.itemId === item.id,
     );
-    const totalOut = outMovements.reduce((sum, m) => sum + m.qty, 0);
-    const currentStock = db.getCurrentStock(item.id);
+    const totalOut = outMovements.reduce((sum, m) => sum + m.quantity, 0);
+    const currentStock = item.currentStock || 0;
     const turnoverRate = currentStock > 0 ? totalOut / currentStock : 0;
 
     return {
@@ -212,7 +212,7 @@ export default function ReportsPage() {
       currentStock,
       totalOut,
       turnoverRate,
-      value: currentStock * item.pricePerUnitEGP,
+      value: currentStock * (item.unitPrice || 0),
     };
   });
 
