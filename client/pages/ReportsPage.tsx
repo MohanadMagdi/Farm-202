@@ -156,7 +156,7 @@ export default function ReportsPage() {
   const lastMonth = new Date();
   lastMonth.setMonth(lastMonth.getMonth() - 1);
   const recentAnimals = animals.filter(
-    (a) => a.timestamps.createdAt > lastMonth,
+    (a) => a && a.createdAt && a.createdAt > lastMonth,
   );
   const monthlyGrowthRate =
     activeAnimals.length > 0
@@ -623,7 +623,7 @@ export default function ReportsPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>كفاءة ��لتحويل الغذائي</CardTitle>
+                <CardTitle>كفاءة ��لتحوي�� الغذائي</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
