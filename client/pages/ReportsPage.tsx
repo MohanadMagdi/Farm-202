@@ -318,7 +318,7 @@ export default function ReportsPage() {
 
       <Tabs defaultValue="animals" className="w-full" dir="rtl">
         <TabsList className="grid w-full grid-cols-5" dir="rtl">
-          <TabsTrigger value="animals">تقرير ا��حيوانات</TabsTrigger>
+          <TabsTrigger value="animals">تقرير الحيوانات</TabsTrigger>
           <TabsTrigger value="inventory">تقرير المخزون</TabsTrigger>
           <TabsTrigger value="feeding">تقرير التغذية</TabsTrigger>
           <TabsTrigger value="financial">التقرير المالي</TabsTrigger>
@@ -419,7 +419,7 @@ export default function ReportsPage() {
                           {formatWeight(animal.weight)}
                         </div>
                         <div className="text-sm text-green-600">
-                          +{formatWeight(Math.max(0, animal.weight - (animal.birthDate ? 3.5 : animal.weight * 0.7)))}
+                          +{formatWeight(calculateWeightGain(animal))}
                         </div>
                       </div>
                     </div>
@@ -483,10 +483,10 @@ export default function ReportsPage() {
                             {formatWeight(animal.weight)}
                           </TableCell>
                           <TableCell className="text-right">
-                            {formatWeight(Math.max(0, animal.weight - (animal.birthDate ? 3.5 : animal.weight * 0.7)))}
+                            {formatWeight(calculateWeightGain(animal))}
                           </TableCell>
                           <TableCell className="text-right">
-                            {(Math.max(0, animal.weight - (animal.birthDate ? 3.5 : animal.weight * 0.7)) / Math.max(1, ageInDays)).toFixed(2)} كيلو/يوم
+                            {(calculateWeightGain(animal) / Math.max(1, ageInDays)).toFixed(2)} كيلو/يوم
                           </TableCell>
                           <TableCell className="text-right">
                             {animal.feedEfficiency.toFixed(2)}
@@ -515,7 +515,7 @@ export default function ReportsPage() {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2 space-x-reverse">
                 <Package className="h-5 w-5 text-farm-600" />
-                <span>ت��ليل المخزو��</span>
+                <span>تحليل المخزو��</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -634,7 +634,7 @@ export default function ReportsPage() {
                         <div className="text-sm font-semibold">
                           {(animal.weight * 3) > 0
                             ? (
-                                Math.max(0, animal.weight - (animal.birthDate ? 3.5 : animal.weight * 0.7)) /
+                                calculateWeightGain(animal) /
                                 (animal.weight * 3)
                               ).toFixed(2)
                             : "0.00"}{" "}
