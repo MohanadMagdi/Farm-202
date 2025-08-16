@@ -157,7 +157,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
   };
 
   const handleDelete = async (animal: Animal) => {
-    if (window.confirm(`هل أنت متأكد من حذ�� الحيوان ${animal.earTagId}؟`)) {
+    if (window.confirm(`هل أنت متأكد من حذف الحيوان ${animal.earTagId}؟`)) {
       try {
         await dataService.animals.delete(animal.id);
         loadAnimals();
@@ -248,10 +248,16 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
           </p>
         </div>
         <div className="flex items-center space-x-3 space-x-reverse">
-          <Button variant="outline" size="sm">
-            <Download className="h-4 w-4 ml-2" />
-            تصدير
-          </Button>
+          <div className="flex">
+            <Button variant="outline" size="sm" onClick={() => handleExport('excel')}>
+              <Download className="h-4 w-4 ml-2" />
+              Excel
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => handleExport('pdf')} className="mr-2">
+              <Download className="h-4 w-4 ml-2" />
+              PDF
+            </Button>
+          </div>
           <Button onClick={() => setIsAddModalOpen(true)}>
             <Plus className="h-4 w-4 ml-2" />
             {getAddButtonLabel(animalType)}
