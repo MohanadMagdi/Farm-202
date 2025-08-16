@@ -46,21 +46,7 @@ export default function LoginPage() {
       });
     } catch (error: any) {
       console.error('Login error:', error);
-      
-      // Handle different Firebase auth errors
-      let errorMessage = 'حدث خطأ أثناء تسجيل الدخول';
-      
-      if (error.code === 'auth/user-not-found') {
-        errorMessage = 'المستخدم غير موجود';
-      } else if (error.code === 'auth/wrong-password') {
-        errorMessage = 'كلمة المرور غير صحيحة';
-      } else if (error.code === 'auth/invalid-email') {
-        errorMessage = 'البريد الإلكتروني غير صحيح';
-      } else if (error.code === 'auth/too-many-requests') {
-        errorMessage = 'تم تجاوز عدد المحاولات المسموح. حاول مرة أخرى لاحقاً';
-      }
-      
-      setError(errorMessage);
+      setError(error.message || 'حدث خطأ أثناء تسجيل الدخول');
     } finally {
       setLoading(false);
     }
