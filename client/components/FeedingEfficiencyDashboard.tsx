@@ -210,10 +210,16 @@ export default function FeedingEfficiencyDashboard({ className }: FeedingEfficie
             </SelectContent>
           </Select>
           
-          <Button onClick={exportReport} variant="outline" size="sm">
-            <Download className="h-4 w-4 ml-2" />
-            تصدير التقرير
-          </Button>
+          <div className="flex">
+            <Button onClick={() => exportReport('excel')} variant="outline" size="sm">
+              <Download className="h-4 w-4 ml-2" />
+              Excel
+            </Button>
+            <Button onClick={() => exportReport('pdf')} variant="outline" size="sm" className="mr-2">
+              <Download className="h-4 w-4 ml-2" />
+              PDF
+            </Button>
+          </div>
         </div>
       </div>
 
