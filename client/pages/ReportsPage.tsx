@@ -175,11 +175,16 @@ export default function ReportsPage() {
     return sum + (record.quantityIssued || 0) * (item?.unitPrice || 0);
   }, 0);
 
-  // Weight gain analysis
+  // Weight gain analysis (using weight difference as approximation)
   const averageWeightGain =
     activeAnimals.length > 0
       ? activeAnimals.reduce(
-          (sum, animal) => sum + animal.metrics.totalGainKg,
+          (sum, animal) => {
+            // Calculate weight gain as current weight minus estimated birth/purchase weight
+            const estimatedInitialWeight = animal.birthDate ? 3.5 : animal.weight * 0.7; // Rough estimate
+            const weightGain = Math.max(0, animal.weight - estimatedInitialWeight);
+            return sum + weightGain;
+          },
           0,
         ) / activeAnimals.length
       : 0;
