@@ -389,14 +389,8 @@ export default function ReportsPage() {
                   <span>متوسط مع��ل ��لنمو ��ليومي</span>
                   <span className="font-semibold">
                     {(
-                      activeAnimals.reduce((sum, a) => {
-                        const ageInDays = a.birthDate ?
-                          Math.max(1, Math.floor((new Date().getTime() - a.birthDate.getTime()) / (1000 * 60 * 60 * 24))) :
-                          Math.max(1, Math.floor((new Date().getTime() - a.purchaseDate.getTime()) / (1000 * 60 * 60 * 24)));
-                        const weightGain = Math.max(0, a.weight - (a.birthDate ? 3.5 : a.weight * 0.7));
-                        const adg = weightGain / ageInDays;
-                        return sum + adg;
-                      }, 0) / Math.max(1, activeAnimals.length)
+                      activeAnimals.reduce((sum, a) => sum + calculateADG(a), 0) /
+                      Math.max(1, activeAnimals.length)
                     ).toFixed(2)}{" "}
                     كيلو/يوم
                   </span>
@@ -409,7 +403,7 @@ export default function ReportsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2 space-x-reverse">
                   <TrendingUp className="h-5 w-5 text-farm-600" />
-                  <span>أفضل ال��يوانات أداء��</span>
+                  <span>أفضل الحيوانات أداء��</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
