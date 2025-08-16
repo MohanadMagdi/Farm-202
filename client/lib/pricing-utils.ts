@@ -105,9 +105,16 @@ export function calculateFormulaPrice(animal: Animal, formula?: PricingFormula):
 /**
  * Calculate age in months from birth date
  */
-export function calculateAgeInMonths(birthDate: Date): number {
+export function calculateAgeInMonths(birthDate: Date | string): number {
   const now = new Date();
-  const diffTime = Math.abs(now.getTime() - birthDate.getTime());
+  const birthDateObj = typeof birthDate === 'string' ? new Date(birthDate) : birthDate;
+
+  // Validate date
+  if (isNaN(birthDateObj.getTime())) {
+    return 0; // Return 0 if invalid date
+  }
+
+  const diffTime = Math.abs(now.getTime() - birthDateObj.getTime());
   const diffMonths = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 30)); // Approximate months
   return diffMonths;
 }
