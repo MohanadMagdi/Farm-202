@@ -240,7 +240,7 @@ export default function ReportsPage() {
             <SelectContent>
               <SelectItem value="week">أسبوعي</SelectItem>
               <SelectItem value="month">شهري</SelectItem>
-              <SelectItem value="quarter">ربع سن��ي</SelectItem>
+              <SelectItem value="quarter">ربع ��نوي</SelectItem>
               <SelectItem value="year">سنوي</SelectItem>
             </SelectContent>
           </Select>
@@ -365,7 +365,7 @@ export default function ReportsPage() {
                   <span>الصغار</span>
                   <span className="font-semibold">
                     {formatArabicNumber(
-                      activeAnimals.filter((a) => a.type === "newborn").length,
+                      activeAnimals.filter((a) => a && a.category === "newborn").length,
                     )}
                   </span>
                 </div>
