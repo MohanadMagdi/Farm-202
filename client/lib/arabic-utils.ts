@@ -100,6 +100,24 @@ export const inventoryCategories = {
 } as const;
 
 /**
+ * Calculate Average Daily Gain (ADG) for an animal
+ */
+export function calculateADG(animal: { weight: number; birthDate?: Date; purchaseDate: Date }): number {
+  const ageInDays = animal.birthDate ?
+    Math.max(1, Math.floor((new Date().getTime() - animal.birthDate.getTime()) / (1000 * 60 * 60 * 24))) :
+    Math.max(1, Math.floor((new Date().getTime() - animal.purchaseDate.getTime()) / (1000 * 60 * 60 * 24)));
+  const weightGain = Math.max(0, animal.weight - (animal.birthDate ? 3.5 : animal.weight * 0.7));
+  return weightGain / ageInDays;
+}
+
+/**
+ * Calculate total weight gain for an animal
+ */
+export function calculateWeightGain(animal: { weight: number; birthDate?: Date }): number {
+  return Math.max(0, animal.weight - (animal.birthDate ? 3.5 : animal.weight * 0.7));
+}
+
+/**
  * Feed types
  */
 export const feedTypes = {
