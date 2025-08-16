@@ -197,7 +197,8 @@ export const dataService = {
   weightRecords: useMockData ? new MockServiceAdapter<WeightRecord>('weightRecords') : weightRecordsService,
   healthRecords: useMockData ? new MockServiceAdapter<HealthRecord>('healthRecords') : healthRecordsService,
   barnMovements: useMockData ? new MockServiceAdapter<BarnMovement>('barnMovements') : barnMovementsService,
-  feedingSchedules: useMockData ? new MockServiceAdapter<FeedingSchedule>('feedingSchedules') : feedingSchedulesService
+  feedingSchedules: useMockData ? new MockServiceAdapter<FeedingSchedule>('feedingSchedules') : feedingSchedulesService,
+  mortalityRecords: useMockData ? new MockServiceAdapter<MortalityRecord>('mortalityRecords') : new MockServiceAdapter<MortalityRecord>('mortalityRecords')
 };
 
 // Helper functions for common operations
