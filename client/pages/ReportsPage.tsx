@@ -76,7 +76,7 @@ export default function ReportsPage() {
   const exportPDF = () => {
     toast({
       title: "تصدير PDF",
-      description: "سيتم تنفيذ التصدير ق��يباً",
+      description: "سيتم تنف��ذ التصدير ق��يباً",
     });
   };
 
@@ -384,7 +384,7 @@ export default function ReportsPage() {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>م��وسط معدل ��لنمو ��ليومي</span>
+                  <span>متوسط معدل ��لنمو ��ليومي</span>
                   <span className="font-semibold">
                     {(
                       activeAnimals.reduce((sum, a) => sum + a.metrics.adg, 0) /
@@ -640,7 +640,7 @@ export default function ReportsPage() {
                         <div className="text-sm font-semibold">
                           {(animal.weight * 3) > 0
                             ? (
-                                animal.metrics.totalGainKg /
+                                Math.max(0, animal.weight - (animal.birthDate ? 3.5 : animal.weight * 0.7)) /
                                 (animal.weight * 3)
                               ).toFixed(2)
                             : "0.00"}{" "}
