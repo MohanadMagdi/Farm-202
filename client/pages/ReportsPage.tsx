@@ -425,7 +425,7 @@ export default function ReportsPage() {
                           {formatWeight(animal.currentWeightKg)}
                         </div>
                         <div className="text-sm text-green-600">
-                          +{formatWeight(animal.metrics.totalGainKg)}
+                          +{formatWeight(Math.max(0, animal.weight - (animal.birthDate ? 3.5 : animal.weight * 0.7)))}
                         </div>
                       </div>
                     </div>
