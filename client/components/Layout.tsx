@@ -150,9 +150,7 @@ export default function Layout({ children }: LayoutProps) {
           
           <div className="flex items-center space-x-4 space-x-reverse">
             {/* Notifications */}
-            <Button variant="outline" size="sm">
-              <Bell className="h-4 w-4" />
-            </Button>
+            <NotificationCenter />
 
             {/* User Menu */}
             <DropdownMenu>
