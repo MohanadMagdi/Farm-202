@@ -159,7 +159,7 @@ export default function WeightReportsPage() {
       const date1 = new Date(firstWeight.date);
       const date2 = new Date(secondWeight.date);
       daysDifference = Math.round((date2.getTime() - date1.getTime()) / (1000 * 60 * 60 * 24));
-      adg = daysDifference > 0 ? Math.round((weightDifference / daysDifference) * 1000) / 1000 : 0;
+      adg = daysDifference > 0 ? Math.round((weightDifference / daysDifference) * 1000 * 1000) / 1000 : 0;
     }
 
     // Calculate cumulative metrics (first to last)
@@ -172,7 +172,7 @@ export default function WeightReportsPage() {
       const firstDate = new Date(firstWeight.date);
       const lastDate = new Date(lastWeight.date);
       cumulativeDays = Math.round((lastDate.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24));
-      cumulativeADG = cumulativeDays > 0 ? Math.round((cumulativeDifference / cumulativeDays) * 1000) / 1000 : 0;
+      cumulativeADG = cumulativeDays > 0 ? Math.round((cumulativeDifference / cumulativeDays) * 1000 * 1000) / 1000 : 0;
     }
 
     return {
@@ -212,7 +212,7 @@ export default function WeightReportsPage() {
         const prevWeight = sortedWeights[index - 1];
         const daysDiff = calculateDaysDifference(prevWeight.date, weight.date);
         const weightDiff = weight.weightKg - prevWeight.weightKg;
-        const adg = daysDiff > 0 ? weightDiff / daysDiff : 0;
+        const adg = daysDiff > 0 ? (weightDiff / daysDiff) * 1000 : 0;
 
         result[`weight_${index}_to_${weightNum}_days`] = daysDiff;
         result[`weight_${index}_to_${weightNum}_diff`] = weightDiff;
@@ -226,7 +226,7 @@ export default function WeightReportsPage() {
       const lastWeight = sortedWeights[sortedWeights.length - 1];
       const totalDays = calculateDaysDifference(firstWeight.date, lastWeight.date);
       const totalWeightDiff = lastWeight.weightKg - firstWeight.weightKg;
-      const cumulativeADG = totalDays > 0 ? totalWeightDiff / totalDays : 0;
+      const cumulativeADG = totalDays > 0 ? (totalWeightDiff / totalDays) * 1000 : 0;
 
       result.cumulative_days = totalDays;
       result.cumulative_weight_diff = totalWeightDiff;
@@ -253,14 +253,14 @@ export default function WeightReportsPage() {
       if (i > 1) {
         headers.push(`الفرق ${formatArabicNumber(i-1)}-${formatArabicNumber(i)} (كجم)`);
         headers.push(`الأيام ${formatArabicNumber(i-1)}-${formatArabicNumber(i)}`);
-        headers.push(`ADG ${formatArabicNumber(i-1)}-${formatArabicNumber(i)} (كجم/يوم)`);
+        headers.push(`ADG ${formatArabicNumber(i-1)}-${formatArabicNumber(i)} (جم/يوم)`);
       }
     }
     
     headers.push("إجمالي الأوزان");
     headers.push("الزيادة التراكمية (كجم)");
     headers.push("الأيام التراكمية");
-    headers.push("ADG التراكمي (كجم/يوم)");
+    headers.push("ADG التراكمي (جم/يوم)");
     
     return headers;
   };
@@ -360,7 +360,7 @@ export default function WeightReportsPage() {
                   
                   cells.push(`<td class="${(diffValue || 0) >= 0 ? 'positive' : 'negative'}">${diffValue !== undefined ? formatArabicNumber(diffValue) + ' كجم' : '-'}</td>`);
                   cells.push(`<td>${daysValue ? formatArabicNumber(daysValue) + ' يوم' : '-'}</td>`);
-                  cells.push(`<td class="${(adgValue || 0) >= 0 ? 'positive' : 'negative'}">${adgValue !== undefined ? formatArabicNumber(Number(adgValue.toFixed(3))) + ' كجم/يوم' : '-'}</td>`);
+                  cells.push(`<td class="${(adgValue || 0) >= 0 ? 'positive' : 'negative'}">${adgValue !== undefined ? formatArabicNumber(Number(adgValue.toFixed(1))) + ' جم/يوم' : '-'}</td>`);
                 }
               }
               
@@ -368,7 +368,7 @@ export default function WeightReportsPage() {
               cells.push(`<td>${formatArabicNumber(row.total_weights || 0)}</td>`);
               cells.push(`<td class="${(row.cumulative_weight_diff || 0) >= 0 ? 'positive' : 'negative'}">${row.cumulative_weight_diff ? formatArabicNumber(row.cumulative_weight_diff) + ' كجم' : '-'}</td>`);
               cells.push(`<td>${row.cumulative_days ? formatArabicNumber(row.cumulative_days) + ' يوم' : '-'}</td>`);
-              cells.push(`<td class="${(row.cumulative_adg || 0) >= 0 ? 'positive' : 'negative'}">${row.cumulative_adg ? formatArabicNumber(Number(row.cumulative_adg.toFixed(3))) + ' كجم/يوم' : '-'}</td>`);
+              cells.push(`<td class="${(row.cumulative_adg || 0) >= 0 ? 'positive' : 'negative'}">${row.cumulative_adg ? formatArabicNumber(Number(row.cumulative_adg.toFixed(1))) + ' جم/يوم' : '-'}</td>`);
               
               return `<tr>${cells.join("")}</tr>`;
             }).join("")}
@@ -454,7 +454,7 @@ export default function WeightReportsPage() {
           
           rowData.push(diffValue !== undefined ? formatArabicNumber(diffValue) : "");
           rowData.push(daysValue ? formatArabicNumber(daysValue) : "");
-          rowData.push(adgValue !== undefined ? formatArabicNumber(Number(adgValue.toFixed(3))) : "");
+          rowData.push(adgValue !== undefined ? formatArabicNumber(Number(adgValue.toFixed(1))) : "");
         }
       }
       
@@ -462,7 +462,7 @@ export default function WeightReportsPage() {
       rowData.push(formatArabicNumber(row.total_weights || 0));
       rowData.push(row.cumulative_weight_diff ? formatArabicNumber(row.cumulative_weight_diff) : "");
       rowData.push(row.cumulative_days ? formatArabicNumber(row.cumulative_days) : "");
-      rowData.push(row.cumulative_adg ? formatArabicNumber(Number(row.cumulative_adg.toFixed(3))) : "");
+      rowData.push(row.cumulative_adg ? formatArabicNumber(Number(row.cumulative_adg.toFixed(1))) : "");
       
       csvRows.push(rowData.join(","));
     });
@@ -760,7 +760,7 @@ export default function WeightReportsPage() {
         <div class="footer">
           <p><strong>📈 نظام إدارة المزرعة - تقارير الأوزان</strong></p>
           <p>تم إنتاج هذا التقرير في: ${currentDate}</p>
-          <p>جميع الأوزان بالكيلوجرام • جميع قيم ADG بالكيلوجرام/يوم</p>
+          <p>جميع الأوزان بالكيلوجرام • جميع قيم ADG بالجرام/يوم</p>
           <p style="margin-top: 10px; font-size: 9px; color: #888;">
             الألوان: <span style="color: #4CAF50;">●</span> نمو إيجابي | <span style="color: #f44336;">●</span> نمو سلبي
           </p>

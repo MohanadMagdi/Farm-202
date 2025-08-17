@@ -251,39 +251,76 @@ export function WeightRecordModal({
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full h-12 justify-start text-right font-medium border-2 border-gray-200 hover:border-green-400 focus:border-green-500 transition-colors",
+                    "w-full h-16 justify-start text-right font-medium border-2 border-gray-200 hover:border-green-400 focus:border-green-500 transition-colors",
                     !formData.date && "text-muted-foreground"
                   )}
                 >
                   <CalendarIcon className="ml-3 h-5 w-5 text-green-600" />
                   {formData.date ? (
-                    <span className="text-lg">
-                      {new Intl.DateTimeFormat('ar-EG', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        calendar: 'gregory'
-                      }).format(formData.date)}
-                    </span>
+                    <div className="flex flex-col items-start">
+                      <span className="text-lg font-bold text-gray-800">
+                        {formData.date.getDate()} {[
+                          'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+                          'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+                        ][formData.date.getMonth()]} {formData.date.getFullYear()}
+                      </span>
+                      <span className="text-sm text-green-600">
+                        {['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'][formData.date.getDay()]}
+                      </span>
+                    </div>
                   ) : (
                     <span className="text-gray-500">اختر تاريخ تسجيل الوزن</span>
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-4 bg-white rounded-xl shadow-xl border-0" align="start">
+              <PopoverContent className="w-auto max-w-sm p-5 bg-white rounded-2xl shadow-2xl border-2 border-gray-100" align="start">
                 <div className="space-y-4" dir="rtl">
-                  {/* شريط اختيار الشهر والسنة */}
-                  <div className="flex gap-3 items-center justify-center pb-3 border-b border-gray-100">
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-medium text-gray-600 text-center">الشهر</label>
+                  {/* عنوان التقويم */}
+                  <div className="text-center py-3 mb-4">
+                    <h3 className="text-xl font-bold text-green-700 bg-gradient-to-r from-green-50 to-green-100 rounded-lg py-3 px-6 inline-block border-2 border-green-200 shadow-sm">
+                      📅 اختر التاريخ
+                    </h3>
+                    <p className="text-sm text-gray-600 mt-2">حدد اليوم والشهر والسنة لتسجيل الوزن</p>
+                  </div>
+
+                  {/* قوائم منسدلة للتاريخ */}
+                  <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-xl border-2 border-gray-200">
+                    {/* قائمة الأيام */}
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-bold text-gray-700 text-center">اليوم</label>
+                      <select
+                        value={formData.date.getDate()}
+                        onChange={(e) => {
+                          const newDate = new Date(formData.date);
+                          newDate.setDate(parseInt(e.target.value));
+                          setFormData(prev => ({ ...prev, date: newDate }));
+                        }}
+                        className="px-3 py-3 text-lg border-2 border-gray-300 rounded-lg bg-white text-center font-bold min-w-[80px] hover:border-green-400 focus:border-green-500 focus:outline-none transition-colors shadow-sm"
+                      >
+                        {Array.from({ length: new Date(formData.date.getFullYear(), formData.date.getMonth() + 1, 0).getDate() }, (_, i) => i + 1).map(day => (
+                          <option key={day} value={day}>
+                            {day}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* قائمة الشهور */}
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-bold text-gray-700 text-center">الشهر</label>
                       <select
                         value={formData.date.getMonth()}
                         onChange={(e) => {
                           const newDate = new Date(formData.date);
                           newDate.setMonth(parseInt(e.target.value));
+                          // تعديل اليوم إذا كان غير متوفر في الشهر الجديد
+                          const maxDay = new Date(newDate.getFullYear(), parseInt(e.target.value) + 1, 0).getDate();
+                          if (newDate.getDate() > maxDay) {
+                            newDate.setDate(maxDay);
+                          }
                           setFormData(prev => ({ ...prev, date: newDate }));
                         }}
-                        className="px-4 py-2 text-sm border-2 border-gray-200 rounded-lg bg-white text-right font-medium min-w-[120px] hover:border-green-400 focus:border-green-500 focus:outline-none transition-colors"
+                        className="px-3 py-3 text-lg border-2 border-gray-300 rounded-lg bg-white text-right font-bold min-w-[120px] hover:border-green-400 focus:border-green-500 focus:outline-none transition-colors shadow-sm"
                       >
                         {[
                           'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
@@ -296,16 +333,22 @@ export function WeightRecordModal({
                       </select>
                     </div>
                     
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-medium text-gray-600 text-center">السنة</label>
+                    {/* قائمة السنوات */}
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-bold text-gray-700 text-center">السنة</label>
                       <select
                         value={formData.date.getFullYear()}
                         onChange={(e) => {
                           const newDate = new Date(formData.date);
                           newDate.setFullYear(parseInt(e.target.value));
+                          // تعديل اليوم إذا كان غير متوفر في السنة الجديدة (حالة السنة الكبيسة)
+                          const maxDay = new Date(parseInt(e.target.value), newDate.getMonth() + 1, 0).getDate();
+                          if (newDate.getDate() > maxDay) {
+                            newDate.setDate(maxDay);
+                          }
                           setFormData(prev => ({ ...prev, date: newDate }));
                         }}
-                        className="px-4 py-2 text-sm border-2 border-gray-200 rounded-lg bg-white text-center font-medium min-w-[90px] hover:border-green-400 focus:border-green-500 focus:outline-none transition-colors"
+                        className="px-3 py-3 text-lg border-2 border-gray-300 rounded-lg bg-white text-center font-bold min-w-[90px] hover:border-green-400 focus:border-green-500 focus:outline-none transition-colors shadow-sm"
                       >
                         {Array.from({ length: 11 }, (_, i) => 2020 + i).map(year => (
                           <option key={year} value={year}>
@@ -316,47 +359,19 @@ export function WeightRecordModal({
                     </div>
                   </div>
 
-                  {/* التقويم */}
-                  <Calendar
-                    mode="single"
-                    selected={formData.date}
-                    onSelect={(date) => date && setFormData(prev => ({ ...prev, date }))}
-                    disabled={(date) => date > new Date() || date < new Date('2020-01-01')}
-                    month={formData.date}
-                    onMonthChange={(date) => setFormData(prev => ({ ...prev, date }))}
-                    showOutsideDays={false}
-                    className="rounded-lg border-0 mx-auto"
-                    classNames={{
-                      months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-                      month: "space-y-4",
-                      caption: "flex justify-center pt-1 relative items-center",
-                      caption_label: "text-base font-bold text-gray-700",
-                      nav: "space-x-1 flex items-center",
-                      nav_button: "h-8 w-8 bg-gray-100 hover:bg-green-100 p-0 opacity-70 hover:opacity-100 rounded-lg transition-colors",
-                      nav_button_previous: "absolute left-1",
-                      nav_button_next: "absolute right-1", 
-                      table: "w-full border-collapse space-y-1",
-                      head_row: "flex mb-2",
-                      head_cell: "text-gray-600 rounded-md w-10 font-semibold text-sm text-center",
-                      row: "flex w-full mt-1",
-                      cell: "text-center text-sm p-0 relative hover:bg-green-50 rounded-lg focus-within:relative focus-within:z-20",
-                      day: "h-10 w-10 p-0 font-medium hover:bg-green-100 hover:text-green-700 rounded-lg transition-colors flex items-center justify-center",
-                      day_selected: "bg-green-600 text-white hover:bg-green-700 hover:text-white font-bold shadow-md",
-                      day_today: "bg-green-50 text-green-700 font-bold border-2 border-green-200",
-                      day_outside: "text-gray-300 opacity-50",
-                      day_disabled: "text-gray-300 opacity-30 cursor-not-allowed",
-                      day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
-                      day_hidden: "invisible",
-                    }}
-                    formatters={{
-                      formatWeekdayName: (date: Date) => {
-                        return new Intl.DateTimeFormat('ar-EG', {
-                          weekday: 'short',
-                          calendar: 'gregory'
-                        }).format(date);
-                      }
-                    }}
-                  />
+                  {/* عرض التاريخ المحدد */}
+                  <div className="text-center py-4 mt-4 bg-green-50 rounded-xl border-2 border-green-200">
+                    <h4 className="text-lg font-bold text-green-800 mb-2">التاريخ المحدد</h4>
+                    <p className="text-2xl font-bold text-green-700">
+                      {formData.date.getDate()} {[
+                        'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+                        'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+                      ][formData.date.getMonth()]} {formData.date.getFullYear()}
+                    </p>
+                    <p className="text-sm text-green-600 mt-1">
+                      {['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'][formData.date.getDay()]}
+                    </p>
+                  </div>
                 </div>
               </PopoverContent>
             </Popover>

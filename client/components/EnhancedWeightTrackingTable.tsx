@@ -80,7 +80,7 @@ export function EnhancedWeightTrackingTable({
         weightLabel: `الوزن ${formatArabicNumber(i)} (كجم)`,
         diffLabel: i > 1 ? `الفرق ${formatArabicNumber(i-1)}-${formatArabicNumber(i)} (كجم)` : undefined,
         daysLabel: i > 1 ? `الأيام ${formatArabicNumber(i-1)}-${formatArabicNumber(i)}` : undefined,
-        adgLabel: i > 1 ? `ADG ${formatArabicNumber(i-1)}-${formatArabicNumber(i)} (كجم/يوم)` : undefined,
+        adgLabel: i > 1 ? `ADG ${formatArabicNumber(i-1)}-${formatArabicNumber(i)} (جم/يوم)` : undefined,
       });
     }
     
@@ -102,7 +102,7 @@ export function EnhancedWeightTrackingTable({
         const prevWeight = sortedWeights[index - 1];
         daysDiff = calculateDaysDifference(prevWeight.date, weight.date);
         weightDiff = weight.weightKg - prevWeight.weightKg;
-        adg = daysDiff > 0 ? weightDiff / daysDiff : 0;
+        adg = daysDiff > 0 ? (weightDiff / daysDiff) * 1000 : 0;
       }
 
       return {
@@ -230,7 +230,7 @@ export function EnhancedWeightTrackingTable({
                                 {weightEntry?.adg !== undefined ? (
                                   <span className={weightEntry.adg >= 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
                                     {weightEntry.adg >= 0 ? '+' : ''}
-                                    {formatArabicNumber(Number(weightEntry.adg.toFixed(3)))} كجم/يوم
+                                    {formatArabicNumber(Number(weightEntry.adg.toFixed(1)))} جم/يوم
                                   </span>
                                 ) : '-'}
                               </TableCell>
