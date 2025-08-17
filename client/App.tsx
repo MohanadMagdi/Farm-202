@@ -22,6 +22,7 @@ import BarnsPage from "./pages/BarnsPage";
 import InventoryPage from "./pages/InventoryPage";
 import FeedingPage from "./pages/FeedingPage";
 import ReportsPage from "./pages/ReportsPage";
+import WeightReportsPage from "./pages/WeightReportsPage";
 import UsersPage from "./pages/UsersPage";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const BarnsManagement = () => <BarnsPage />;
 const InventoryManagement = () => <InventoryPage />;
 const FeedingManagement = () => <FeedingPage />;
 const ReportsManagement = () => <ReportsPage />;
+const WeightReportsManagement = () => <WeightReportsPage />;
 const UsersManagement = () => <UsersPage />;
 
 // Protected route wrapper
@@ -150,6 +152,16 @@ function AppRoutes() {
           <ProtectedRoute>
             <Layout>
               <ReportsManagement />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/reports/weights"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <WeightReportsManagement />
             </Layout>
           </ProtectedRoute>
         }

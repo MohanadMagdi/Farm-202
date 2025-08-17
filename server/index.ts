@@ -2,6 +2,14 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { handleDemo } from "./routes/demo";
+import {
+  getAnimalWeightReportHandler,
+  getBarnWeightReportHandler,
+  addAnimalWeightHandler,
+  deleteAnimalWeightHandler,
+  getAllAnimalsWithWeightsHandler,
+  getWeightStatisticsHandler,
+} from "./routes/weights";
 
 export function createServer() {
   const app = express();
@@ -18,6 +26,14 @@ export function createServer() {
   });
 
   app.get("/api/demo", handleDemo);
+
+  // Weight tracking API routes
+  app.get("/api/weights/animal/:animalId", getAnimalWeightReportHandler);
+  app.get("/api/weights/barn/:barnId", getBarnWeightReportHandler);
+  app.post("/api/weights/animal/:animalId", addAnimalWeightHandler);
+  app.delete("/api/weights/animal/:animalId/weight/:weightId", deleteAnimalWeightHandler);
+  app.get("/api/weights/all", getAllAnimalsWithWeightsHandler);
+  app.get("/api/weights/statistics", getWeightStatisticsHandler);
 
   return app;
 }

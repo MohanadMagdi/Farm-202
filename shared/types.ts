@@ -49,6 +49,13 @@ export interface Animal {
   isolationDate?: Date;
   isolationReason?: string;
 
+  // Weight tracking
+  weightHistory?: {
+    id?: string;
+    date: string; // YYYY-MM-DD format
+    weightKg: number;
+  }[];
+
   // For females
   isPregnant?: boolean;
   aiDate?: Date; // AI = Artificial Insemination

@@ -28,6 +28,7 @@ import {
   LogOut,
   Shield,
   Database,
+  Scale,
 } from "lucide-react";
 
 const navigation = [
@@ -70,6 +71,12 @@ const navigation = [
     name: "التقارير",
     href: "/reports",
     icon: FileText,
+    permission: "reports",
+  },
+  {
+    name: "تقارير الأوزان",
+    href: "/reports/weights",
+    icon: Scale,
     permission: "reports",
   },
   {

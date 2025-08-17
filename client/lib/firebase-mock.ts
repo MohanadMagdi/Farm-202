@@ -2,7 +2,6 @@
  * Firebase Hybrid System
  * Uses real Firebase in production, mock data in development/testing
  */
-
 import { formatArabicDate } from "./arabic-utils";
 import type {
   Animal,
@@ -87,6 +86,14 @@ class MockFirestore {
           healthStatus: "سليم",
           isIsolated: false,
           pricingMethod: "formula" as any,
+          weightHistory: [
+            { id: "w001_1", date: "2023-03-20", weightKg: 45.0 },
+            { id: "w001_2", date: "2023-04-20", weightKg: 52.5 },
+            { id: "w001_3", date: "2023-05-20", weightKg: 58.2 },
+            { id: "w001_4", date: "2023-06-20", weightKg: 65.8 },
+            { id: "w001_5", date: "2023-07-20", weightKg: 71.3 },
+            { id: "w001_6", date: "2023-08-20", weightKg: 75.5 }
+          ],
           createdAt: new Date("2023-03-15"),
           updatedAt: now,
           createdBy: "user_001",
@@ -106,6 +113,15 @@ class MockFirestore {
           healthStatus: "سليم",
           isIsolated: false,
           pricingMethod: "formula" as any,
+          weightHistory: [
+            { id: "w002_1", date: "2022-08-15", weightKg: 38.5 },
+            { id: "w002_2", date: "2022-10-15", weightKg: 47.2 },
+            { id: "w002_3", date: "2022-12-15", weightKg: 58.8 },
+            { id: "w002_4", date: "2023-02-15", weightKg: 68.5 },
+            { id: "w002_5", date: "2023-04-15", weightKg: 78.2 },
+            { id: "w002_6", date: "2023-06-15", weightKg: 87.0 },
+            { id: "w002_7", date: "2023-08-15", weightKg: 95.2 }
+          ],
           createdAt: new Date("2022-08-10"),
           updatedAt: now,
           createdBy: "user_001",
@@ -130,6 +146,14 @@ class MockFirestore {
           offspringCount: 2,
           offspringIds: ["anim_004", "anim_005"],
           pricingMethod: "formula" as any,
+          weightHistory: [
+            { id: "w003_1", date: "2022-12-01", weightKg: 42.0 },
+            { id: "w003_2", date: "2023-02-01", weightKg: 48.5 },
+            { id: "w003_3", date: "2023-04-01", weightKg: 55.0 },
+            { id: "w003_4", date: "2023-06-01", weightKg: 58.8 },
+            { id: "w003_5", date: "2023-08-01", weightKg: 62.3 },
+            { id: "w003_6", date: "2023-10-01", weightKg: 65.2 }
+          ],
           createdAt: new Date("2022-11-08"),
           updatedAt: now,
           createdBy: "user_001",
@@ -148,6 +172,12 @@ class MockFirestore {
           motherEarTagId: "F047",
           birthDate: new Date("2024-01-10"),
           pricingMethod: "formula" as any,
+          weightHistory: [
+            { id: "w004_1", date: "2024-01-10", weightKg: 3.5 },
+            { id: "w004_2", date: "2024-02-10", weightKg: 6.8 },
+            { id: "w004_3", date: "2024-03-10", weightKg: 9.2 },
+            { id: "w004_4", date: "2024-04-10", weightKg: 12.3 }
+          ],
           createdAt: new Date("2024-01-10"),
           updatedAt: now,
           createdBy: "user_001",
@@ -168,12 +198,54 @@ class MockFirestore {
           motherEarTagId: "F047",
           birthDate: new Date("2024-01-10"),
           pricingMethod: "formula" as any,
+          weightHistory: [
+            { id: "w005_1", date: "2024-01-10", weightKg: 3.2 },
+            { id: "w005_2", date: "2024-02-10", weightKg: 6.4 },
+            { id: "w005_3", date: "2024-03-10", weightKg: 8.9 },
+            { id: "w005_4", date: "2024-04-10", weightKg: 11.8 }
+          ],
           createdAt: new Date("2024-01-10"),
           updatedAt: now,
           createdBy: "user_001",
           updatedBy: "user_001",
           purchaseDate: new Date("2024-01-10"),
           purchasePrice: 0,
+        },
+        // Test animal with many weight entries to demonstrate dynamic columns
+        {
+          id: "anim_test_multi",
+          earTagId: "M999",
+          category: "male" as AnimalCategory,
+          sex: "male" as const,
+          weight: 85.7,
+          supplier: "مزرعة التجارب",
+          purchaseDate: new Date("2022-01-01"),
+          purchasePrice: 2800,
+          currentPrice: 9500,
+          barnId: "barn_001",
+          healthStatus: "ممتاز",
+          isIsolated: false,
+          pricingMethod: "formula" as any,
+          weightHistory: [
+            { id: "wtest_1", date: "2022-01-01", weightKg: 25.0 },
+            { id: "wtest_2", date: "2022-02-01", weightKg: 28.5 },
+            { id: "wtest_3", date: "2022-03-01", weightKg: 32.8 },
+            { id: "wtest_4", date: "2022-04-01", weightKg: 37.2 },
+            { id: "wtest_5", date: "2022-05-01", weightKg: 42.1 },
+            { id: "wtest_6", date: "2022-06-01", weightKg: 47.5 },
+            { id: "wtest_7", date: "2022-07-01", weightKg: 52.8 },
+            { id: "wtest_8", date: "2022-08-01", weightKg: 57.9 },
+            { id: "wtest_9", date: "2022-09-01", weightKg: 63.2 },
+            { id: "wtest_10", date: "2022-10-01", weightKg: 68.1 },
+            { id: "wtest_11", date: "2022-11-01", weightKg: 72.8 },
+            { id: "wtest_12", date: "2022-12-01", weightKg: 77.3 },
+            { id: "wtest_13", date: "2023-01-01", weightKg: 81.2 },
+            { id: "wtest_14", date: "2023-02-01", weightKg: 85.7 }
+          ],
+          createdAt: new Date("2022-01-01"),
+          updatedAt: now,
+          createdBy: "user_001",
+          updatedBy: "user_001",
         },
       ] as Animal[],
 
