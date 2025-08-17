@@ -332,7 +332,7 @@ export default function ExportImportButtons({ onOperationComplete }: ExportImpor
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="excel">Excel (.xlsx)</SelectItem>
-                  <SelectItem value="pdf">PDF (.pdf)</SelectItem>
+
                   <SelectItem value="json">JSON (.json)</SelectItem>
                   <SelectItem value="csv">CSV (.csv)</SelectItem>
                 </SelectContent>

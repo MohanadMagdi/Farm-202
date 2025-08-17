@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -76,17 +75,10 @@ export default function ReportsPage() {
   const [reportPeriod, setReportPeriod] = useState("month");
   const [selectedCategory, setSelectedCategory] = useState("all");
 
-  const exportPDF = () => {
-    toast({
-      title: "تصدير PDF",
-      description: "سيتم تنفيذ التصدير ق��يباً",
-    });
-  };
-
   const exportExcel = () => {
     toast({
       title: "تصدير Excel",
-      description: "سيتم تن��يذ التصدير قريباً",
+      description: "سيتم تنفيذ التصدير قريباً",
     });
   };
 
@@ -242,10 +234,7 @@ export default function ReportsPage() {
               <SelectItem value="year">سنوي</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="sm" onClick={exportPDF}>
-            <Download className="h-4 w-4 ml-2" />
-            تصدير PDF
-          </Button>
+
           <Button variant="outline" size="sm" onClick={exportExcel}>
             <FileText className="h-4 w-4 ml-2" />
             تصدير Excel

@@ -197,7 +197,7 @@ export default function AnimalsOverviewPage() {
             إحصائيات شاملة عن جميع الحيوانات في المزرعة
           </p>
         </div>
-        <div className="flex items-center space-x-3 space-x-reverse">
+        <div className="flex items-center gap-3">
           <Button variant="outline" size="sm">
             <BarChart3 className="h-4 w-4 ml-2" />
             تقرير مفصل
@@ -218,7 +218,7 @@ export default function AnimalsOverviewPage() {
             <div className="text-2xl font-bold text-farm-800">
               {analytics.totalAnimals}
             </div>
-            <div className="flex items-center space-x-2 space-x-reverse text-xs text-muted-foreground">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <TrendingUp className="h-3 w-3 text-green-500" />
               <span>نمو مستقر</span>
             </div>
@@ -271,18 +271,18 @@ export default function AnimalsOverviewPage() {
             <div className="text-2xl font-bold text-green-600">
               {analytics.healthyCount}
             </div>
-            <div className="flex items-center space-x-2 space-x-reverse">
+            <div className="flex items-center gap-2">
               {analytics.sickCount > 0 && (
                 <>
                   <AlertTriangle className="h-3 w-3 text-yellow-500" />
                   <span className="text-xs text-muted-foreground">
-                    {analytics.sickCount} ي��تاج رعاية
+                    {analytics.sickCount} يحتاج رعاية
                   </span>
                 </>
               )}
               {analytics.sickCount === 0 && (
                 <span className="text-xs text-green-600">
-                  ج��يع الحيوانات سليمة
+                  جميع الحيوانات سليمة
                 </span>
               )}
             </div>
@@ -317,7 +317,7 @@ export default function AnimalsOverviewPage() {
         {/* Animal Distribution */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2 space-x-reverse">
+            <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5 text-farm-600" />
               <span>توزيع الحيوانات</span>
             </CardTitle>
@@ -325,17 +325,17 @@ export default function AnimalsOverviewPage() {
           <CardContent className="space-y-4">
             <Tabs defaultValue="overview" className="w-full">
               <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="overview">نظرة عامة</TabsTrigger>
-                <TabsTrigger value="males">الذكور</TabsTrigger>
-                <TabsTrigger value="females">الإناث</TabsTrigger>
-                <TabsTrigger value="newborns">الصغار</TabsTrigger>
                 <TabsTrigger value="breeding">سير التربية</TabsTrigger>
+                <TabsTrigger value="newborns">الصغار</TabsTrigger>
+                <TabsTrigger value="females">الإناث</TabsTrigger>
+                <TabsTrigger value="males">الذكور</TabsTrigger>
+                <TabsTrigger value="overview">نظرة عامة</TabsTrigger>
               </TabsList>
 
               <TabsContent value="overview" className="space-y-3">
                 <Link to="/animals/males" className="block">
                   <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent transition-colors">
-                    <div className="flex items-center space-x-3 space-x-reverse">
+                    <div className="flex items-center gap-3">
                       <div className="h-3 w-3 rounded-full bg-blue-500"></div>
                       <div>
                         <span className="font-medium">الذكور</span>
@@ -354,7 +354,7 @@ export default function AnimalsOverviewPage() {
                         </p>
                       </div>
                     </div>
-                    <div className="text-left">
+                    <div className="text-right">
                       <div className="text-lg font-semibold">
                         {analytics.maleCount}
                       </div>
@@ -373,7 +373,7 @@ export default function AnimalsOverviewPage() {
 
                 <Link to="/animals/females" className="block">
                   <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent transition-colors">
-                    <div className="flex items-center space-x-3 space-x-reverse">
+                    <div className="flex items-center gap-3">
                       <div className="h-3 w-3 rounded-full bg-pink-500"></div>
                       <div>
                         <span className="font-medium">الإناث</span>
@@ -392,7 +392,7 @@ export default function AnimalsOverviewPage() {
                         </p>
                       </div>
                     </div>
-                    <div className="text-left">
+                    <div className="text-right">
                       <div className="text-lg font-semibold">
                         {analytics.femaleCount}
                       </div>
@@ -411,7 +411,7 @@ export default function AnimalsOverviewPage() {
 
                 <Link to="/animals/newborns" className="block">
                   <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent transition-colors">
-                    <div className="flex items-center space-x-3 space-x-reverse">
+                    <div className="flex items-center gap-3">
                       <div className="h-3 w-3 rounded-full bg-green-500"></div>
                       <div>
                         <span className="font-medium">الصغار</span>
@@ -430,7 +430,7 @@ export default function AnimalsOverviewPage() {
                         </p>
                       </div>
                     </div>
-                    <div className="text-left">
+                    <div className="text-right">
                       <div className="text-lg font-semibold">
                         {analytics.newbornCount}
                       </div>
@@ -503,7 +503,7 @@ export default function AnimalsOverviewPage() {
         {/* Recent Activities */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2 space-x-reverse">
+            <CardTitle className="flex items-center gap-2">
               <Activity className="h-5 w-5 text-farm-600" />
               <span>النشاط الأخير</span>
             </CardTitle>
@@ -513,7 +513,7 @@ export default function AnimalsOverviewPage() {
               {recentActivities.map((activity) => (
                 <div
                   key={activity.id}
-                  className="flex items-start space-x-3 space-x-reverse"
+                  className="flex items-start gap-3"
                 >
                   <div
                     className={`h-8 w-8 rounded-full flex items-center justify-center bg-gray-100 ${activity.color}`}
@@ -545,7 +545,7 @@ export default function AnimalsOverviewPage() {
       {/* Animals by Barn */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2 space-x-reverse">
+          <CardTitle className="flex items-center gap-2">
             <MapPin className="h-5 w-5 text-farm-600" />
             <span>توزيع الحيوانات على الحظائر</span>
           </CardTitle>
@@ -601,7 +601,7 @@ export default function AnimalsOverviewPage() {
       {analytics.sickCount > 0 && (
         <Card className="border-yellow-200 bg-yellow-50">
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2 space-x-reverse text-yellow-800">
+            <CardTitle className="flex items-center gap-2 text-yellow-800">
               <AlertTriangle className="h-5 w-5" />
               <span>تنبيهات صحية</span>
             </CardTitle>
@@ -617,7 +617,7 @@ export default function AnimalsOverviewPage() {
                     key={animal.id}
                     className="flex items-center justify-between p-2 bg-white rounded"
                   >
-                    <div className="flex items-center space-x-2 space-x-reverse">
+                    <div className="flex items-center gap-2">
                       <span className="font-medium">{animal.earTagId}</span>
                       <Badge variant="outline">{animal.healthStatus}</Badge>
                       {animal.isIsolated && (

@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +30,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { dataService, farmHelpers } from "@/lib/data-service";
-import type { Barn, Animal, BarnType } from "@shared/types";
+import type { Barn, Animal, BarnType, WeightRecord, FeedingRecord } from "@/../../shared/types";
 import { toast } from "@/hooks/use-toast";
 import {
   Search,
@@ -47,7 +48,13 @@ import {
   Scale,
   Trash2,
   Home,
+  Utensils,
 } from "lucide-react";
+
+import { BarnAnimalsList } from "@/components/BarnAnimalsList";
+import { BarnFeedingData } from "@/components/BarnFeedingData";
+import { BarnEfficiencyData } from "@/components/BarnEfficiencyData";
+import { BarnEquipmentList } from "@/components/BarnEquipmentList";
 
 const barnTypeLabels: Record<BarnType, string> = {
   male: "ذكور",
@@ -85,6 +92,8 @@ export default function BarnsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [barns, setBarns] = useState<Barn[]>([]);
   const [animals, setAnimals] = useState<Animal[]>([]);
+  const [weightRecords, setWeightRecords] = useState<WeightRecord[]>([]);
+  const [feedingRecords, setFeedingRecords] = useState<FeedingRecord[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Analytics
@@ -127,13 +136,17 @@ export default function BarnsPage() {
 
   const loadData = async () => {
     try {
-      const [barnsData, animalsData] = await Promise.all([
+      const [barnsData, animalsData, weightData, feedingData] = await Promise.all([
         dataService.barns.getAll(),
         dataService.animals.getAll(),
+        dataService.weightRecords.getAll(),
+        dataService.feedingRecords.getAll(),
       ]);
 
       setBarns(barnsData);
       setAnimals(animalsData);
+      setWeightRecords(weightData);
+      setFeedingRecords(feedingData);
       calculateAnalytics(barnsData, animalsData);
     } catch (error) {
       console.error("Error loading barn data:", error);
@@ -228,6 +241,10 @@ export default function BarnsPage() {
     setBarnFormMode("edit");
     setSelectedBarn(barn);
     setShowBarnModal(true);
+  };
+
+  const handleViewBarn = (barn: Barn) => {
+    setSelectedBarn(barn);
   };
 
   const handleSaveBarn = async () => {
@@ -387,7 +404,7 @@ export default function BarnsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir="rtl">
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -396,13 +413,13 @@ export default function BarnsPage() {
             عرض وإدارة حظائر المزرعة ونقل الحيوانات
           </p>
         </div>
-        <div className="flex items-center space-x-3 space-x-reverse">
+        <div className="flex items-center gap-3">
           <Button variant="outline" size="sm" onClick={() => setShowTransferModal(true)}>
-            <ArrowRightLeft className="h-4 w-4 ml-2" />
+            <ArrowRightLeft className="h-4 w-4 mr-2" />
             نقل الحيوانات
           </Button>
           <Button onClick={handleAddBarn}>
-            <Plus className="h-4 w-4 ml-2" />
+            <Plus className="h-4 w-4 mr-2" />
             إضافة حظيرة جديدة
           </Button>
         </div>
@@ -460,7 +477,7 @@ export default function BarnsPage() {
               {Math.round(analytics.avgOccupancyRate)}%
             </div>
             <div className="flex items-center text-xs text-muted-foreground">
-              <TrendingUp className="h-3 w-3 ml-1 text-green-500" />
+              <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
               <span>كفاءة عالية</span>
             </div>
           </CardContent>
@@ -471,7 +488,7 @@ export default function BarnsPage() {
             <CardTitle className="text-sm font-medium">تنبيهات</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center space-x-2 space-x-reverse">
+            <div className="flex items-center gap-2">
               {analytics.fullBarns > 0 ? (
                 <>
                   <AlertTriangle className="h-5 w-5 text-red-500" />
@@ -502,7 +519,7 @@ export default function BarnsPage() {
           <CardTitle className="text-lg">البحث والتصفية</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4 md:space-x-reverse">
+          <div className="flex flex-col gap-4 md:flex-row">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -564,10 +581,10 @@ export default function BarnsPage() {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <CardTitle className="text-lg flex items-center">
-                      <TypeIcon className={`h-5 w-5 ml-2 ${barnTypeColors[barn.type]}`} />
+                      <TypeIcon className={`h-5 w-5 mr-2 ${barnTypeColors[barn.type]}`} />
                       {barn.name}
                     </CardTitle>
-                    <CardDescription className="flex items-center space-x-2 space-x-reverse mt-1">
+                    <CardDescription className="flex items-center gap-2 mt-1">
                       <MapPin className="h-4 w-4" />
                       <span>{barn.location}</span>
                     </CardDescription>
@@ -660,38 +677,40 @@ export default function BarnsPage() {
                 )}
 
                 {/* Actions */}
-                <div className="flex items-center space-x-2 space-x-reverse pt-2">
-                  <Button variant="outline" size="sm" className="flex-1">
-                    <Eye className="h-3 w-3 ml-1" />
+                <div className="grid grid-cols-2 gap-2 pt-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleViewBarn(barn)}
+                  >
+                    <Eye className="h-3 w-3 mr-1" />
                     عرض
                   </Button>
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="flex-1"
                     onClick={() => handleEditBarn(barn)}
                   >
-                    <Edit className="h-3 w-3 ml-1" />
+                    <Edit className="h-3 w-3 mr-1" />
                     تعديل
                   </Button>
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="flex-1"
                     onClick={() => openTransferModal(barn)}
                     disabled={barnAnimals.length === 0}
                   >
-                    <Users className="h-3 w-3 ml-1" />
+                    <Users className="h-3 w-3 mr-1" />
                     نقل
                   </Button>
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => handleDeleteBarn(barn)}
-                    className="text-red-600 hover:text-red-700"
-                    disabled={occupancy > 0}
+                    onClick={() => window.open(`/feeding?barn=${barn.id}`, '_blank')}
+                    className="text-green-600 hover:text-green-700"
                   >
-                    <Trash2 className="h-3 w-3" />
+                    <Utensils className="h-3 w-3 mr-1" />
+                    التغذية
                   </Button>
                 </div>
               </CardContent>
@@ -705,6 +724,203 @@ export default function BarnsPage() {
           <CardContent className="text-center py-8">
             <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">لا توجد حظائر مطابقة للبحث</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Selected Barn Details Section */}
+      {selectedBarn && (
+        <Card className="mt-6">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-xl">تفاصيل الحظيرة - {selectedBarn.name}</CardTitle>
+                <CardDescription>عرض بيانات الحظيرة وإحصائياتها والحيوانات المتواجدة بها</CardDescription>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedBarn(null)}
+              >
+                ✕
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {/* Basic Barn Information */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <div className="flex justify-between items-center">
+                      <CardTitle className="text-lg">{selectedBarn.name}</CardTitle>
+                      <Badge variant={selectedBarn.isActive ? "outline" : "destructive"}>
+                        {selectedBarn.isActive ? "نشط" : "غير نشط"}
+                      </Badge>
+                    </div>
+                    <CardDescription>
+                      <Badge variant="outline" className={barnTypeColors[selectedBarn.type]}>
+                        {barnTypeLabels[selectedBarn.type]}
+                      </Badge>
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground">السعة:</p>
+                        <p className="font-medium">{selectedBarn.capacity} رأس</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">الموقع:</p>
+                        <p className="font-medium">{selectedBarn.location}</p>
+                      </div>
+                    </div>
+
+                    {selectedBarn.description && (
+                      <div>
+                        <p className="text-sm text-muted-foreground">الوصف:</p>
+                        <p className="text-sm">{selectedBarn.description}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">إحصائيات الإشغال</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {(() => {
+                      const barnAnimals = animals.filter(a => a.barnId === selectedBarn.id);
+                      const occupancyRate = selectedBarn.capacity > 0 
+                        ? Math.round((barnAnimals.length / selectedBarn.capacity) * 100) 
+                        : 0;
+                      const status = getOccupancyBadge(barnAnimals.length, selectedBarn.capacity);
+
+                      return (
+                        <div className="space-y-3">
+                          <div className="flex justify-between mb-1">
+                            <span className="text-sm">معدل الإشغال:</span>
+                            <span className="font-medium">{occupancyRate}%</span>
+                          </div>
+                          <Progress value={occupancyRate} className="h-2" />
+                          
+                          <div className="flex justify-between">
+                            <span className="text-sm">عدد الحيوانات:</span>
+                            <span className="font-medium">{barnAnimals.length} / {selectedBarn.capacity}</span>
+                          </div>
+                          
+                          <div className="flex justify-between">
+                            <span className="text-sm">حالة الإشغال:</span>
+                            <Badge className={status.color}>{status.text}</Badge>
+                          </div>
+                          
+                          <div className="flex justify-between">
+                            <span className="text-sm">متوسط الوزن:</span>
+                            <span className="font-medium">
+                              {barnAnimals.length > 0 
+                                ? (barnAnimals.reduce((sum, a) => sum + a.weight, 0) / barnAnimals.length).toFixed(1)
+                                : 0} كج
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">تفاصيل الحيوانات</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {(() => {
+                      const barnAnimals = animals.filter(a => a.barnId === selectedBarn.id);
+                      
+                      // Count by category
+                      const maleCount = barnAnimals.filter(a => a.category === "male").length;
+                      const femaleCount = barnAnimals.filter(a => a.category === "female").length;
+                      const newbornCount = barnAnimals.filter(a => a.category === "newborn").length;
+                      
+                      // Count by health status
+                      const healthyCount = barnAnimals.filter(a => 
+                        a.healthStatus === "سليم" || 
+                        a.healthStatus === "سليمة" || 
+                        a.healthStatus === "healthy"
+                      ).length;
+                      
+                      return (
+                        <div className="space-y-3">
+                          <div className="flex justify-between">
+                            <span className="text-sm">ذكور:</span>
+                            <span className="font-medium text-blue-600">{maleCount}</span>
+                          </div>
+                          
+                          <div className="flex justify-between">
+                            <span className="text-sm">إناث:</span>
+                            <span className="font-medium text-pink-600">{femaleCount}</span>
+                          </div>
+                          
+                          <div className="flex justify-between">
+                            <span className="text-sm">صغار:</span>
+                            <span className="font-medium text-green-600">{newbornCount}</span>
+                          </div>
+                          
+                          <div className="flex justify-between">
+                            <span className="text-sm">حيوانات سليمة:</span>
+                            <span className="font-medium text-green-600">{healthyCount}</span>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Tabs for different sections */}
+              <Tabs defaultValue="animals">
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="equipment">المعدات</TabsTrigger>
+                  <TabsTrigger value="efficiency">كفاءة التغذية</TabsTrigger>
+                  <TabsTrigger value="feeding">التغذية</TabsTrigger>
+                  <TabsTrigger value="animals">الحيوانات</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="equipment" className="pt-4">
+                  <BarnEquipmentList 
+                    barnId={selectedBarn.id}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="efficiency" className="pt-4">
+                  <BarnEfficiencyData 
+                    feedEfficiencyRecords={[]} // TODO: Load from API when available
+                    weightRecords={weightRecords.filter(record => 
+                      animals.some(animal => animal.id === record.animalId && animal.barnId === selectedBarn.id)
+                    )}
+                    animals={animals.filter(animal => animal.barnId === selectedBarn.id)}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="feeding" className="pt-4">
+                  <BarnFeedingData 
+                    barnId={selectedBarn.id}
+                    feedConsumptionRecords={[]} // For now, we don't have this data
+                    feedingRecords={feedingRecords.filter(record => record.barnId === selectedBarn.id)}
+                    animalCount={animals.filter(animal => animal.barnId === selectedBarn.id).length}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="animals" className="pt-4">
+                  <BarnAnimalsList 
+                    animals={animals.filter(animal => animal.barnId === selectedBarn.id)} 
+                    weightRecords={weightRecords.filter(record => 
+                      animals.some(animal => animal.id === record.animalId && animal.barnId === selectedBarn.id)
+                    )}
+                  />
+                </TabsContent>
+              </Tabs>
+            </div>
           </CardContent>
         </Card>
       )}
@@ -800,7 +1016,7 @@ export default function BarnsPage() {
               />
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               <Checkbox
                 id="isActive"
                 checked={barnFormData.isActive}
@@ -953,6 +1169,7 @@ export default function BarnsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
     </div>
   );
 }

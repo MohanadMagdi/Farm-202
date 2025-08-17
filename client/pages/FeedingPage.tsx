@@ -55,6 +55,8 @@ import {
   TrendingUp,
   Target,
   Activity,
+  Building2,
+  Package,
 } from "lucide-react";
 
 export default function FeedingPage() {
@@ -510,6 +512,150 @@ export default function FeedingPage() {
         </Card>
       )}
 
+      {/* Barn Feeding Inventory Connection */}
+      {analytics.barnAnalytics.length > 0 && (
+        <Card className="border-green-200 bg-green-50">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2 space-x-reverse text-green-800">
+              <Building2 className="h-5 w-5" />
+              <span>استهلاك المخزون حسب الحظيرة</span>
+            </CardTitle>
+            <CardDescription className="text-green-700">
+              الكميات الصادرة من المخازن لكل حظيرة منفصلة
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {analytics.barnAnalytics
+                .filter((barn) => barn.feedIssued > 0)
+                .map((barn) => {
+                  // Get feeding records for this barn
+                  const barnFeedingRecords = todayRecords.filter(
+                    (record) => record.barnId === barn.barnId,
+                  );
+                  
+                  // Calculate inventory cost for this barn
+                  const barnInventoryCost = barnFeedingRecords.reduce((sum, record) => {
+                    const feedItem = warehouseItems.find(
+                      (item) => item.name === record.feedType,
+                    );
+                    return sum + record.quantityIssued * (feedItem?.unitPrice || 0);
+                  }, 0);
+
+                  return (
+                    <div key={barn.barnId} className="p-4 bg-white rounded-lg border border-green-200">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center space-x-2 space-x-reverse">
+                          <Building2 className="h-4 w-4 text-green-600" />
+                          <h4 className="font-medium text-green-800">{barn.barnName}</h4>
+                        </div>
+                        <Badge variant="outline" className="text-green-700 border-green-300">
+                          {barn.animalsCount} حيوان
+                        </Badge>
+                      </div>
+
+                      <div className="space-y-3">
+                        {/* Inventory Issued Section */}
+                        <div className="p-3 bg-green-50 rounded-lg border border-green-100">
+                          <h5 className="font-medium text-green-800 mb-2 flex items-center">
+                            <Package className="h-4 w-4 ml-1" />
+                            الكميات الصادرة من المخزن
+                          </h5>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span>إجمالي الصادر:</span>
+                              <span className="font-semibold text-green-700">
+                                {farmHelpers.formatWeight(barn.feedIssued)}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>تكلفة المخزون:</span>
+                              <span className="font-semibold text-green-700">
+                                {farmHelpers.formatCurrency(barnInventoryCost)}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>الصادر/حيوان:</span>
+                              <span className="font-semibold text-green-700">
+                                {farmHelpers.formatWeight(barn.feedPerAnimal)}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>عدد الصرفيات:</span>
+                              <span className="font-semibold text-green-700">
+                                {barnFeedingRecords.length} صرفية
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Feed Types Used */}
+                        <div className="space-y-2">
+                          <h6 className="text-xs font-medium text-muted-foreground">
+                            أنواع العلف المستخدمة:
+                          </h6>
+                          <div className="flex flex-wrap gap-1">
+                            {Array.from(new Set(barnFeedingRecords.map(r => r.feedType))).map((feedType) => (
+                              <Badge key={feedType} variant="secondary" className="text-xs">
+                                {feedType}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Performance Metrics */}
+                        <div className="pt-2 border-t border-green-200">
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div className="text-center p-2 bg-white rounded border border-green-100">
+                              <div className="font-semibold text-green-600">
+                                {barn.avgDailyGain.toFixed(2)}
+                              </div>
+                              <div className="text-muted-foreground">كيلو/يوم</div>
+                            </div>
+                            <div className="text-center p-2 bg-white rounded border border-green-100">
+                              <div className={`font-semibold ${
+                                barn.efficiency <= 3
+                                  ? "text-green-600"
+                                  : barn.efficiency <= 5
+                                    ? "text-yellow-600"
+                                    : "text-red-600"
+                              }`}>
+                                {barn.efficiency.toFixed(1)}
+                              </div>
+                              <div className="text-muted-foreground">معامل التحويل</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Quick Action Buttons */}
+                        <div className="flex gap-2 pt-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleAddFeeding(barn.barnId)}
+                            className="flex-1 text-xs h-7"
+                          >
+                            <Plus className="h-3 w-3 ml-1" />
+                            صرف علف
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1 text-xs h-7"
+                          >
+                            <Eye className="h-3 w-3 ml-1" />
+                            تفاصيل
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Tabs defaultValue="records" className="w-full" dir="rtl">
         <TabsList className="grid w-full grid-cols-3" dir="rtl">
           <TabsTrigger value="records">سجلات التغذية</TabsTrigger>
@@ -746,6 +892,160 @@ export default function FeedingPage() {
 
         <TabsContent value="analytics" className="space-y-4" dir="rtl">
           <FeedingEfficiencyDashboard />
+          
+          {/* Detailed Barn Inventory Consumption */}
+          <Card className="border-blue-200">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2 space-x-reverse text-blue-800">
+                <Package className="h-5 w-5" />
+                <span>تقرير استهلاك المخزون تفصيلي حسب الحظيرة</span>
+              </CardTitle>
+              <CardDescription>
+                عرض تفصيلي للكميات الصادرة من المخازن لكل حظيرة مع التكلفة وأنواع العلف
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {barns
+                  .filter((barn) => {
+                    const barnRecords = todayRecords.filter(r => r.barnId === barn.id);
+                    return barnRecords.length > 0;
+                  })
+                  .map((barn) => {
+                    const barnRecords = todayRecords.filter(r => r.barnId === barn.id);
+                    const totalIssued = barnRecords.reduce((sum, r) => sum + r.quantityIssued, 0);
+                    const totalCost = barnRecords.reduce((sum, record) => {
+                      const feedItem = warehouseItems.find(item => item.name === record.feedType);
+                      return sum + record.quantityIssued * (feedItem?.unitPrice || 0);
+                    }, 0);
+                    const barnAnimals = animals.filter(a => a.barnId === barn.id);
+
+                    return (
+                      <Card key={barn.id} className="border-l-4 border-l-blue-500">
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2 space-x-reverse">
+                              <Building2 className="h-5 w-5 text-blue-600" />
+                              <h3 className="font-semibold text-lg">{barn.name}</h3>
+                              <Badge variant="outline">{barnAnimals.length} حيوان</Badge>
+                            </div>
+                            <div className="text-left">
+                              <div className="text-lg font-bold text-blue-600">
+                                {farmHelpers.formatCurrency(totalCost)}
+                              </div>
+                              <div className="text-sm text-muted-foreground">إجمالي التكلفة</div>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="overflow-x-auto">
+                            <Table dir="rtl">
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead className="text-right">الوقت</TableHead>
+                                  <TableHead className="text-right">نوع العلف</TableHead>
+                                  <TableHead className="text-right">الكمية الصادرة</TableHead>
+                                  <TableHead className="text-right">سعر الوحدة</TableHead>
+                                  <TableHead className="text-right">إجمالي التكلفة</TableHead>
+                                  <TableHead className="text-right">عدد الحيوانات</TableHead>
+                                  <TableHead className="text-right">الكمية/حيوان</TableHead>
+                                  <TableHead className="text-right">المسجل بواسطة</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {barnRecords.map((record) => {
+                                  const feedItem = warehouseItems.find(item => item.name === record.feedType);
+                                  const unitPrice = feedItem?.unitPrice || 0;
+                                  const recordCost = record.quantityIssued * unitPrice;
+                                  
+                                  return (
+                                    <TableRow key={record.id}>
+                                      <TableCell className="text-right">{record.time}</TableCell>
+                                      <TableCell className="text-right">{record.feedType}</TableCell>
+                                      <TableCell className="text-right font-medium">
+                                        {farmHelpers.formatWeight(record.quantityIssued)}
+                                      </TableCell>
+                                      <TableCell className="text-right">
+                                        {farmHelpers.formatCurrency(unitPrice)}/كيلو
+                                      </TableCell>
+                                      <TableCell className="text-right font-semibold text-blue-600">
+                                        {farmHelpers.formatCurrency(recordCost)}
+                                      </TableCell>
+                                      <TableCell className="text-right">{record.animalsCount}</TableCell>
+                                      <TableCell className="text-right">
+                                        {farmHelpers.formatWeight(record.feedPerAnimal)}
+                                      </TableCell>
+                                      <TableCell className="text-right">{record.recordedBy}</TableCell>
+                                    </TableRow>
+                                  );
+                                })}
+                                {/* Totals Row */}
+                                <TableRow className="bg-blue-50">
+                                  <TableCell colSpan={2} className="text-right font-semibold">
+                                    إجمالي {barn.name}:
+                                  </TableCell>
+                                  <TableCell className="text-right font-bold text-blue-700">
+                                    {farmHelpers.formatWeight(totalIssued)}
+                                  </TableCell>
+                                  <TableCell></TableCell>
+                                  <TableCell className="text-right font-bold text-blue-700">
+                                    {farmHelpers.formatCurrency(totalCost)}
+                                  </TableCell>
+                                  <TableCell className="text-right font-semibold">
+                                    {barnAnimals.length}
+                                  </TableCell>
+                                  <TableCell className="text-right font-semibold">
+                                    {barnAnimals.length > 0 ? 
+                                      farmHelpers.formatWeight(totalIssued / barnAnimals.length) : 
+                                      "0 كيلو"
+                                    }
+                                  </TableCell>
+                                  <TableCell></TableCell>
+                                </TableRow>
+                              </TableBody>
+                            </Table>
+                          </div>
+
+                          {/* Summary for this barn */}
+                          <div className="mt-4 grid grid-cols-3 gap-4 p-3 bg-blue-50 rounded-lg">
+                            <div className="text-center">
+                              <div className="text-sm text-muted-foreground">عدد الصرفيات</div>
+                              <div className="font-semibold text-blue-600">
+                                {barnRecords.length} صرفية
+                              </div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-sm text-muted-foreground">أنواع العلف</div>
+                              <div className="font-semibold text-blue-600">
+                                {Array.from(new Set(barnRecords.map(r => r.feedType))).length} نوع
+                              </div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-sm text-muted-foreground">التكلفة/حيوان</div>
+                              <div className="font-semibold text-blue-600">
+                                {barnAnimals.length > 0 ?
+                                  farmHelpers.formatCurrency(totalCost / barnAnimals.length) :
+                                  "0 ج.م"
+                                }
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+
+                {/* If no barns have feeding records */}
+                {barns.filter(barn => todayRecords.some(r => r.barnId === barn.id)).length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>لم يتم تسجيل أي صرفيات علف لهذا التاريخ</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+          
           <div
             className="grid gap-6 md:grid-cols-2"
             style={{ display: "none" }}

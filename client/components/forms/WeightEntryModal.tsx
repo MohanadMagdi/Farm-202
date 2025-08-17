@@ -90,8 +90,9 @@ export function WeightRecordModal({
       );
 
       toast({
-        title: 'نجح',
-        description: `تم تسجيل وزن ${formData.weightKg} كجم للحيوان ${selectedAnimal?.earTagId} بنجاح`,
+        title: 'تم تسجيل الوزن بنجاح',
+        description: `تم تسجيل وزن ${formData.weightKg} كجم للحيوان ${selectedAnimal?.earTagId} وتحديث تقارير الأوزان`,
+        variant: 'default',
       });
 
       onSuccess?.();

@@ -10,10 +10,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus } from 'lucide-react';
+import { Plus, Scale } from 'lucide-react';
 import { WeightRecordModal } from '@/components/forms/WeightEntryModal';
 import { formatArabicDate, formatArabicNumber } from '@/lib/arabic-utils';
 import { calculateDaysDifference } from '@/lib/weights';
+import { useToast } from '@/hooks/use-toast';
 import type { Animal } from '@shared/types';
 
 interface WeightEntry {
@@ -56,6 +57,7 @@ export function EnhancedWeightTrackingTable({
   animals, 
   onRefresh 
 }: EnhancedWeightTrackingTableProps) {
+  const { toast } = useToast();
   const [weightModalOpen, setWeightModalOpen] = useState(false);
   const [selectedAnimalId, setSelectedAnimalId] = useState<string>('');
   const [maxWeightEntries, setMaxWeightEntries] = useState(0);
@@ -132,9 +134,19 @@ export function EnhancedWeightTrackingTable({
   };
 
   const handleWeightModalSuccess = () => {
+    const selectedAnimal = animals.find(a => a.id === selectedAnimalId);
+    
     setWeightModalOpen(false);
     setSelectedAnimalId('');
-    onRefresh(); // Refresh data after successful addition
+    
+    // Show success notification
+    toast({
+      title: "تم تسجيل الوزن بنجاح",
+      description: `تم تحديث بيانات الحيوان ${selectedAnimal?.earTagId || ''} وتقارير الأوزان`,
+      variant: "default",
+    });
+    
+    onRefresh(); // Refresh data after successful addition - this updates the weight reports page
   };
 
   const getCategoryBadge = (category: string) => {
@@ -246,10 +258,11 @@ export function EnhancedWeightTrackingTable({
                         variant="outline"
                         size="sm"
                         onClick={() => handleAddWeight(animal.id)}
-                        className="gap-1"
+                        className="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent rounded-md h-8 w-8 p-0 text-green-600 hover:text-green-700"
+                        title="إضافة وزن جديد"
                       >
-                        <Plus className="h-3 w-3" />
-                        إضافة وزن
+                        <Scale className="h-4 w-4" />
+                        <span className="sr-only">إضافة وزن</span>
                       </Button>
                     </TableCell>
                   </TableRow>

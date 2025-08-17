@@ -13,6 +13,8 @@ import {
   healthRecordsService,
   barnMovementsService,
   feedingSchedulesService,
+  barnEquipmentService,
+  feedEfficiencyService,
 } from "./firestore";
 
 import { mockFirestore } from "./firebase-mock";
@@ -29,7 +31,10 @@ import type {
   MortalityRecord,
   AnimalCategory,
   WarehouseType,
-} from "@shared/types";
+  BarnEquipment,
+  FeedConsumptionRecord,
+  FeedEfficiencyRecord,
+} from "@/../../shared/types";
 
 // Determine if we should use mock data (development mode or no Firebase config)
 const useMockData =
@@ -234,6 +239,15 @@ export const dataService = {
   mortalityRecords: useMockData
     ? new MockServiceAdapter<MortalityRecord>("mortalityRecords")
     : new MockServiceAdapter<MortalityRecord>("mortalityRecords"),
+  barnEquipment: useMockData
+    ? new MockServiceAdapter<BarnEquipment>("barnEquipment")
+    : barnEquipmentService,
+  feedConsumption: useMockData
+    ? new MockServiceAdapter<FeedConsumptionRecord>("feedConsumption")
+    : new MockServiceAdapter<FeedConsumptionRecord>("feedConsumption"),
+  feedEfficiency: useMockData
+    ? new MockServiceAdapter<FeedEfficiencyRecord>("feedEfficiencyRecords")
+    : feedEfficiencyService,
 };
 
 // Helper functions for common operations
@@ -324,6 +338,120 @@ export const farmHelpers = {
     avgDailyGain: number,
   ): number => {
     return avgDailyGain > 0 ? feedPerAnimal / avgDailyGain : 0;
+  },
+  
+  // Calculate daily feed consumption per animal
+  calculateDailyFeedConsumption: async (barnId: string, date: Date): Promise<number> => {
+    const [feedRecords, animals] = await Promise.all([
+      dataService.feedConsumption.query([
+        { field: "barnId", operator: "==", value: barnId },
+        { field: "date", operator: "==", value: date },
+      ]),
+      dataService.animals.getByBarn(barnId),
+    ]);
+    
+    const totalFeed = feedRecords.reduce((sum, record) => sum + record.quantityKg, 0);
+    const animalCount = animals.length;
+    
+    return animalCount > 0 ? totalFeed / animalCount : 0;
+  },
+  
+  // Calculate weekly feed consumption per animal
+  calculateWeeklyFeedConsumption: async (barnId: string, endDate: Date): Promise<number> => {
+    // Calculate date 7 days before
+    const startDate = new Date(endDate);
+    startDate.setDate(startDate.getDate() - 7);
+    
+    // Query feed consumption for the week
+    // This is simplified for mock data - in production would need proper date range query
+    const feedRecords = await dataService.feedConsumption.getAll();
+    const weekRecords = feedRecords.filter(record => 
+      record.barnId === barnId && 
+      record.date >= startDate && 
+      record.date <= endDate
+    );
+    
+    const totalFeed = weekRecords.reduce((sum, record) => sum + record.quantityKg, 0);
+    
+    // Get average animal count for the week
+    const animals = await dataService.animals.getByBarn(barnId);
+    // In production, would need to account for animal movements during the week
+    
+    return animals.length > 0 ? totalFeed / animals.length : 0;
+  },
+  
+  // Calculate monthly feed consumption per animal
+  calculateMonthlyFeedConsumption: async (barnId: string, endDate: Date): Promise<number> => {
+    // Calculate date 30 days before
+    const startDate = new Date(endDate);
+    startDate.setDate(startDate.getDate() - 30);
+    
+    // Query feed consumption for the month
+    const feedRecords = await dataService.feedConsumption.getAll();
+    const monthRecords = feedRecords.filter(record => 
+      record.barnId === barnId && 
+      record.date >= startDate && 
+      record.date <= endDate
+    );
+    
+    const totalFeed = monthRecords.reduce((sum, record) => sum + record.quantityKg, 0);
+    
+    // Get average animal count for the month
+    const animals = await dataService.animals.getByBarn(barnId);
+    
+    return animals.length > 0 ? totalFeed / animals.length : 0;
+  },
+  
+  // Calculate feed efficiency between weight measurements
+  calculateFeedEfficiencyBetweenWeights: async (
+    animalId: string, 
+    startDate: Date, 
+    endDate: Date, 
+    startWeight: number, 
+    endWeight: number
+  ): Promise<{
+    feedConsumed: number,
+    dailyGain: number,
+    feedEfficiency: number
+  }> => {
+    // Get animal's barn
+    const animal = await dataService.animals.getById(animalId);
+    if (!animal) return { feedConsumed: 0, dailyGain: 0, feedEfficiency: 0 };
+    
+    // Calculate total days
+    const days = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    if (days <= 0) return { feedConsumed: 0, dailyGain: 0, feedEfficiency: 0 };
+    
+    // Get feed consumption for the barn during this period
+    const feedRecords = await dataService.feedConsumption.getAll();
+    const periodRecords = feedRecords.filter(record => 
+      record.barnId === animal.barnId && 
+      record.date >= startDate && 
+      record.date <= endDate
+    );
+    
+    // Calculate total feed for the barn
+    const totalBarnFeed = periodRecords.reduce((sum, record) => sum + record.quantityKg, 0);
+    
+    // Get average number of animals in the barn during this period
+    const animals = await dataService.animals.getByBarn(animal.barnId);
+    const avgAnimalCount = animals.length; // Simplified - should account for movements
+    
+    // Calculate feed per animal during this period
+    const feedPerAnimal = avgAnimalCount > 0 ? totalBarnFeed / avgAnimalCount : 0;
+    
+    // Calculate daily weight gain
+    const weightGain = endWeight - startWeight;
+    const dailyGain = days > 0 ? weightGain / days : 0;
+    
+    // Calculate feed efficiency (kg feed per kg gain)
+    const feedEfficiency = weightGain > 0 ? feedPerAnimal / weightGain : 0;
+    
+    return {
+      feedConsumed: feedPerAnimal,
+      dailyGain,
+      feedEfficiency
+    };
   },
 };
 

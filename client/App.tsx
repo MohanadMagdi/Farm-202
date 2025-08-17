@@ -184,6 +184,11 @@ function AppRoutes() {
 
 const App = () => {
   useEffect(() => {
+    // Set RTL direction for the entire document
+    document.documentElement.setAttribute('dir', 'rtl');
+    document.documentElement.setAttribute('lang', 'ar');
+    document.body.classList.add('rtl');
+
     // Initialize data synchronization
     initializeDataSync();
 

@@ -296,3 +296,50 @@ export interface WarehouseAnalytics {
   expiredItems: number;
   expiringItems: number; // expiring within 7 days
 }
+
+export interface BarnEquipment {
+  id: string;
+  barnId: string;
+  name: string;
+  type: string;
+  quantity: number;
+  status: "working" | "needs_maintenance" | "broken";
+  maintenanceDate?: Date;
+  nextMaintenanceDate?: Date;
+  notes?: string;
+  createdAt: Date;
+  updatedAt?: Date;
+}
+
+export interface FeedConsumptionRecord {
+  id: string;
+  barnId: string;
+  date: Date;
+  feedType: string;
+  quantityKg: number;
+  animalCount: number;
+  consumptionPerAnimal: number; // Calculated field (quantityKg / animalCount)
+  warehouseItemId: string; // Reference to the warehouse item
+  stockMovementId?: string; // Optional reference to the stock movement record
+  createdAt: Date;
+  createdBy: string;
+  notes?: string;
+}
+
+export interface FeedEfficiencyRecord {
+  id: string;
+  barnId: string;
+  animalId?: string; // Optional if tracking individual animals
+  startDate: Date;
+  endDate: Date;
+  startWeight: number;
+  endWeight: number;
+  weightGain: number; // Calculated (endWeight - startWeight)
+  daysCount: number;
+  dailyGain: number; // Calculated (weightGain / daysCount)
+  totalFeedConsumed: number;
+  feedPerDay: number; // Calculated (totalFeedConsumed / daysCount)
+  feedEfficiencyRatio: number; // Calculated (weightGain / totalFeedConsumed)
+  createdAt: Date;
+  updatedAt: Date;
+}

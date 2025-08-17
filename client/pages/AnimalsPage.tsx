@@ -118,7 +118,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
     });
   };
 
-  const handleExport = async (format: "pdf" | "excel") => {
+  const handleExport = async () => {
     try {
       setLoading(true);
 
@@ -127,11 +127,11 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
         ? animals.filter((animal) => animal.category === animalType)
         : animals;
 
-      await exportAnimalsReport(filteredAnimals, format, animalType);
+      await exportAnimalsReport(filteredAnimals, "excel", animalType);
 
       toast({
         title: "تم تصدير التقرير بنجاح",
-        description: `تم تصدير تقرير ${getAnimalTypeLabel(animalType)} بصيغة ${format === "pdf" ? "PDF" : "Excel"}`,
+        description: `تم تصدير تقرير ${getAnimalTypeLabel(animalType)} بصيغة Excel`,
       });
     } catch (error) {
       console.error("Export error:", error);
@@ -270,20 +270,12 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => handleExport("excel")}
+              onClick={handleExport}
             >
               <Download className="h-4 w-4 ml-2" />
               Excel
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleExport("pdf")}
-              className="mr-2"
-            >
-              <Download className="h-4 w-4 ml-2" />
-              PDF
-            </Button>
+
           </div>
           <Button onClick={() => setIsAddModalOpen(true)}>
             <Plus className="h-4 w-4 ml-2" />

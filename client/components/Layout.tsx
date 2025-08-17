@@ -142,17 +142,17 @@ export default function Layout({ children }: LayoutProps) {
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center">
-          <div className="flex items-center space-x-4 space-x-reverse">
+          <div className="flex items-center gap-4">
             <CircleDot className="h-8 w-8 text-farm-600" />
             <div>
               <h1 className="text-xl font-bold text-farm-800">مزرعة الأغنام</h1>
-              <div className="flex items-center space-x-2 space-x-reverse">
+              <div className="flex items-center gap-2">
                 <p className="text-sm text-muted-foreground">
                   نظام إدارة المزرعة
                 </p>
                 {dataMode === "mock" && (
                   <Badge variant="outline" className="text-xs">
-                    <Database className="h-3 w-3 ml-1" />
+                    <Database className="h-3 w-3 mr-1" />
                     وضع التطوير
                   </Badge>
                 )}
@@ -162,7 +162,7 @@ export default function Layout({ children }: LayoutProps) {
 
           <div className="flex-1" />
 
-          <div className="flex items-center space-x-4 space-x-reverse">
+          <div className="flex items-center gap-4">
             {/* Notifications */}
             <NotificationCenter />
 
@@ -170,7 +170,7 @@ export default function Layout({ children }: LayoutProps) {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-auto px-3">
-                  <div className="flex items-center space-x-2 space-x-reverse">
+                  <div className="flex items-center gap-2">
                     <Avatar className="h-8 w-8">
                       <AvatarFallback className="bg-farm-600 text-white text-xs">
                         {user ? getUserInitials(user.displayName) : "U"}
@@ -197,7 +197,7 @@ export default function Layout({ children }: LayoutProps) {
                     <p className="text-xs text-muted-foreground">
                       {user?.email}
                     </p>
-                    <div className="flex items-center space-x-2 space-x-reverse mt-1">
+                    <div className="flex items-center gap-2 mt-1">
                       <Shield className="h-3 w-3" />
                       <span className="text-xs">
                         {roleLabels[user?.role || "barn_manager"]}
@@ -245,7 +245,7 @@ export default function Layout({ children }: LayoutProps) {
                   <Link
                     to={item.href}
                     className={cn(
-                      "flex items-center space-x-3 space-x-reverse rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                      "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                       isActive
                         ? "bg-farm-100 text-farm-800"
                         : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
@@ -257,7 +257,7 @@ export default function Layout({ children }: LayoutProps) {
 
                   {/* Sub-navigation */}
                   {item.children && (
-                    <div className="mr-8 mt-2 space-y-1">
+                    <div className="ml-8 mt-2 space-y-1">
                       {item.children
                         .filter(
                           (child) =>

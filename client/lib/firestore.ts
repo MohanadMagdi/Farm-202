@@ -307,3 +307,7 @@ export class WarehouseExtendedService extends FirestoreService<WarehouseItem> {
 }
 
 export const warehouseExtendedService = new WarehouseExtendedService();
+
+// New services for barn equipment and feed efficiency
+export const barnEquipmentService = new FirestoreService<import("@/../../shared/types").BarnEquipment>("barnEquipment");
+export const feedEfficiencyService = new FirestoreService<import("@/../../shared/types").FeedEfficiencyRecord>("feedEfficiencyRecords");

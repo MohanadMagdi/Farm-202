@@ -1,6 +1,6 @@
 /**
  * Export Utilities for Sheep Farm Management System
- * Handles PDF and Excel export functionality for all reports
+ * Handles Excel export functionality for all reports
  */
 
 import type {
@@ -102,132 +102,11 @@ export async function exportToExcel<T>(
 }
 
 /**
- * Export data to PDF format
- */
-export async function exportToPDF<T>(
-  data: T[],
-  columns: TableColumn[],
-  options: ExportOptions,
-): Promise<void> {
-  try {
-    // Dynamic imports to reduce bundle size
-    const [jsPDF, autoTable] = await Promise.all([
-      import("jspdf"),
-      import("jspdf-autotable"),
-    ]);
-
-    const { jsPDF: JsPDF } = jsPDF;
-
-    // Create PDF document
-    const doc = new JsPDF({
-      orientation: options.orientation || "portrait",
-      unit: "mm",
-      format: "a4",
-    });
-
-    // Add Arabic font support (if available)
-    try {
-      // Note: In a real implementation, you'd need to add Arabic font files
-      // For now, we'll use the default font
-      doc.setFont("helvetica");
-    } catch (fontError) {
-      console.warn("Arabic font not available, using default font");
-    }
-
-    // Add title
-    doc.setFontSize(20);
-    doc.text(options.title, 105, 20, { align: "center" });
-
-    // Add subtitle if provided
-    let yPos = 30;
-    if (options.subtitle) {
-      doc.setFontSize(14);
-      doc.text(options.subtitle, 105, yPos, { align: "center" });
-      yPos += 10;
-    }
-
-    // Add date if requested
-    if (options.includeDate !== false) {
-      doc.setFontSize(10);
-      doc.text(
-        `تاريخ التقرير: ${new Date().toLocaleDateString("ar-EG")}`,
-        200,
-        yPos,
-        { align: "right" },
-      );
-      yPos += 10;
-    }
-
-    // Transform data for table
-    const tableData = data.map((item) =>
-      columns.map((col) => {
-        const value = (item as any)[col.key];
-        return col.formatter ? col.formatter(value) : (value || "").toString();
-      }),
-    );
-
-    // Add table
-    (doc as any).autoTable({
-      head: [columns.map((col) => col.header)],
-      body: tableData,
-      startY: yPos + 5,
-      styles: {
-        font: "helvetica",
-        fontSize: 8,
-        cellPadding: 2,
-        overflow: "linebreak",
-        halign: "center",
-      },
-      headStyles: {
-        fillColor: [41, 128, 185],
-        textColor: 255,
-        fontStyle: "bold",
-      },
-      alternateRowStyles: {
-        fillColor: [245, 245, 245],
-      },
-      margin: { top: 10, right: 10, bottom: 10, left: 10 },
-      columnStyles: columns.reduce((styles, col, index) => {
-        styles[index] = {
-          halign: col.align || "center",
-          cellWidth: col.width ? col.width * 0.5 : "auto", // Convert to mm approximately
-        };
-        return styles;
-      }, {} as any),
-    });
-
-    // Add footer
-    const pageCount = doc.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFontSize(8);
-      doc.text(
-        `نظام إدارة المزرعة - صفحة ${i} من ${pageCount}`,
-        105,
-        doc.internal.pageSize.height - 10,
-        { align: "center" },
-      );
-    }
-
-    // Generate filename
-    const filename =
-      options.filename ||
-      `${options.title.replace(/\s+/g, "_")}_${new Date().getTime()}.pdf`;
-
-    // Download file
-    doc.save(filename);
-  } catch (error) {
-    console.error("Error exporting to PDF:", error);
-    throw new Error("فشل في تصدير ملف PDF");
-  }
-}
-
-/**
  * Export Animals Report
  */
 export async function exportAnimalsReport(
   animals: Animal[],
-  format: "pdf" | "excel",
+  format: "excel",
   category?: string,
 ): Promise<void> {
   const columns: TableColumn[] = [
@@ -314,11 +193,7 @@ export async function exportAnimalsReport(
     orientation: "landscape",
   };
 
-  if (format === "excel") {
-    await exportToExcel(animals, columns, options);
-  } else {
-    await exportToPDF(animals, columns, options);
-  }
+  await exportToExcel(animals, columns, options);
 }
 
 /**
@@ -326,7 +201,7 @@ export async function exportAnimalsReport(
  */
 export async function exportFeedingReport(
   feedingRecords: FeedingRecord[],
-  format: "pdf" | "excel",
+  format: "excel",
 ): Promise<void> {
   const columns: TableColumn[] = [
     {
@@ -377,11 +252,7 @@ export async function exportFeedingReport(
     orientation: "landscape",
   };
 
-  if (format === "excel") {
-    await exportToExcel(feedingRecords, columns, options);
-  } else {
-    await exportToPDF(feedingRecords, columns, options);
-  }
+  await exportToExcel(feedingRecords, columns, options);
 }
 
 /**
@@ -390,7 +261,7 @@ export async function exportFeedingReport(
 export async function exportInventoryReport(
   items: WarehouseItem[],
   movements: StockMovement[],
-  format: "pdf" | "excel",
+  format: "excel",
 ): Promise<void> {
   const columns: TableColumn[] = [
     { header: "اسم المادة", key: "name", width: 25 },
@@ -456,11 +327,7 @@ export async function exportInventoryReport(
     orientation: "landscape",
   };
 
-  if (format === "excel") {
-    await exportToExcel(items, columns, options);
-  } else {
-    await exportToPDF(items, columns, options);
-  }
+  await exportToExcel(items, columns, options);
 }
 
 /**
@@ -468,7 +335,7 @@ export async function exportInventoryReport(
  */
 export async function exportWeightRecordsReport(
   records: (WeightRecord & { animalEarTagId?: string })[],
-  format: "pdf" | "excel",
+  format: "excel",
 ): Promise<void> {
   const columns: TableColumn[] = [
     { header: "رقم الأذن", key: "animalEarTagId", width: 15 },
@@ -494,11 +361,7 @@ export async function exportWeightRecordsReport(
     orientation: "portrait",
   };
 
-  if (format === "excel") {
-    await exportToExcel(records, columns, options);
-  } else {
-    await exportToPDF(records, columns, options);
-  }
+  await exportToExcel(records, columns, options);
 }
 
 /**
@@ -506,7 +369,7 @@ export async function exportWeightRecordsReport(
  */
 export async function exportHealthRecordsReport(
   records: (HealthRecord & { animalEarTagId?: string })[],
-  format: "pdf" | "excel",
+  format: "excel",
 ): Promise<void> {
   const columns: TableColumn[] = [
     { header: "رقم الأذن", key: "animalEarTagId", width: 15 },
@@ -536,11 +399,7 @@ export async function exportHealthRecordsReport(
     orientation: "landscape",
   };
 
-  if (format === "excel") {
-    await exportToExcel(records, columns, options);
-  } else {
-    await exportToPDF(records, columns, options);
-  }
+  await exportToExcel(records, columns, options);
 }
 
 // Helper functions
@@ -581,9 +440,9 @@ export async function exportComprehensiveFarmReport(
   animals: Animal[],
   feedingRecords: FeedingRecord[],
   warehouseItems: WarehouseItem[],
-  format: "pdf" | "excel",
+  format: "excel",
 ): Promise<void> {
-  // This would create a multi-sheet Excel or multi-page PDF with all farm data
+  // This would create a multi-sheet Excel export with all farm data
   // Implementation would depend on specific requirements
   console.log("Comprehensive farm report export not yet implemented");
 }

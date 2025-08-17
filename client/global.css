@@ -139,6 +139,7 @@
 
   body {
     @apply bg-background text-foreground font-arabic;
+    direction: rtl;
   }
 
   [dir="rtl"] {
@@ -147,6 +148,36 @@
 
   .rtl {
     direction: rtl;
+  }
+
+  /* RTL specific overrides */
+  [dir="rtl"] .text-left {
+    text-align: right;
+  }
+
+  [dir="rtl"] .text-right {
+    text-align: left;
+  }
+
+  /* Force RTL layout for main containers */
+  [dir="rtl"] main,
+  [dir="rtl"] .container,
+  [dir="rtl"] .space-y-6,
+  [dir="rtl"] .grid {
+    direction: rtl;
+  }
+
+  /* RTL flex alignment */
+  [dir="rtl"] .flex {
+    direction: rtl;
+  }
+
+  [dir="rtl"] .justify-end {
+    justify-content: flex-start;
+  }
+
+  [dir="rtl"] .justify-start {
+    justify-content: flex-end;
   }
 
   /* Arabic number formatting */

@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { CalendarIcon, Download, Plus, FileText, FileSpreadsheet } from "lucide-react";
+import { CalendarIcon, Download, Plus, FileText, FileSpreadsheet, Scale } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
@@ -270,10 +270,28 @@ export default function WeightReportsPage() {
     setShowWeightModal(true);
   };
 
-  const handleWeightAdded = () => {
-    loadData();
+  const handleWeightAdded = async () => {
     setShowWeightModal(false);
     setSelectedAnimalId("");
+    
+    // Show loading state briefly while refreshing
+    setLoading(true);
+    
+    try {
+      await loadData(); // Refresh all weight data and reports
+      
+      // The toast notification is already shown by the WeightEntryModal
+      // Just ensure data is refreshed
+    } catch (error) {
+      console.error('Error refreshing weight reports:', error);
+      toast({
+        title: "خطأ في تحديث التقارير",
+        description: "تم تسجيل الوزن لكن حدث خطأ في تحديث التقارير",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const exportToExcel = () => {
@@ -491,310 +509,6 @@ export default function WeightReportsPage() {
     });
   };
 
-  const exportToPDF = () => {
-    const data = filteredAnimals.map(convertToEnhancedSpreadsheetFormat);
-    const maxWeights = getMaxWeights(filteredAnimals);
-    const headers = generateExportHeaders(maxWeights);
-    
-    const currentDate = new Intl.DateTimeFormat('ar-EG', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      calendar: 'gregory'
-    }).format(new Date());
-    
-    // Generate summary statistics
-    const validData = data.filter(row => row.cumulative_adg !== undefined && row.cumulative_weight_diff !== undefined);
-    const totalAnimals = data.length;
-    const averageADG = validData.length > 0 ? 
-      validData.reduce((sum, row) => sum + (row.cumulative_adg || 0), 0) / validData.length : 0;
-    const totalWeightGain = validData.reduce((sum, row) => sum + (row.cumulative_weight_diff || 0), 0);
-    const positiveGrowthAnimals = validData.filter(row => (row.cumulative_adg || 0) > 0).length;
-    
-    const categoryName = selectedCategory === "all" ? "جميع الأنواع" : 
-                       selectedCategory === "male" ? "ذكور" :
-                       selectedCategory === "female" ? "إناث" : "صغار";
-
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html dir="rtl" lang="ar">
-      <head>
-        <meta charset="UTF-8">
-        <title>تقرير أوزان الحيوانات</title>
-        <style>
-          @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
-          
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          
-          body {
-            font-family: 'Cairo', Arial, sans-serif;
-            font-size: 12px;
-            line-height: 1.4;
-            color: #333;
-            direction: rtl;
-            padding: 20px;
-          }
-          
-          .header {
-            text-align: center;
-            margin-bottom: 20px;
-            border-bottom: 3px solid #4CAF50;
-            padding-bottom: 15px;
-          }
-          
-          .header h1 {
-            font-size: 28px;
-            color: #4CAF50;
-            margin-bottom: 10px;
-            font-weight: bold;
-          }
-          
-          .header .info {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 10px;
-            font-size: 12px;
-            color: #666;
-          }
-          
-          .summary {
-            background: linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%);
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            border: 1px solid #4CAF50;
-          }
-          
-          .summary h3 {
-            text-align: center;
-            margin-bottom: 15px;
-            color: #2E7D32;
-            font-size: 16px;
-          }
-          
-          .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            text-align: center;
-          }
-          
-          .summary-item {
-            background: white;
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-          }
-          
-          .summary-item .value {
-            font-size: 20px;
-            font-weight: bold;
-            color: #4CAF50;
-            margin-bottom: 5px;
-          }
-          
-          .summary-item .label {
-            color: #666;
-            font-size: 11px;
-          }
-          
-          .filters {
-            background-color: #f8f9fa;
-            padding: 12px;
-            margin-bottom: 20px;
-            border-radius: 6px;
-            border-left: 4px solid #4CAF50;
-            font-size: 12px;
-          }
-          
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-            font-size: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-          }
-          
-          th, td {
-            border: 1px solid #ddd;
-            padding: 8px 4px;
-            text-align: center;
-          }
-          
-          th {
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-            color: white;
-            font-weight: bold;
-            font-size: 9px;
-          }
-          
-          tbody tr:nth-child(even) {
-            background-color: #f8f9fa;
-          }
-          
-          tbody tr:hover {
-            background-color: #e8f5e8;
-          }
-          
-          .positive { color: #4CAF50; font-weight: bold; }
-          .negative { color: #f44336; font-weight: bold; }
-          
-          .footer {
-            margin-top: 30px;
-            padding-top: 15px;
-            border-top: 2px solid #4CAF50;
-            text-align: center;
-            font-size: 10px;
-            color: #666;
-          }
-          
-          @media print {
-            body { padding: 10px; }
-            .header h1 { font-size: 24px; }
-            table { font-size: 8px; }
-            th, td { padding: 3px 2px; }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>🐑 تقرير أوزان الحيوانات</h1>
-          <div class="info">
-            <span><strong>التاريخ:</strong> ${currentDate}</span>
-            <span><strong>عدد الحيوانات:</strong> ${totalAnimals}</span>
-            <span><strong>نظام إدارة المزرعة</strong></span>
-          </div>
-        </div>
-        
-        <div class="summary">
-          <h3>📊 ملخص الإحصائيات</h3>
-          <div class="summary-grid">
-            <div class="summary-item">
-              <div class="value">${totalAnimals}</div>
-              <div class="label">إجمالي الحيوانات</div>
-            </div>
-            <div class="summary-item">
-              <div class="value">${formatArabicNumber(Number(averageADG.toFixed(3)))}</div>
-              <div class="label">متوسط الزيادة اليومية</div>
-            </div>
-            <div class="summary-item">
-              <div class="value">${formatArabicNumber(Number(totalWeightGain.toFixed(1)))}</div>
-              <div class="label">إجمالي الزيادة (كجم)</div>
-            </div>
-            <div class="summary-item">
-              <div class="value">${positiveGrowthAnimals}</div>
-              <div class="label">حيوانات نمو إيجابي</div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="filters">
-          <strong>🔍 المرشحات المطبقة:</strong>
-          نوع الحيوان: ${categoryName} |
-          ${selectedBarn !== "all" ? `الحظيرة: ${barns.find(b => b.id === selectedBarn)?.name || selectedBarn} |` : ''}
-          ${searchTerm ? `البحث: ${searchTerm} |` : ''}
-          التاريخ: ${currentDate}
-        </div>
-        
-        <table>
-          <thead>
-            <tr>
-              ${headers.map(h => `<th>${h}</th>`).join('')}
-            </tr>
-          </thead>
-          <tbody>
-            ${data.map(row => {
-              const cells = [`<td><strong>${row.earTagId}</strong></td>`];
-              
-              const maxWeightCount = Math.max(...data.map(r => r.total_weights || 0), 2);
-              
-              for (let i = 1; i <= maxWeightCount; i++) {
-                const dateKey = `weight_${i}_date`;
-                const weightKey = `weight_${i}_kg`;
-                
-                // Date cell with Arabic formatting
-                const dateValue = row[dateKey];
-                if (dateValue) {
-                  const formattedDate = new Intl.DateTimeFormat('ar-EG', {
-                    year: 'numeric',
-                    month: 'long', 
-                    day: 'numeric',
-                    calendar: 'gregory'
-                  }).format(new Date(dateValue));
-                  cells.push(`<td>${formattedDate}</td>`);
-                } else {
-                  cells.push(`<td>-</td>`);
-                }
-                
-                // Weight cell
-                const weightValue = row[weightKey];
-                cells.push(`<td>${weightValue ? formatArabicNumber(weightValue) : '-'}</td>`);
-                
-                // Difference columns (only for i > 1)
-                if (i > 1) {
-                  const diffKey = `weight_${i-1}_to_${i}_diff`;
-                  const daysKey = `weight_${i-1}_to_${i}_days`;
-                  const adgKey = `weight_${i-1}_to_${i}_adg`;
-                  
-                  const diffValue = row[diffKey];
-                  const daysValue = row[daysKey];
-                  const adgValue = row[adgKey];
-                  
-                  cells.push(`<td class="${(diffValue || 0) >= 0 ? 'positive' : 'negative'}">${diffValue !== undefined ? formatArabicNumber(diffValue) : '-'}</td>`);
-                  cells.push(`<td>${daysValue ? formatArabicNumber(daysValue) : '-'}</td>`);
-                  cells.push(`<td class="${(adgValue || 0) >= 0 ? 'positive' : 'negative'}">${adgValue !== undefined ? formatArabicNumber(Number(adgValue.toFixed(3))) : '-'}</td>`);
-                }
-              }
-              
-              // Add summary columns
-              cells.push(`<td>${formatArabicNumber(row.total_weights || 0)}</td>`);
-              cells.push(`<td class="${(row.cumulative_weight_diff || 0) >= 0 ? 'positive' : 'negative'}">${row.cumulative_weight_diff ? formatArabicNumber(row.cumulative_weight_diff) : '-'}</td>`);
-              cells.push(`<td>${row.cumulative_days ? formatArabicNumber(row.cumulative_days) : '-'}</td>`);
-              cells.push(`<td class="${(row.cumulative_adg || 0) >= 0 ? 'positive' : 'negative'}">${row.cumulative_adg ? formatArabicNumber(Number(row.cumulative_adg.toFixed(3))) : '-'}</td>`);
-              
-              return `<tr>${cells.join('')}</tr>`;
-            }).join('')}
-          </tbody>
-        </table>
-        
-        <div class="footer">
-          <p><strong>📈 نظام إدارة المزرعة - تقارير الأوزان</strong></p>
-          <p>تم إنتاج هذا التقرير في: ${currentDate}</p>
-          <p>جميع الأوزان بالكيلوجرام • جميع قيم ADG بالجرام/يوم</p>
-          <p style="margin-top: 10px; font-size: 9px; color: #888;">
-            الألوان: <span style="color: #4CAF50;">●</span> نمو إيجابي | <span style="color: #f44336;">●</span> نمو سلبي
-          </p>
-        </div>
-      </body>
-      </html>
-    `;
-
-    // Open print dialog
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(htmlContent);
-      printWindow.document.close();
-      
-      printWindow.onload = () => {
-        setTimeout(() => {
-          printWindow.print();
-          // Don't auto-close, let user decide
-        }, 1000);
-      };
-
-      toast({
-        title: "تم فتح نافذة الطباعة",
-        description: "يمكنك طباعة التقرير أو حفظه كـ PDF من متصفحك",
-      });
-    } else {
-      toast({
-        title: "خطأ",
-        description: "لا يمكن فتح نافذة الطباعة. تحقق من إعدادات النوافذ المنبثقة",
-        variant: "destructive",
-      });
-    }
-  };
-
   const exportAll = async () => {
     try {
       // Export CSV
@@ -805,16 +519,11 @@ export default function WeightReportsPage() {
         exportToExcel();
       }, 500);
 
-      // Small delay then show PDF option
+      // Show completion message
       setTimeout(() => {
         toast({
-          title: "تصدير شامل",
-          description: "تم تصدير CSV و Excel. هل تريد تصدير PDF أيضاً؟",
-          action: (
-            <button onClick={exportToPDF} className="bg-primary text-primary-foreground px-3 py-1 rounded text-sm">
-              تصدير PDF
-            </button>
-          ),
+          title: "تم التصدير بنجاح",
+          description: "تم تصدير البيانات بصيغة CSV و Excel",
         });
       }, 1000);
 
@@ -836,8 +545,10 @@ export default function WeightReportsPage() {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-farm-600 mx-auto mb-4"></div>
+          <Scale className="h-12 w-12 text-green-600 animate-pulse mx-auto mb-4" />
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-farm-600 mx-auto mb-4"></div>
           <p className="text-muted-foreground">جاري تحميل تقارير الأوزان...</p>
+          <p className="text-sm text-muted-foreground mt-1">تحديث البيانات والحسابات</p>
         </div>
       </div>
     );
@@ -847,7 +558,10 @@ export default function WeightReportsPage() {
     <div className="container mx-auto p-6 space-y-6" dir="rtl">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-farm-800 mb-2">تقارير الأوزان</h1>
+          <div className="flex items-center gap-3 mb-2">
+            <Scale className="h-8 w-8 text-green-600" />
+            <h1 className="text-3xl font-bold text-farm-800">تقارير الأوزان</h1>
+          </div>
           <p className="text-muted-foreground">
             عرض وتحليل بيانات أوزان الحيوانات وحساب الزيادة اليومية
           </p>
@@ -873,22 +587,13 @@ export default function WeightReportsPage() {
             <FileSpreadsheet className="h-4 w-4" />
             تصدير Excel
           </Button>
-          <Button
-            variant="outline" 
-            size="sm"
-            onClick={exportToPDF}
-            className="gap-2 hover:bg-red-50"
-            title="تصدير البيانات إلى ملف PDF للطباعة"
-          >
-            <FileText className="h-4 w-4" />
-            تصدير PDF
-          </Button>
+
           <Button
             variant="default"
             size="sm"
             onClick={exportAll}
             className="gap-2 bg-green-600 hover:bg-green-700 text-white"
-            title="تصدير جميع التقارير (CSV, Excel, PDF)"
+            title="تصدير جميع التقارير (CSV, Excel)"
           >
             <Download className="h-4 w-4" />
             تصدير شامل

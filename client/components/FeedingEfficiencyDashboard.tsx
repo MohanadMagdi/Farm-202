@@ -171,7 +171,7 @@ export default function FeedingEfficiencyDashboard({
     }
   };
 
-  const exportReport = async (format: "pdf" | "excel") => {
+  const exportReport = async () => {
     try {
       setLoading(true);
 
@@ -186,11 +186,11 @@ export default function FeedingEfficiencyDashboard({
         (record) => record.date >= cutoffDate,
       );
 
-      await exportFeedingReport(filteredRecords, format);
+      await exportFeedingReport(filteredRecords, "excel");
 
       toast({
         title: "تم تصدير التقرير بنجاح",
-        description: `تم تصدير تقرير كفاءة التغذية بصيغة ${format === "pdf" ? "PDF" : "Excel"}`,
+        description: "تم تصدير تقرير كفاءة التغذية بصيغة Excel",
       });
     } catch (error) {
       console.error("Export error:", error);
@@ -245,22 +245,14 @@ export default function FeedingEfficiencyDashboard({
 
           <div className="flex">
             <Button
-              onClick={() => exportReport("excel")}
+              onClick={exportReport}
               variant="outline"
               size="sm"
             >
               <Download className="h-4 w-4 ml-2" />
               Excel
             </Button>
-            <Button
-              onClick={() => exportReport("pdf")}
-              variant="outline"
-              size="sm"
-              className="mr-2"
-            >
-              <Download className="h-4 w-4 ml-2" />
-              PDF
-            </Button>
+
           </div>
         </div>
       </div>

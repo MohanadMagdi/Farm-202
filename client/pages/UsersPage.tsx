@@ -79,6 +79,15 @@ export default function UsersPage() {
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
+  const [isViewUserDialogOpen, setIsViewUserDialogOpen] = useState(false);
+  const [isEditUserDialogOpen, setIsEditUserDialogOpen] = useState(false);
+  const [isRoleSettingsDialogOpen, setIsRoleSettingsDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [editUser, setEditUser] = useState({
+    name: "",
+    email: "",
+    role: "barn_manager" as keyof typeof roleLabels,
+  });
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
@@ -144,6 +153,45 @@ export default function UsersPage() {
     }
   };
 
+  const handleViewUser = (user: User) => {
+    setSelectedUser(user);
+    setIsViewUserDialogOpen(true);
+  };
+
+  const handleEditUser = (user: User) => {
+    setSelectedUser(user);
+    setEditUser({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    });
+    setIsEditUserDialogOpen(true);
+  };
+
+  const handleUpdateUser = async () => {
+    if (!selectedUser) return;
+    
+    try {
+      await db.collection("users").doc(selectedUser.id).update({
+        ...editUser,
+        timestamps: {
+          ...selectedUser.timestamps,
+          updatedAt: new Date(),
+        },
+      });
+      setIsEditUserDialogOpen(false);
+      setSelectedUser(null);
+      setEditUser({ name: "", email: "", role: "barn_manager" });
+      loadUsers();
+    } catch (error) {
+      console.error("Error updating user:", error);
+    }
+  };
+
+  const handleOpenRoleSettings = () => {
+    setIsRoleSettingsDialogOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -191,7 +239,7 @@ export default function UsersPage() {
           </p>
         </div>
         <div className="flex items-center space-x-3 space-x-reverse">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleOpenRoleSettings}>
             <Settings className="h-4 w-4 ml-2" />
             إعدادات الأدوار
           </Button>
@@ -269,6 +317,235 @@ export default function UsersPage() {
               <DialogFooter>
                 <Button type="submit" onClick={handleAddUser}>
                   إضافة المستخدم
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* View User Dialog */}
+          <Dialog open={isViewUserDialogOpen} onOpenChange={setIsViewUserDialogOpen}>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle className="flex items-center space-x-2 space-x-reverse">
+                  <UserCheck className="h-5 w-5 text-farm-600" />
+                  <span>تفاصيل المستخدم</span>
+                </DialogTitle>
+                <DialogDescription>
+                  عرض معلومات المستخدم والصلاحيات
+                </DialogDescription>
+              </DialogHeader>
+              {selectedUser && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">الاسم</Label>
+                      <p className="text-sm text-muted-foreground">{selectedUser.name}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">البريد الإلكتروني</Label>
+                      <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">الدور</Label>
+                      <Badge variant="secondary">
+                        {roleLabels[selectedUser.role]}
+                      </Badge>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">الحالة</Label>
+                      <Badge variant={selectedUser.active ? "default" : "destructive"}>
+                        {selectedUser.active ? "نشط" : "غير نشط"}
+                      </Badge>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">تاريخ الإنشاء</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {formatArabicDate(selectedUser.timestamps.createdAt)}
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">آخر تحديث</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {formatArabicDate(selectedUser.timestamps.updatedAt)}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">الصلاحيات</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {rolePermissions[selectedUser.role]?.map((permission, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {permission}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+
+                  {!selectedUser.claimsSynced && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                      <div className="flex items-center space-x-2 space-x-reverse">
+                        <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                        <p className="text-sm text-yellow-800">
+                          هذا المستخدم يحتاج إلى مزامنة الصلاحيات
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+
+          {/* Edit User Dialog */}
+          <Dialog open={isEditUserDialogOpen} onOpenChange={setIsEditUserDialogOpen}>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle className="flex items-center space-x-2 space-x-reverse">
+                  <Edit className="h-5 w-5 text-farm-600" />
+                  <span>تعديل المستخدم</span>
+                </DialogTitle>
+                <DialogDescription>
+                  تعديل معلومات المستخدم والدور
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-name" className="text-right">
+                    الاسم
+                  </Label>
+                  <Input
+                    id="edit-name"
+                    value={editUser.name}
+                    onChange={(e) => setEditUser({ ...editUser, name: e.target.value })}
+                    className="col-span-3"
+                    placeholder="اسم المستخدم"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-email" className="text-right">
+                    البريد الإلكتروني
+                  </Label>
+                  <Input
+                    id="edit-email"
+                    type="email"
+                    value={editUser.email}
+                    onChange={(e) => setEditUser({ ...editUser, email: e.target.value })}
+                    className="col-span-3"
+                    placeholder="user@example.com"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-role" className="text-right">
+                    الدور
+                  </Label>
+                  <Select
+                    value={editUser.role}
+                    onValueChange={(value) =>
+                      setEditUser({
+                        ...editUser,
+                        role: value as keyof typeof roleLabels,
+                      })
+                    }
+                  >
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="اختر الدور" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(roleLabels).map(([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsEditUserDialogOpen(false)}
+                >
+                  إلغاء
+                </Button>
+                <Button onClick={handleUpdateUser}>
+                  حفظ التغييرات
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Role Settings Dialog */}
+          <Dialog open={isRoleSettingsDialogOpen} onOpenChange={setIsRoleSettingsDialogOpen}>
+            <DialogContent className="sm:max-w-[700px]">
+              <DialogHeader>
+                <DialogTitle className="flex items-center space-x-2 space-x-reverse">
+                  <Shield className="h-5 w-5 text-farm-600" />
+                  <span>إعدادات الأدوار والصلاحيات</span>
+                </DialogTitle>
+                <DialogDescription>
+                  إدارة الأدوار والصلاحيات في النظام
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 max-h-[500px] overflow-y-auto">
+                {Object.entries(roleLabels).map(([role, label]) => (
+                  <div key={role} className="border rounded-lg p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2 space-x-reverse">
+                        <h4 className="font-medium text-lg">{label}</h4>
+                        <Badge variant="outline">
+                          {formatArabicNumber(
+                            users.filter((u) => u.role === role).length
+                          )}{" "}
+                          مستخدم
+                        </Badge>
+                      </div>
+                      {role === "owner" && (
+                        <Badge variant="destructive" className="text-xs">
+                          غير قابل للتعديل
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">الصلاحيات المتاحة:</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {rolePermissions[role as keyof typeof rolePermissions]?.map(
+                          (permission, index) => (
+                            <Badge
+                              key={index}
+                              variant="secondary"
+                              className="text-xs"
+                            >
+                              <CheckCircle className="h-3 w-3 ml-1 text-green-600" />
+                              {permission}
+                            </Badge>
+                          )
+                        )}
+                      </div>
+                    </div>
+
+                    {users.filter((u) => u.role === role).length > 0 && (
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">المستخدمون في هذا الدور:</Label>
+                        <div className="flex flex-wrap gap-2">
+                          {users
+                            .filter((u) => u.role === role)
+                            .map((user) => (
+                              <Badge key={user.id} variant="outline" className="text-xs">
+                                {user.name}
+                                {!user.active && " (غير نشط)"}
+                              </Badge>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <DialogFooter>
+                <Button onClick={() => setIsRoleSettingsDialogOpen(false)}>
+                  إغلاق
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -512,10 +789,20 @@ export default function UsersPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2 space-x-reverse">
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleViewUser(user)}
+                          title="عرض تفاصيل المستخدم"
+                        >
                           <Eye className="h-3 w-3" />
                         </Button>
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleEditUser(user)}
+                          title="تعديل المستخدم"
+                        >
                           <Edit className="h-3 w-3" />
                         </Button>
                         <Button
@@ -524,6 +811,7 @@ export default function UsersPage() {
                           onClick={() =>
                             handleToggleUserStatus(user.id, user.active)
                           }
+                          title={user.active ? "تعطيل المستخدم" : "تفعيل المستخدم"}
                         >
                           {user.active ? (
                             <Lock className="h-3 w-3" />
@@ -536,6 +824,8 @@ export default function UsersPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => handleDeleteUser(user.id)}
+                            className="text-red-600 hover:text-red-700"
+                            title="حذف المستخدم"
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>

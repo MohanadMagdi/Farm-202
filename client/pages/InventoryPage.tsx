@@ -197,18 +197,18 @@ export default function InventoryPage() {
     });
   };
 
-  const exportReport = async (format: "pdf" | "excel") => {
+  const exportReport = async () => {
     try {
       setLoading(true);
 
       // Get stock movements for additional data
       const stockMovements = await dataService.stockMovements.getAll();
 
-      await exportInventoryReport(warehouseItems, stockMovements, format);
+      await exportInventoryReport(warehouseItems, stockMovements, "excel");
 
       toast({
         title: "تم تصدير التقرير بنجاح",
-        description: `تم تصدير تقرير المخزون بصيغة ${format === "pdf" ? "PDF" : "Excel"}`,
+        description: "تم تصدير تقرير المخزون بصيغة Excel",
       });
     } catch (error) {
       console.error("Export error:", error);
@@ -347,20 +347,12 @@ export default function InventoryPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => exportReport("excel")}
+              onClick={exportReport}
             >
               <Download className="h-4 w-4 ml-2" />
               Excel
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => exportReport("pdf")}
-              className="mr-2"
-            >
-              <Download className="h-4 w-4 ml-2" />
-              PDF
-            </Button>
+
           </div>
           <Button variant="outline" size="sm" onClick={createDispatchOrder}>
             <FileText className="h-4 w-4 ml-2" />
