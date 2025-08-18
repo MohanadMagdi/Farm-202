@@ -56,27 +56,27 @@ const navigation = [
     permission: "barns",
   },
   {
-    name: "المخزون",
-    href: "/inventory",
-    icon: Package,
-    permission: "inventory",
-  },
-  {
     name: "التغذية",
     href: "/feeding",
     icon: Utensils,
     permission: "feeding",
   },
   {
-    name: "التقارير",
-    href: "/reports",
-    icon: FileText,
-    permission: "reports",
+    name: "المخزون",
+    href: "/inventory",
+    icon: Package,
+    permission: "inventory",
   },
   {
     name: "تقارير الأوزان",
     href: "/reports/weights",
     icon: Scale,
+    permission: "reports",
+  },
+  {
+    name: "التقارير",
+    href: "/reports",
+    icon: FileText,
     permission: "reports",
   },
   {

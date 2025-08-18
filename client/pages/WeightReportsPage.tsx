@@ -78,7 +78,8 @@ export default function WeightReportsPage() {
         dataService.barns.getAll(),
       ]);
 
-      // Filter animals that have weightHistory
+      // Include all animals, but filter those that have weightHistory for the main view
+      // This ensures animals appear in reports after their first weight entry
       const animalsWithWeights = animalsData
         .filter((animal) => animal.weightHistory && animal.weightHistory.length > 0)
         .map((animal) => ({

@@ -116,9 +116,21 @@ export default function WeightRecordModal({
       const weightGain = newWeight - selectedAnimal.weight;
       const newADG = calculateNewADG();
 
-      // Update animal weight
+      // Update animal weight and add to weight history
+      const newWeightHistoryEntry = {
+        id: crypto.randomUUID(),
+        date: formData.recordDate,
+        weightKg: newWeight,
+      };
+
+      const updatedWeightHistory = [
+        ...(selectedAnimal.weightHistory || []),
+        newWeightHistoryEntry,
+      ];
+
       await dataService.animals.update(selectedAnimal.id, {
         weight: newWeight,
+        weightHistory: updatedWeightHistory,
         updatedAt: new Date(),
         updatedBy: formData.recordedBy,
       });
@@ -149,7 +161,7 @@ export default function WeightRecordModal({
 
       toast({
         title: "تم تسجيل الوزن بنجاح",
-        description: `تم تسجيل وزن ${newWeight} كيلو ل��حيوان ${selectedAnimal.earTagId}`,
+        description: `تم تسجيل وزن ${newWeight} كيلو للحيوان ${selectedAnimal.earTagId} وإضافته لتقارير الأوزان`,
       });
 
       onSave();

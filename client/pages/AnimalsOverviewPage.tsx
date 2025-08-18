@@ -325,11 +325,11 @@ export default function AnimalsOverviewPage() {
           <CardContent className="space-y-4">
             <Tabs defaultValue="overview" className="w-full">
               <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="breeding">سير التربية</TabsTrigger>
-                <TabsTrigger value="newborns">الصغار</TabsTrigger>
-                <TabsTrigger value="females">الإناث</TabsTrigger>
-                <TabsTrigger value="males">الذكور</TabsTrigger>
                 <TabsTrigger value="overview">نظرة عامة</TabsTrigger>
+                <TabsTrigger value="males">الذكور</TabsTrigger>
+                <TabsTrigger value="females">الإناث</TabsTrigger>
+                <TabsTrigger value="newborns">الصغار</TabsTrigger>
+                <TabsTrigger value="breeding">سير التربية</TabsTrigger>
               </TabsList>
 
               <TabsContent value="overview" className="space-y-3">

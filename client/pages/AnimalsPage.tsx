@@ -52,6 +52,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [healthFilter, setHealthFilter] = useState<string>("all");
+  const [recentlyUpdatedAnimals, setRecentlyUpdatedAnimals] = useState<Set<string>>(new Set());
 
   // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -155,12 +156,53 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
     setIsWeightModalOpen(true);
   };
 
-  const handleSave = () => {
-    loadAnimals();
-    toast({
-      title: "تم الحفظ بنجاح",
-      description: "تم حفظ بيانات الحيوان بنجاح",
-    });
+  const handleWeightSave = async () => {
+    try {
+      // إضافة الحيوان المحدد للقائمة المحدثة حديثاً
+      if (selectedAnimal) {
+        setRecentlyUpdatedAnimals(prev => new Set(prev).add(selectedAnimal.id));
+        
+        // إزالة المؤشر بعد 3 ثواني
+        setTimeout(() => {
+          setRecentlyUpdatedAnimals(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(selectedAnimal.id);
+            return newSet;
+          });
+        }, 3000);
+      }
+
+      // إعادة تحميل البيانات فوراً لإظهار الوزن الجديد
+      await loadAnimals();
+      toast({
+        title: "تم تسجيل الوزن بنجاح",
+        description: "تم تحديث وزن الحيوان في الجدول",
+      });
+    } catch (error) {
+      console.error("Error reloading after weight update:", error);
+      // لا نظهر خطأ لأن الوزن تم حفظه بالفعل، فقط التحديث فشل
+      toast({
+        title: "تم تسجيل الوزن",
+        description: "قد تحتاج لتحديث الصفحة لرؤية التغييرات",
+      });
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      await loadAnimals(); // إعادة تحميل البيانات وتحديث الإحصائيات
+      toast({
+        title: "تم الحفظ بنجاح",
+        description: "تم تحديث بيانات الحيوان بنجاح",
+      });
+    } catch (error) {
+      console.error("Error reloading animals data:", error);
+      toast({
+        title: "تم الحفظ مع تحذير",
+        description: "تم حفظ البيانات لكن قد تحتاج لتحديث الصفحة",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDelete = async (animal: Animal) => {
@@ -442,7 +484,17 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      {farmHelpers.formatWeight(animal.weight)}
+                      <div className="flex items-center justify-end gap-1">
+                        {farmHelpers.formatWeight(animal.weight)}
+                        {recentlyUpdatedAnimals.has(animal.id) && (
+                          <Badge 
+                            variant="outline" 
+                            className="bg-green-50 text-green-600 text-xs"
+                          >
+                            محدث
+                          </Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-right">
                       <Badge
@@ -560,7 +612,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
           setIsWeightModalOpen(false);
           setSelectedAnimal(null);
         }}
-        onSave={handleSave}
+        onSave={handleWeightSave}
         preselectedAnimalId={selectedAnimal?.id}
       />
     </div>

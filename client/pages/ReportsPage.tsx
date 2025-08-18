@@ -35,11 +35,13 @@ import {
 import AdvancedAnalyticsDashboard from "@/components/AdvancedAnalyticsDashboard";
 import {
   db,
+} from "@/lib/firebase-mock";
+import type {
   Animal,
-  InventoryItem,
+  WarehouseItem as InventoryItem,
   StockMovement,
   FeedingRecord,
-} from "@/lib/firebase-mock";
+} from "@shared/types";
 import { toast } from "@/hooks/use-toast";
 import {
   Download,
@@ -145,7 +147,7 @@ export default function ReportsPage() {
   );
   const totalInventoryValue = inventoryItems.reduce((sum, item) => {
     const currentStock = db.getCurrentStock(item.id);
-    return sum + currentStock * item.pricePerUnitEGP;
+    return sum + currentStock * (item.unitPrice || 0);
   }, 0);
 
   // Monthly growth calculation
@@ -365,7 +367,7 @@ export default function ReportsPage() {
                   <span className="font-semibold">
                     {formatWeight(
                       activeAnimals.reduce(
-                        (sum, a) => sum + a.currentWeightKg,
+                        (sum, a) => sum + a.weight,
                         0,
                       ) / Math.max(1, activeAnimals.length),
                     )}
@@ -467,9 +469,9 @@ export default function ReportsPage() {
                           </TableCell>
                           <TableCell className="text-right">
                             <Badge variant="outline">
-                              {animal.type === "male"
+                              {animal.category === "male"
                                 ? "ذكر"
-                                : animal.type === "female"
+                                : animal.category === "female"
                                   ? "أنثى"
                                   : "صغير"}
                             </Badge>
@@ -556,12 +558,12 @@ export default function ReportsPage() {
                         <TableCell className="text-right">
                           <Badge
                             className={
-                              item.currentStock <= item.minLevel
+                              item.currentStock <= item.minStockLevel
                                 ? "bg-red-100 text-red-800"
                                 : "bg-green-100 text-green-800"
                             }
                           >
-                            {item.currentStock <= item.minLevel
+                            {item.currentStock <= item.minStockLevel
                               ? "منخفض"
                               : "طبيعي"}
                           </Badge>
@@ -595,7 +597,7 @@ export default function ReportsPage() {
                   <span>إجمالي العلف المستهلك</span>
                   <span className="font-semibold">
                     {formatWeight(
-                      feedingRecords.reduce((sum, r) => sum + r.qtyKg, 0),
+                      feedingRecords.reduce((sum, r) => sum + r.quantityIssued, 0),
                     )}
                   </span>
                 </div>
@@ -603,7 +605,7 @@ export default function ReportsPage() {
                   <span>م��وسط الاس��هلاك اليومي</span>
                   <span className="font-semibold">
                     {formatWeight(
-                      feedingRecords.reduce((sum, r) => sum + r.qtyKg, 0) / 30,
+                      feedingRecords.reduce((sum, r) => sum + r.quantityIssued, 0) / 30,
                     )}
                   </span>
                 </div>

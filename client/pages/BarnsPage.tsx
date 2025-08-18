@@ -48,7 +48,6 @@ import {
   Scale,
   Trash2,
   Home,
-  Utensils,
 } from "lucide-react";
 
 import { BarnAnimalsList } from "@/components/BarnAnimalsList";
@@ -677,10 +676,11 @@ export default function BarnsPage() {
                 )}
 
                 {/* Actions */}
-                <div className="grid grid-cols-2 gap-2 pt-2">
+                <div className="flex items-center gap-2 pt-2">
                   <Button 
                     variant="outline" 
                     size="sm" 
+                    className="flex-1"
                     onClick={() => handleViewBarn(barn)}
                   >
                     <Eye className="h-3 w-3 mr-1" />
@@ -689,6 +689,7 @@ export default function BarnsPage() {
                   <Button 
                     variant="outline" 
                     size="sm" 
+                    className="flex-1"
                     onClick={() => handleEditBarn(barn)}
                   >
                     <Edit className="h-3 w-3 mr-1" />
@@ -697,6 +698,7 @@ export default function BarnsPage() {
                   <Button 
                     variant="outline" 
                     size="sm" 
+                    className="flex-1"
                     onClick={() => openTransferModal(barn)}
                     disabled={barnAnimals.length === 0}
                   >
@@ -706,11 +708,11 @@ export default function BarnsPage() {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => window.open(`/feeding?barn=${barn.id}`, '_blank')}
-                    className="text-green-600 hover:text-green-700"
+                    onClick={() => handleDeleteBarn(barn)}
+                    className="text-red-600 hover:text-red-700"
+                    disabled={occupancy > 0}
                   >
-                    <Utensils className="h-3 w-3 mr-1" />
-                    التغذية
+                    <Trash2 className="h-3 w-3" />
                   </Button>
                 </div>
               </CardContent>
