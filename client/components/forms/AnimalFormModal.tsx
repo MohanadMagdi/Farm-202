@@ -406,7 +406,7 @@ export default function AnimalFormModal({
       console.error("Error saving animal:", error);
       toast({
         title: "خطأ في الحفظ",
-        description: "حدث خطأ أثنا�� حفظ بيانات الحيوان",
+        description: "حدث خطأ أثناء حفظ بيانات الحيوان",
         variant: "destructive",
       });
     } finally {
@@ -423,7 +423,7 @@ export default function AnimalFormModal({
   );
 
   const isolationTypes = [
-    { value: "health_quarantine", label: "حجر صحي للوافد��ن الجدد" },
+    { value: "health_quarantine", label: "حجر صحي للوافدين الجدد" },
     { value: "illness", label: "عزل بسبب المرض" },
     { value: "post_birth", label: "عزل ما بعد الولادة" },
     { value: "feeding", label: "عزل للتغذية الخاصة" },
@@ -439,14 +439,14 @@ export default function AnimalFormModal({
           <DialogDescription>
             {mode === "add"
               ? "إدخال بيانات الحيوان الجديد بالمزرعة"
-              : "تعديل البيانات الأساس��ة للحيوان"}
+              : "تعديل البيانات الأساسية للحيوان"}
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-6 py-4">
           {/* Basic Information */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">المعلومات الأساس��ة</h3>
+            <h3 className="text-lg font-semibold">المعلومات الأساسية</h3>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
@@ -499,7 +499,7 @@ export default function AnimalFormModal({
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="اختر الحظي��ة" />
+                    <SelectValue placeholder="اختر الحظيرة" />
                   </SelectTrigger>
                   <SelectContent>
                     {filteredBarns.map((barn) => (
@@ -686,7 +686,7 @@ export default function AnimalFormModal({
                     {formData.weight && (
                       <div className="bg-blue-50 p-3 rounded-lg border">
                         <p className="text-sm font-medium text-blue-800 mb-1">
-                          ال��عر المحسوب:
+                          السعر المحسوب:
                         </p>
                         <p className="text-lg font-bold text-blue-900">
                           {formatEGP(
@@ -785,7 +785,7 @@ export default function AnimalFormModal({
                   </div>
                   <div>
                     <Label htmlFor="offspringCount">
-                      عدد الموا��يد السابقة
+                      عدد المواليد السابقة
                     </Label>
                     <Input
                       id="offspringCount"
@@ -886,8 +886,8 @@ export default function AnimalFormModal({
                                   ✅ اختيار الأم صحيح
                                 </p>
                                 <p className="text-sm text-green-700 mt-1">
-                                  سيتم ربط المولود بالأم ��لقائياً مع تحديث
-                                  إ��صائيات الأم
+                                  سيتم ربط المولود بالأم تلقائياً مع تحديث
+                                  إحصائيات الأم
                                 </p>
                               </div>
                             </div>
@@ -910,7 +910,7 @@ export default function AnimalFormModal({
                 </div>
 
                 <div>
-                  <Label htmlFor="weaningDate">تا��يخ الفطام</Label>
+                  <Label htmlFor="weaningDate">تاريخ الفطام</Label>
                   <Input
                     id="weaningDate"
                     type="date"

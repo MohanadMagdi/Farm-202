@@ -116,7 +116,7 @@ export default function StockMovementModal({
     } else {
       return [
         { value: "صرف للحظيرة", label: "صرف للحظيرة" },
-        { value: "صرف للتغذية", label: "صرف ��لتغذية" },
+        { value: "صرف للتغذية", label: "صرف للتغذية" },
         { value: "صرف للعلاج", label: "صرف للعلاج" },
         { value: "بيع", label: "بيع" },
         { value: "فاقد/تالف", label: "فاقد/تالف" },
@@ -282,7 +282,7 @@ export default function StockMovementModal({
                     newStock <= warehouseItem.minStockLevel && (
                       <div className="flex items-center text-yellow-600">
                         <AlertTriangle className="h-3 w-3 ml-1" />
-                        <span>س��صبح المخزون أقل من الحد الأدنى</span>
+                        <span>سيصبح المخزون أقل من الحد الأدنى</span>
                       </div>
                     )}
                 </div>
@@ -433,7 +433,7 @@ export default function StockMovementModal({
 
           {/* Requested By */}
           <div>
-            <Label htmlFor="requestedBy">المس��ول *</Label>
+            <Label htmlFor="requestedBy">المسؤول *</Label>
             <Input
               id="requestedBy"
               value={formData.requestedBy}

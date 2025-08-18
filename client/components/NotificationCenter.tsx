@@ -162,7 +162,7 @@ export default function NotificationCenter() {
                     onClick={markAllAsRead}
                     className="text-xs"
                   >
-                    تحديد الكل كمق��وء
+                    تحديد الكل كمقروء
                   </Button>
                 )}
               </div>

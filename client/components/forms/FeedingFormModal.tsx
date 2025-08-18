@@ -348,7 +348,7 @@ export default function FeedingFormModal({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="quantityIssued">
-                  الكمي�� المصروفة ({selectedFeedItem?.unit || "كيلو"}) *
+                  الكمية المصروفة ({selectedFeedItem?.unit || "كيلو"}) *
                 </Label>
                 <Input
                   id="quantityIssued"
@@ -485,7 +485,7 @@ export default function FeedingFormModal({
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="recordedBy">المسج�� بواسطة *</Label>
+                <Label htmlFor="recordedBy">المسجل بواسطة *</Label>
                 <Input
                   id="recordedBy"
                   value={formData.recordedBy}

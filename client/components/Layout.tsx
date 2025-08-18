@@ -98,7 +98,7 @@ const roleColors = {
 };
 
 const roleLabels = {
-  owner: "مدير ��لمزرعة",
+  owner: "مدير المزرعة",
   manager: "مدير العمليات",
   vet: "طبيب بيطري",
   inventory: "مسؤول مخزون",

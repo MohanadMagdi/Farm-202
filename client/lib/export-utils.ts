@@ -31,7 +31,7 @@ export interface TableColumn {
   key: string;
   width?: number;
   align?: "left" | "center" | "right";
-  formatter?: (value: any) => string;
+  formatter?: (value: any, item?: any) => string;
 }
 
 /**
@@ -75,7 +75,7 @@ export async function exportToExcel<T>(
         القيمة: new Date().toLocaleDateString("ar-EG"),
       },
       { المعلومة: "المؤلف", القيمة: options.author || "نظام إدارة المزرعة" },
-      { المعلومة: "عد�� السجلات", القيمة: data.length.toString() },
+      { المعلومة: "عدد السجلات", القيمة: data.length.toString() },
     ];
 
     if (options.subtitle) {

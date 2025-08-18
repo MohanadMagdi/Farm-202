@@ -342,7 +342,7 @@ class MockFirestore {
         },
         {
           id: "wh_004",
-          name: "مضاد حيوي - أوكسي ت��راسيكلين",
+          name: "مضاد حيوي - أوكسي تتراسيكلين",
           type: "medicines" as WarehouseType,
           category: "أدوية",
           unit: "قارورة",
@@ -383,7 +383,7 @@ class MockFirestore {
           unitPrice: 4.2,
           totalCost: 2100,
           date: new Date("2024-01-10"),
-          reason: "مشتر��ات جديدة",
+          reason: "مشتريات جديدة",
           recordedBy: "user_001",
           billNumber: "INV-2024-001",
           notes: "دفعة جديدة من التبن",
@@ -616,7 +616,7 @@ class MockFirestore {
           financialLoss: 8500, // EGP
           recordedBy: "user_001",
           createdAt: new Date("2024-01-15"),
-          notes: "حالة مؤسفة ��ان من الممكن تجنبها بالعلاج المبكر",
+          notes: "حالة مؤسفة كان من الممكن تجنبها بالعلاج المبكر",
         },
         {
           id: "mort_002",
@@ -647,7 +647,7 @@ class MockFirestore {
           ageAtDeath: 2, // months
           weightAtDeath: 15.2,
           barnId: "barn_003",
-          veterinaryReport: "إصا��ة نتيجة سقوط من مكان مرتفع",
+          veterinaryReport: "إصابة نتيجة سقوط من مكان مرتفع",
           preventable: true,
           financialLoss: 2500, // EGP
           recordedBy: "user_001",

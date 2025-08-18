@@ -17,7 +17,8 @@ import {
   formatArabicNumber,
   animalTypes,
 } from "@/lib/arabic-utils";
-import { db, Animal, Barn, InventoryItem } from "@/lib/firebase-mock";
+import { dataService } from "@/lib/data-service";
+import type { Animal, Barn, WarehouseItem, StockMovement, FeedingRecord } from "@/../../shared/types";
 import {
   CircleDot,
   TrendingUp,
@@ -36,7 +37,9 @@ import {
 export default function Index() {
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [barns, setBarns] = useState<Barn[]>([]);
-  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+  const [warehouseItems, setWarehouseItems] = useState<WarehouseItem[]>([]);
+  const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
+  const [feedingRecords, setFeedingRecords] = useState<FeedingRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -45,18 +48,20 @@ export default function Index() {
 
   const loadDashboardData = async () => {
     try {
-      const [animalsSnapshot, barnsSnapshot, inventorySnapshot] =
+      const [animalsData, barnsData, warehouseData, stockData, feedingData] =
         await Promise.all([
-          db.collection("animals").get(),
-          db.collection("barns").get(),
-          db.collection("inventory").get(),
+          dataService.animals.getAll(),
+          dataService.barns.getAll(),
+          dataService.warehouseItems.getAll(),
+          dataService.stockMovements.getAll(),
+          dataService.feedingRecords.getAll(),
         ]);
 
-      setAnimals(animalsSnapshot.docs.map((doc) => doc.data() as Animal));
-      setBarns(barnsSnapshot.docs.map((doc) => doc.data() as Barn));
-      setInventoryItems(
-        inventorySnapshot.docs.map((doc) => doc.data() as InventoryItem),
-      );
+      setAnimals(animalsData);
+      setBarns(barnsData);
+      setWarehouseItems(warehouseData);
+      setStockMovements(stockData);
+      setFeedingRecords(feedingData);
     } catch (error) {
       console.error("Error loading dashboard data:", error);
     } finally {
@@ -79,38 +84,73 @@ export default function Index() {
     );
   }
 
-  // Calculate real data from Firebase mock
-  const activeAnimals = animals.filter((a) => a.status === "active");
+  // Calculate real data from actual service - no need to filter by status as all animals should be active by default
+  const activeAnimals = animals;
   const totalAnimals = activeAnimals.length;
-  const males = activeAnimals.filter((a) => a.type === "male").length;
-  const females = activeAnimals.filter((a) => a.type === "female").length;
-  const newborns = activeAnimals.filter((a) => a.type === "newborn").length;
+  const males = activeAnimals.filter((a) => a.category === "male").length;
+  const females = activeAnimals.filter((a) => a.category === "female").length;
+  const newborns = activeAnimals.filter((a) => a.category === "newborn").length;
 
   const totalValue = activeAnimals.reduce(
-    (sum, animal) => sum + (animal.purchase?.priceEGP || 0),
+    (sum, animal) => sum + (animal.purchasePrice || 0),
     0,
   );
+  
+  // Calculate average weight from weight history
   const averageWeight =
     totalAnimals > 0
-      ? activeAnimals.reduce((sum, animal) => sum + animal.currentWeightKg, 0) /
-        totalAnimals
+      ? activeAnimals.reduce((sum, animal) => {
+          const latestWeight = animal.weightHistory && animal.weightHistory.length > 0 
+            ? animal.weightHistory[animal.weightHistory.length - 1].weightKg 
+            : animal.weight || 0;
+          return sum + latestWeight;
+        }, 0) / totalAnimals
       : 0;
 
   const totalCapacity = barns.reduce((sum, barn) => sum + barn.capacity, 0);
   const currentOccupancy = totalAnimals;
 
   // Generate alerts based on real data
-  const lowStockItems = inventoryItems.filter((item) => {
-    const currentStock = db.getCurrentStock(item.id);
-    return currentStock <= item.minLevel;
-  });
+  const lowStockItems = warehouseItems.filter((item) => 
+    item.currentStock <= item.minStockLevel
+  );
+
+  // Calculate recent activity from actual data
+  const recentStockMovements = stockMovements
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 3);
+
+  const recentFeedingRecords = feedingRecords
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 2);
+
+  // Calculate monthly growth based on recent animals
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+  const monthStart = new Date(currentYear, currentMonth, 1);
+  
+  const animalsThisMonth = activeAnimals.filter(animal => 
+    animal.createdAt && new Date(animal.createdAt) >= monthStart
+  ).length;
+  
+  const lastMonthStart = new Date(currentYear, currentMonth - 1, 1);
+  const lastMonthEnd = new Date(currentYear, currentMonth, 0);
+  const animalsLastMonth = activeAnimals.filter(animal => {
+    if (!animal.createdAt) return false;
+    const createdDate = new Date(animal.createdAt);
+    return createdDate >= lastMonthStart && createdDate <= lastMonthEnd;
+  }).length;
+  
+  const monthlyGrowth = animalsLastMonth > 0 
+    ? ((animalsThisMonth - animalsLastMonth) / animalsLastMonth) * 100 
+    : 0;
 
   const alerts = [
     ...lowStockItems.map((item) => ({
       id: `stock_${item.id}`,
       type: "warning" as const,
       title: "مخزون منخفض",
-      description: `مخزون ${item.name} أقل من المستوى المطلوب`,
+      description: `مخزون ${item.name} أقل من المستوى المطلوب (${item.currentStock} ${item.unit})`,
       priority: "high" as const,
     })),
     ...(newborns > 0
@@ -124,32 +164,88 @@ export default function Index() {
           },
         ]
       : []),
+    // Add alerts for animals needing attention
+    ...(() => {
+      const currentDate = new Date();
+      const animalsNeedingAttention = activeAnimals.filter(animal => {
+        // Check for isolation status
+        if (animal.isIsolated) return true;
+        
+        // Check for pregnant animals near due date
+        if (animal.isPregnant && animal.expectedBirthDate) {
+          const daysUntilBirth = Math.floor(
+            (new Date(animal.expectedBirthDate).getTime() - currentDate.getTime()) / 
+            (1000 * 60 * 60 * 24)
+          );
+          return daysUntilBirth <= 7 && daysUntilBirth >= 0;
+        }
+        
+        return false;
+      });
+      
+      return animalsNeedingAttention.length > 0 ? [{
+        id: "health_check",
+        type: "warning" as const,
+        title: "حيوانات تحتاج رعاية",
+        description: `${animalsNeedingAttention.length} حيوان يحتاج رعاية خاصة`,
+        priority: "medium" as const,
+      }] : [];
+    })(),
   ];
 
   const recentActivity = [
-    {
-      id: 1,
-      action: "إضافة حيوان جديد",
-      animal: activeAnimals[0]?.tagId || "غير محدد",
-      time: "منذ ساعتين",
-    },
-    {
-      id: 2,
-      action: "تسجيل وزن",
-      animal: activeAnimals[1]?.tagId || "غير محدد",
-      weight: `${activeAnimals[1]?.currentWeightKg || 0} كيلو`,
-      time: "منذ 4 ساعات",
-    },
-    {
-      id: 3,
-      action: "نقل إلى حظيرة",
-      animal: activeAnimals[2]?.tagId || "غير محدد",
-      barn: activeAnimals[2]?.barnId || "غير محدد",
-      time: "أمس",
-    },
-  ];
+    ...recentStockMovements.map((movement, index) => {
+      const item = warehouseItems.find(i => i.id === movement.itemId);
+      return {
+        id: `stock_${index}`,
+        action: movement.type === "in" ? "إضافة للمخزون" : "صرف من المخزون",
+        animal: null,
+        weight: null,
+        barn: null,
+        time: getRelativeTime(movement.date),
+      };
+    }),
+    ...recentFeedingRecords.map((record, index) => {
+      const barn = barns.find(b => b.id === record.barnId);
+      return {
+        id: `feeding_${index}`,
+        action: "تسجيل تغذية",
+        animal: null, // FeedingRecord doesn't have specific animal, it's for barn
+        weight: null,
+        barn: barn?.name || "حظيرة غير معروفة",
+        time: getRelativeTime(record.date),
+      };
+    }),
+    // Add recent weight records from weight history
+    ...activeAnimals
+      .filter(animal => animal.weightHistory && animal.weightHistory.length > 0)
+      .map((animal, index) => {
+        const latestWeight = animal.weightHistory![animal.weightHistory!.length - 1];
+        const barn = barns.find(b => b.id === animal.barnId);
+        return {
+          id: `weight_${index}`,
+          action: "تسجيل وزن",
+          animal: animal.earTagId,
+          weight: `${formatWeight(latestWeight.weightKg)}`,
+          barn: barn?.name || "حظيرة غير معروفة",
+          time: getRelativeTime(latestWeight.date),
+        };
+      })
+      .slice(0, 2)
+  ].slice(0, 5); // Show only the 5 most recent activities
 
-  const monthlyGrowth = 5.2; // Mock calculation
+  // Helper function to get relative time
+  function getRelativeTime(date: Date | string): string {
+    const now = new Date();
+    const targetDate = new Date(date);
+    const diffInHours = Math.floor((now.getTime() - targetDate.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return "منذ دقائق";
+    if (diffInHours < 24) return `منذ ${diffInHours} ساعة`;
+    if (diffInHours < 48) return "أمس";
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `منذ ${diffInDays} أيام`;
+  }
 
   return (
     <div className="space-y-6">

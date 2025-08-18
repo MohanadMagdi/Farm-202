@@ -501,7 +501,7 @@ export default function FeedingPage() {
                             ? "ممتاز"
                             : barn.efficiency <= 5
                               ? "جيد"
-                              : "يحت��ج تحسين"}
+                              : "يحتاج تحسين"}
                         </Badge>
                       </div>
                     </div>
@@ -879,7 +879,7 @@ export default function FeedingPage() {
                     {todaySchedules.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={7} className="text-center py-8">
-                          لا توجد جداول ��غذية نشطة
+                          لا توجد جداول تغذية نشطة
                         </TableCell>
                       </TableRow>
                     )}
@@ -1055,7 +1055,7 @@ export default function FeedingPage() {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2 space-x-reverse">
                   <BarChart3 className="h-5 w-5 text-farm-600" />
-                  <span>ا��تهلاك العلف حسب النوع</span>
+                  <span>استهلاك العلف حسب النوع</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -1131,7 +1131,7 @@ export default function FeedingPage() {
                       </Badge>
                     </div>
                     <p className="text-sm text-yellow-700">
-                      كفاءة مقبولة، ��مكن تحسينها
+                      كفاءة مقبولة، يمكن تحسينها
                     </p>
                   </div>
 

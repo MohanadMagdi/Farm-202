@@ -80,7 +80,7 @@ export default function LoginPage() {
     {
       email: 'inventory@farm.com',
       password: 'demo123',
-      role: 'مسؤول ا��مخزون',
+      role: 'مسؤول المخزون',
       icon: Package,
       color: 'text-purple-600',
       permissions: 'المخزون، التغذية، التقارير'
@@ -164,7 +164,7 @@ export default function LoginPage() {
 
             <div className="mt-6 text-center">
               <p className="text-sm text-muted-foreground">
-                نظ��م إدارة شامل للمزارع مع تتبع دقيق للحيوانات والتغذية والمخزون
+                نظام إدارة شامل للمزارع مع تتبع دقيق للحيوانات والتغذية والمخزون
               </p>
             </div>
           </CardContent>
@@ -222,7 +222,7 @@ export default function LoginPage() {
                 </div>
                 <div className="flex items-center">
                   <Building2 className="h-3 w-3 ml-1" />
-                  إدارة الحظ��ئر
+                  إدارة الحظائر
                 </div>
                 <div className="flex items-center">
                   <Package className="h-3 w-3 ml-1" />

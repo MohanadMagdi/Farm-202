@@ -457,3 +457,6 @@ export const farmHelpers = {
 
 // Export data mode for debugging
 export const dataMode = useMockData ? "mock" : "firebase";
+
+// Add inventory alias for backwards compatibility
+(dataService as any).inventory = dataService.warehouseItems;

@@ -160,7 +160,7 @@ export default function BreedingWorkflowDashboard() {
     } catch (error) {
       console.error("Error in auto scan:", error);
       toast({
-        title: "خطأ في ال��حص التلقائي",
+        title: "خطأ في الفحص التلقائي",
         description: "حدث خطأ أثناء الفحص التلقائي",
         variant: "destructive",
       });

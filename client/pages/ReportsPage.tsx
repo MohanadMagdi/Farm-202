@@ -315,7 +315,7 @@ export default function ReportsPage() {
           <TabsTrigger value="inventory">تقرير المخزون</TabsTrigger>
           <TabsTrigger value="feeding">تقرير التغذية</TabsTrigger>
           <TabsTrigger value="financial">التقرير المالي</TabsTrigger>
-          <TabsTrigger value="analytics">التح��يلات المتقدمة</TabsTrigger>
+          <TabsTrigger value="analytics">التحليلات المتقدمة</TabsTrigger>
         </TabsList>
 
         <TabsContent value="animals" className="space-y-4" dir="rtl">
@@ -330,7 +330,7 @@ export default function ReportsPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span>إ��مالي الحيوانات النشطة</span>
+                  <span>إجمالي الحيوانات النشطة</span>
                   <span className="font-semibold">
                     {formatArabicNumber(activeAnimals.length)}
                   </span>
@@ -374,7 +374,7 @@ export default function ReportsPage() {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>متوسط مع��ل ��لنمو ��ليومي</span>
+                  <span>متوسط معدل النمو اليومي</span>
                   <span className="font-semibold">
                     {(
                       activeAnimals.reduce(
@@ -393,7 +393,7 @@ export default function ReportsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2 space-x-reverse">
                   <TrendingUp className="h-5 w-5 text-farm-600" />
-                  <span>أفضل الحيوانات أداء��</span>
+                  <span>أفضل الحيوانات أداءً</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -409,7 +409,7 @@ export default function ReportsPage() {
                           <div className="font-medium">{animal.earTagId}</div>
                           <div className="text-sm text-muted-foreground">
                             معدل النمو: {calculateADG(animal).toFixed(2)}{" "}
-                            كيلو/��وم
+                            كيلو/يوم
                           </div>
                         </div>
                       </div>
@@ -441,10 +441,10 @@ export default function ReportsPage() {
                       <TableHead className="text-right">رقم الأذن</TableHead>
                       <TableHead className="text-right">النوع</TableHead>
                       <TableHead className="text-right">
-                        العمر (��يام)
+                        العمر (أيام)
                       </TableHead>
                       <TableHead className="text-right">
-                        الوزن الحال��
+                        الوزن الحالي
                       </TableHead>
                       <TableHead className="text-right">إجمالي النمو</TableHead>
                       <TableHead className="text-right">
@@ -515,7 +515,7 @@ export default function ReportsPage() {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2 space-x-reverse">
                 <Package className="h-5 w-5 text-farm-600" />
-                <span>تحليل المخزو��</span>
+                <span>تحليل المخزون</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -523,7 +523,7 @@ export default function ReportsPage() {
                 <Table dir="rtl">
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-right">��سم الصنف</TableHead>
+                      <TableHead className="text-right">اسم الصنف</TableHead>
                       <TableHead className="text-right">
                         المخزون الحالي
                       </TableHead>
@@ -602,7 +602,7 @@ export default function ReportsPage() {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>م��وسط الاس��هلاك اليومي</span>
+                  <span>متوسط الاستهلاك اليومي</span>
                   <span className="font-semibold">
                     {formatWeight(
                       feedingRecords.reduce((sum, r) => sum + r.quantityIssued, 0) / 30,
@@ -610,7 +610,7 @@ export default function ReportsPage() {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>تكلفة التغذية الشه��ية</span>
+                  <span>تكلفة التغذية الشهرية</span>
                   <span className="font-semibold">
                     {formatEGP(monthlyFeedingCost)}
                   </span>
@@ -620,7 +620,7 @@ export default function ReportsPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>كفاءة ��لتحوي�� الغذائي</CardTitle>
+                <CardTitle>كفاءة التحويل الغذائي</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -638,10 +638,10 @@ export default function ReportsPage() {
                                 (animal.weight * 3)
                               ).toFixed(2)
                             : "0.00"}{" "}
-                          كيلو نمو/كيلو ��لف
+                          كيلو نمو/كيلو علف
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          إجمالي العل��: {formatWeight(animal.weight * 3)}
+                          إجمالي العلف: {formatWeight(animal.weight * 3)}
                         </div>
                       </div>
                     </div>
@@ -669,7 +669,7 @@ export default function ReportsPage() {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>ق��مة المخزون</span>
+                  <span>قيمة المخزون</span>
                   <span className="font-semibold">
                     {formatEGP(totalInventoryValue)}
                   </span>

@@ -467,7 +467,7 @@ export default function AnimalsOverviewPage() {
                     <div className="text-3xl font-bold text-pink-600">
                       {analytics.femaleCount}
                     </div>
-                    <p className="text-muted-foreground">��جمالي الإناث</p>
+                    <p className="text-muted-foreground">إجمالي الإناث</p>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>حوامل:</span>

@@ -155,9 +155,6 @@
     text-align: right;
   }
 
-  [dir="rtl"] .text-right {
-    text-align: left;
-  }
 
   /* Force RTL layout for main containers */
   [dir="rtl"] main,

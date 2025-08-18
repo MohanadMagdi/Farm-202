@@ -92,7 +92,7 @@ export const animalStatus = {
  * Inventory categories
  */
 export const inventoryCategories = {
-  feed: "أعل��ف",
+  feed: "أعلاف",
   medicine: "أدوية",
   medical_supply: "مستلزمات طبية",
   equipment: "معدات",
