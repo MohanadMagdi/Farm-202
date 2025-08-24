@@ -16,6 +16,10 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: "dist/spa",
   },
+  optimizeDeps: {
+    exclude: [],
+    include: ["lucide-react"],
+  },
   plugins: [react(), expressPlugin()],
   resolve: {
     alias: {

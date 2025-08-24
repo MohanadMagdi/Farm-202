@@ -214,7 +214,7 @@ class MockFirestore {
         // Test animal with many weight entries to demonstrate dynamic columns
         {
           id: "anim_test_multi",
-          earTagId: "M999",
+          earTagId: "M006",
           category: "male" as AnimalCategory,
           sex: "male" as const,
           weight: 85.7,

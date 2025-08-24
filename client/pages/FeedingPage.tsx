@@ -37,6 +37,7 @@ import type {
   FeedingAnalytics,
 } from "@shared/types";
 import FeedingFormModal from "@/components/forms/FeedingFormModal";
+import FeedingScheduleModal from "@/components/forms/FeedingScheduleModal";
 import FeedingEfficiencyDashboard from "@/components/FeedingEfficiencyDashboard";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -90,6 +91,10 @@ export default function FeedingPage() {
     useState<FeedingRecord | null>(null);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [preselectedBarnId, setPreselectedBarnId] = useState<string>();
+  const [currentTab, setCurrentTab] = useState<string>("records");
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [selectedSchedule, setSelectedSchedule] = useState<FeedingSchedule | null>(null);
+  const [scheduleModalMode, setScheduleModalMode] = useState<"add" | "edit">("add");
 
   useEffect(() => {
     loadData();
@@ -244,6 +249,46 @@ export default function FeedingPage() {
     });
   };
 
+  const handleAddSchedule = () => {
+    setSelectedSchedule(null);
+    setScheduleModalMode("add");
+    setShowScheduleModal(true);
+  };
+
+  const handleEditSchedule = (schedule: FeedingSchedule) => {
+    setSelectedSchedule(schedule);
+    setScheduleModalMode("edit");
+    setShowScheduleModal(true);
+  };
+
+  const handleDeleteSchedule = async (schedule: FeedingSchedule) => {
+    if (window.confirm(`هل أنت متأكد من حذف جدول التغذية؟`)) {
+      try {
+        await dataService.feedingSchedules.delete(schedule.id);
+        toast({
+          title: "تم الحذف بنجاح",
+          description: "تم حذف جدول التغذية بنجاح",
+        });
+        loadData();
+      } catch (error) {
+        console.error("Error deleting feeding schedule:", error);
+        toast({
+          title: "خطأ في الحذف",
+          description: "حدث خطأ أثناء حذف جدول التغذية",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  const handleScheduleModalSave = () => {
+    loadData();
+    toast({
+      title: "تم الحفظ بنجاح",
+      description: "تم حفظ جدول التغذية بنجاح",
+    });
+  };
+
   const handleAddFeeding = (barnId?: string) => {
     setSelectedFeedingRecord(null);
     setModalMode("add");
@@ -338,10 +383,6 @@ export default function FeedingPage() {
           <Button variant="outline" size="sm" onClick={exportReport}>
             <Download className="h-4 w-4 ml-2" />
             تصدير تقرير
-          </Button>
-          <Button onClick={() => handleAddFeeding()}>
-            <Plus className="h-4 w-4 ml-2" />
-            تسجيل تغذية
           </Button>
         </div>
       </div>
@@ -656,7 +697,7 @@ export default function FeedingPage() {
         </Card>
       )}
 
-      <Tabs defaultValue="records" className="w-full" dir="rtl">
+      <Tabs defaultValue="records" className="w-full" dir="rtl" value={currentTab} onValueChange={setCurrentTab}>
         <TabsList className="grid w-full grid-cols-3" dir="rtl">
           <TabsTrigger value="records">سجلات التغذية</TabsTrigger>
           <TabsTrigger value="schedules">جداول التغذية</TabsTrigger>
@@ -666,10 +707,18 @@ export default function FeedingPage() {
         <TabsContent value="records" className="space-y-4" dir="rtl">
           <Card>
             <CardHeader>
-              <CardTitle>سجلات التغذية المنجزة</CardTitle>
-              <CardDescription>
-                الوجبات المسجلة لتاريخ {formatArabicDate(selectedDateObj)}
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>سجلات التغذية المنجزة</CardTitle>
+                  <CardDescription>
+                    الوجبات المسجلة لتاريخ {formatArabicDate(selectedDateObj)}
+                  </CardDescription>
+                </div>
+                <Button onClick={() => handleAddFeeding()}>
+                  <Plus className="h-4 w-4 ml-2" />
+                  تسجيل تغذية جديدة
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="rounded-md border">
@@ -741,6 +790,13 @@ export default function FeedingPage() {
                                 variant="outline"
                                 size="sm"
                                 className="h-8 w-8 p-0"
+                                onClick={() => {
+                                  toast({
+                                    title: "عرض التفاصيل",
+                                    description: `عرض تفاصيل تسجيل التغذية: ${record.feedType}`,
+                                  });
+                                }}
+                                title="عرض التفاصيل"
                               >
                                 <Eye className="h-3 w-3" />
                               </Button>
@@ -749,6 +805,7 @@ export default function FeedingPage() {
                                 size="sm"
                                 onClick={() => handleEditFeeding(record)}
                                 className="h-8 w-8 p-0"
+                                title="تعديل"
                               >
                                 <Edit className="h-3 w-3" />
                               </Button>
@@ -757,6 +814,7 @@ export default function FeedingPage() {
                                 size="sm"
                                 onClick={() => handleDeleteFeeding(record)}
                                 className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                                title="حذف"
                               >
                                 <Trash2 className="h-3 w-3" />
                               </Button>
@@ -782,10 +840,18 @@ export default function FeedingPage() {
         <TabsContent value="schedules" className="space-y-4" dir="rtl">
           <Card>
             <CardHeader>
-              <CardTitle>جداول التغذية النشطة</CardTitle>
-              <CardDescription>
-                الجداول المعتمدة لتغذية الحيوانات
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>جداول التغذية النشطة</CardTitle>
+                  <CardDescription>
+                    الجداول المعتمدة لتغذية الحيوانات
+                  </CardDescription>
+                </div>
+                <Button onClick={() => handleAddSchedule()}>
+                  <Plus className="h-4 w-4 ml-2" />
+                  إضافة جدول جديد
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="rounded-md border">
@@ -851,6 +917,13 @@ export default function FeedingPage() {
                                 variant="outline"
                                 size="sm"
                                 className="h-8 w-8 p-0"
+                                onClick={() => {
+                                  toast({
+                                    title: "عرض تفاصيل الجدول",
+                                    description: `تفاصيل جدول تغذية ${schedule.feedType} في ${barns.find(b => b.id === schedule.barnId)?.name}`,
+                                  });
+                                }}
+                                title="عرض التفاصيل"
                               >
                                 <Eye className="h-3 w-3" />
                               </Button>
@@ -858,6 +931,8 @@ export default function FeedingPage() {
                                 variant="outline"
                                 size="sm"
                                 className="h-8 w-8 p-0"
+                                onClick={() => handleEditSchedule(schedule)}
+                                title="تعديل الجدول"
                               >
                                 <Edit className="h-3 w-3" />
                               </Button>
@@ -868,8 +943,18 @@ export default function FeedingPage() {
                                   handleAddFeeding(schedule.barnId)
                                 }
                                 className="h-8 w-8 p-0 text-green-600 hover:text-green-700"
+                                title="تسجيل تغذية حسب هذا الجدول"
                               >
                                 <Utensils className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDeleteSchedule(schedule)}
+                                className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                                title="حذف الجدول"
+                              >
+                                <Trash2 className="h-3 w-3" />
                               </Button>
                             </div>
                           </TableCell>
@@ -1177,6 +1262,15 @@ export default function FeedingPage() {
         feedingRecord={selectedFeedingRecord}
         mode={modalMode}
         preselectedBarnId={preselectedBarnId}
+      />
+
+      {/* Feeding Schedule Modal */}
+      <FeedingScheduleModal
+        isOpen={showScheduleModal}
+        onClose={() => setShowScheduleModal(false)}
+        onSave={handleScheduleModalSave}
+        schedule={selectedSchedule}
+        mode={scheduleModalMode}
       />
     </div>
   );
