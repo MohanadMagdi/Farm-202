@@ -882,10 +882,10 @@ export default function BarnsPage() {
               {/* Tabs for different sections */}
               <Tabs defaultValue="animals">
                 <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="equipment">المعدات</TabsTrigger>
-                  <TabsTrigger value="efficiency">كفاءة التغذية</TabsTrigger>
-                  <TabsTrigger value="feeding">التغذية</TabsTrigger>
                   <TabsTrigger value="animals">الحيوانات</TabsTrigger>
+                  <TabsTrigger value="feeding">التغذية</TabsTrigger>
+                  <TabsTrigger value="efficiency">كفاءة التغذية</TabsTrigger>
+                  <TabsTrigger value="equipment">المعدات</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="equipment" className="pt-4">

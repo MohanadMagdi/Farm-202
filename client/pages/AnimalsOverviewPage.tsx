@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatArabicDate } from "@/lib/arabic-utils";
 import { dataService, farmHelpers } from "@/lib/data-service";
 import BreedingWorkflowDashboard from "@/components/BreedingWorkflowDashboard";
-import type { Animal, AnimalCategory } from "@shared/types";
+import type { Animal, AnimalCategory, Barn } from "@shared/types";
 import {
   CircleDot,
   TrendingUp,
@@ -34,6 +34,7 @@ import {
 
 export default function AnimalsOverviewPage() {
   const [animals, setAnimals] = useState<Animal[]>([]);
+  const [barns, setBarns] = useState<Barn[]>([]);
   const [loading, setLoading] = useState(true);
   const [analytics, setAnalytics] = useState({
     totalAnimals: 0,
@@ -49,14 +50,20 @@ export default function AnimalsOverviewPage() {
     averageADG: 0,
   });
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     loadAnimals();
   }, []);
 
   const loadAnimals = async () => {
     try {
-      const animalsData = await dataService.animals.getAll();
+      const [animalsData, barnsData] = await Promise.all([
+        dataService.animals.getAll(),
+        dataService.barns.getAll(),
+      ]);
       setAnimals(animalsData);
+      setBarns(barnsData);
       calculateAnalytics(animalsData);
     } catch (error) {
       console.error("Error loading animals:", error);
@@ -133,6 +140,12 @@ export default function AnimalsOverviewPage() {
     );
   }
 
+  // Helper function to get barn name by barnId
+  const getBarnName = (barnId: string) => {
+    const barn = barns.find(b => b.id === barnId);
+    return barn ? barn.name : barnId; // Fallback to barnId if not found
+  };
+
   // Animals by barn
   const animalsByBarn = animals.reduce(
     (acc, animal) => {
@@ -198,7 +211,7 @@ export default function AnimalsOverviewPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => navigate("/reports")}>
             <BarChart3 className="h-4 w-4 ml-2" />
             تقرير مفصل
           </Button>
@@ -555,7 +568,7 @@ export default function AnimalsOverviewPage() {
             {Object.entries(animalsByBarn).map(([barnId, barnAnimals]) => (
               <div key={barnId} className="p-4 border rounded-lg">
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-medium">{barnId}</h4>
+                  <h4 className="font-medium">{getBarnName(barnId)}</h4>
                   <Badge variant="outline">{barnAnimals.length}</Badge>
                 </div>
 
