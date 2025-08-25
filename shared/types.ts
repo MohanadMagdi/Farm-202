@@ -30,12 +30,34 @@ export type UserRole =
 export type MovementType = "in" | "out" | "transfer";
 export type PricingMethod = "manual" | "formula" | "market_rate";
 
+// Male cattle business rules and constraints
+export interface MaleBusinessRules {
+  minPurchaseWeight: number; // Minimum weight at purchase (18 kg)
+  maxSaleWeight: number;     // Maximum weight at sale (60 kg)
+  farmCycleDuration: {       // Life cycle in farm (4-5 months)
+    min: number; // months
+    max: number; // months
+  };
+  weightGainTarget: number;  // Expected weight gain per month
+}
+
+export const MALE_BUSINESS_RULES: MaleBusinessRules = {
+  minPurchaseWeight: 18,     // 18 kg minimum purchase weight
+  maxSaleWeight: 60,         // 60 kg maximum sale weight
+  farmCycleDuration: {
+    min: 4,                  // 4 months minimum
+    max: 5                   // 5 months maximum
+  },
+  weightGainTarget: 8        // ~8-10 kg gain per month target
+};
+
 export interface Animal {
   id: string;
   earTagId: string; // Unique ear tag ID
   category: AnimalCategory;
   sex: "male" | "female";
   weight: number; // Current weight
+  ageMonths: number; // Age in months - required for all animals
   supplier?: string;
   purchaseDate: Date;
   purchasePrice: number; // EGP

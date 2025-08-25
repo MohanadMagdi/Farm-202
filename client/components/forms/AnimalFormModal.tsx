@@ -22,6 +22,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { formatArabicDate } from "@/lib/arabic-utils";
 import { dataService } from "@/lib/data-service";
+import { maleManagementService } from "@/lib/male-management-service";
 import {
   calculateCurrentPrice,
   formatEGP,
@@ -58,6 +59,7 @@ export default function AnimalFormModal({
     category: animalType,
     sex: "male" as "male" | "female",
     weight: "",
+    ageMonths: "", // Added age field
     supplier: "",
     purchaseDate: new Date().toISOString().split("T")[0],
     purchasePrice: "",
@@ -283,6 +285,31 @@ export default function AnimalFormModal({
       return;
     }
 
+    // Validate male business rules if adding a male
+    if (formData.category === "male" && mode === "add") {
+      const weight = parseFloat(formData.weight) || 0;
+      const age = parseInt(formData.ageMonths) || 0;
+      const validation = maleManagementService.validatePurchase(weight, age);
+      
+      if (!validation.isValid) {
+        toast({
+          title: "خطأ في قواعد الذكور",
+          description: validation.errors.join(", "),
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (validation.warnings.length > 0) {
+        // Show warnings but continue
+        toast({
+          title: "تحذير",
+          description: validation.warnings.join(", "),
+          variant: "default",
+        });
+      }
+    }
+
     setLoading(true);
     try {
       const animalData: Omit<Animal, "id"> = {
@@ -290,6 +317,7 @@ export default function AnimalFormModal({
         category: formData.category,
         sex: formData.sex,
         weight: parseFloat(formData.weight),
+        ageMonths: parseInt(formData.ageMonths) || 0, // Add age field
         supplier: formData.supplier || undefined,
         purchaseDate: new Date(formData.purchaseDate),
         purchasePrice: parseFloat(formData.purchasePrice) || 0,
@@ -487,6 +515,20 @@ export default function AnimalFormModal({
                     setFormData({ ...formData, weight: e.target.value })
                   }
                   placeholder="65.5"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="ageMonths">العمر (شهور) *</Label>
+                <Input
+                  id="ageMonths"
+                  type="number"
+                  min="0"
+                  value={formData.ageMonths}
+                  onChange={(e) =>
+                    setFormData({ ...formData, ageMonths: e.target.value })
+                  }
+                  placeholder="12"
                 />
               </div>
 

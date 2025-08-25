@@ -33,7 +33,7 @@ import { formatArabicDate } from "@/lib/arabic-utils";
 import { dataService, farmHelpers } from "@/lib/data-service";
 import { maleManagementService } from "@/lib/male-management-service";
 import { exportAnimalsReport } from "@/lib/export-utils";
-import type { Animal, AnimalCategory, Barn } from "@shared/types";
+import type { Animal, AnimalCategory } from "@shared/types";
 import { toast } from "@/hooks/use-toast";
 import {
   Search,
@@ -59,7 +59,6 @@ interface AnimalsPageProps {
 
 export default function AnimalsPage({ animalType }: AnimalsPageProps) {
   const [animals, setAnimals] = useState<Animal[]>([]);
-  const [barns, setBarns] = useState<Barn[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [healthFilter, setHealthFilter] = useState<string>("all");
@@ -90,7 +89,6 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
 
   useEffect(() => {
     loadAnimals();
-    loadBarns();
   }, [animalType]);
 
   const loadAnimals = async () => {
@@ -108,15 +106,6 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadBarns = async () => {
-    try {
-      const barnsData = await dataService.barns.getAll();
-      setBarns(barnsData);
-    } catch (error) {
-      console.error("Error loading barns:", error);
     }
   };
 
@@ -167,11 +156,6 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
       averageAge,
       expectedProfit,
     });
-  };
-
-  const getBarnName = (barnId: string): string => {
-    const barn = barns.find(b => b.id === barnId);
-    return barn ? barn.name : barnId;
   };
 
   const handleExport = async () => {
@@ -298,17 +282,15 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
       
       switch (statusFilter) {
         case "ready":
-          const readyList = maleManagementService.getMalesReadyForSale([animal]);
-          return readyList.length > 0;
+          return maleManagementService.isMaleReadyForSale(animal);
         case "attention":
-          const attentionList = maleManagementService.getMalesNeedingAttention([animal]);
-          return attentionList.length > 0;
+          return maleManagementService.doesMaleNeedAttention(animal);
         case "early":
           const cycleInfo = maleManagementService.getFarmCycleInfo(animal);
-          return cycleInfo.timeInFarm < 4;
+          return cycleInfo.farmMonths < 4;
         case "late":
           const lateInfo = maleManagementService.getFarmCycleInfo(animal);
-          return lateInfo.timeInFarm > 5;
+          return lateInfo.farmMonths > 5;
         default:
           return true;
       }
@@ -316,15 +298,11 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
 
   // Helper functions for males
   const getMaleStatusCategory = (animal: Animal) => {
-    const readyList = maleManagementService.getMalesReadyForSale([animal]);
-    if (readyList.length > 0) return "ready";
-    
-    const attentionList = maleManagementService.getMalesNeedingAttention([animal]);
-    if (attentionList.length > 0) return "attention";
-    
+    if (maleManagementService.isMaleReadyForSale(animal)) return "ready";
+    if (maleManagementService.doesMaleNeedAttention(animal)) return "attention";
     const cycleInfo = maleManagementService.getFarmCycleInfo(animal);
-    if (cycleInfo.timeInFarm < 4) return "early";
-    if (cycleInfo.timeInFarm > 5) return "late";
+    if (cycleInfo.farmMonths < 4) return "early";
+    if (cycleInfo.farmMonths > 5) return "late";
     return "normal";
   };
 
@@ -404,7 +382,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
   }
 
   return (
-    <div className="space-y-6" dir="rtl">
+    <div className="space-y-6">
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -434,7 +412,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-6" dir="rtl">
+      <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-6">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">إجمالي العدد</CardTitle>
@@ -603,7 +581,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
           <CardTitle className="text-lg">البحث والتصفية</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4 md:space-x-reverse" dir="rtl">
+          <div className="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4 md:space-x-reverse">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -611,8 +589,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                   placeholder="البحث برقم الأذن أو المورد..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pr-10 text-right"
-                  dir="rtl"
+                  className="pr-10"
                 />
               </div>
             </div>
@@ -655,7 +632,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
       <div className="space-y-6">
         {animalType === "male" ? (
           // Enhanced Males Table with Tabs
-          <Tabs defaultValue="all" className="w-full" dir="rtl">
+          <Tabs defaultValue="all" className="w-full">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="all">جميع الذكور ({analytics.totalCount})</TabsTrigger>
               <TabsTrigger value="ready">جاهز للبيع ({analytics.readyForSale})</TabsTrigger>
@@ -672,8 +649,8 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="rounded-md border" dir="rtl">
-                    <Table className="rtl:text-right">
+                  <div className="rounded-md border">
+                    <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead className="text-right">رقم الأذن</TableHead>
@@ -705,12 +682,12 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                               {animal.ageMonths ? `${animal.ageMonths} شهر` : "غير محدد"}
                             </TableCell>
                             <TableCell className="text-right">
-                              <div className="flex items-center justify-start gap-1">
+                              <div className="flex items-center justify-end gap-1">
                                 {farmHelpers.formatWeight(animal.weight)}
                                 {recentlyUpdatedAnimals.has(animal.id) && (
                                   <Badge 
                                     variant="outline" 
-                                    className="bg-green-50 text-green-600 text-xs mr-1"
+                                    className="bg-green-50 text-green-600 text-xs"
                                   >
                                     محدث
                                   </Badge>
@@ -733,7 +710,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                                 className="flex items-center w-fit"
                               >
                                 <MapPin className="h-3 w-3 ml-1" />
-                                {getBarnName(animal.barnId)}
+                                {animal.barnId}
                               </Badge>
                             </TableCell>
                             <TableCell className="text-right">
@@ -745,34 +722,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                               {animal.supplier || "-"}
                             </TableCell>
                             <TableCell className="text-right">
-                              <div className="flex items-center gap-1 justify-start">
-                                <Button
-                                  variant="destructive"
-                                  size="sm"
-                                  onClick={() => handleDelete(animal)}
-                                  className="h-8 w-8 p-0"
-                                  title="حذف"
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleWeightRecord(animal)}
-                                  className="h-8 w-8 p-0 text-green-600 hover:text-green-700"
-                                  title="تسجيل وزن"
-                                >
-                                  <Scale className="h-3 w-3" />
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleEdit(animal)}
-                                  className="h-8 w-8 p-0"
-                                  title="تعديل"
-                                >
-                                  <Edit className="h-3 w-3" />
-                                </Button>
+                              <div className="flex items-center gap-1 justify-end">
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -784,6 +734,30 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                                   title="عرض دورة الحياة"
                                 >
                                   <TrendingUp className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleEdit(animal)}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleWeightRecord(animal)}
+                                  className="h-8 w-8 p-0 text-green-600 hover:text-green-700"
+                                >
+                                  <Scale className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleDelete(animal)}
+                                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                                >
+                                  <Trash2 className="h-3 w-3" />
                                 </Button>
                               </div>
                             </TableCell>
@@ -815,36 +789,15 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid gap-4" dir="rtl">
+                  <div className="grid gap-4">
                     {maleManagementService.getMalesReadyForSale(filteredAnimals).map((male) => (
-                      <div key={male.id} className="space-y-2">
-                        <MaleLifecycleCard
-                          animal={male}
-                        />
-                        <div className="flex gap-2 justify-end">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEdit(male)}
-                          >
-                            تعديل
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleWeightRecord(male)}
-                          >
-                            تسجيل وزن
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleDelete(male)}
-                          >
-                            حذف
-                          </Button>
-                        </div>
-                      </div>
+                      <MaleLifecycleCard
+                        key={male.id}
+                        male={male}
+                        onEdit={handleEdit}
+                        onWeightRecord={handleWeightRecord}
+                        onDelete={handleDelete}
+                      />
                     ))}
                     {maleManagementService.getMalesReadyForSale(filteredAnimals).length === 0 && (
                       <div className="text-center py-8 text-muted-foreground">
@@ -868,36 +821,15 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid gap-4" dir="rtl">
-                    {maleManagementService.getMalesNeedingAttention(filteredAnimals).map((maleWithReason) => (
-                      <div key={maleWithReason.animal.id} className="space-y-2">
-                        <MaleLifecycleCard
-                          animal={maleWithReason.animal}
-                        />
-                        <div className="flex gap-2 justify-end">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEdit(maleWithReason.animal)}
-                          >
-                            تعديل
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleWeightRecord(maleWithReason.animal)}
-                          >
-                            تسجيل وزن
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleDelete(maleWithReason.animal)}
-                          >
-                            حذف
-                          </Button>
-                        </div>
-                      </div>
+                  <div className="grid gap-4">
+                    {maleManagementService.getMalesNeedingAttention(filteredAnimals).map((male) => (
+                      <MaleLifecycleCard
+                        key={male.id}
+                        male={male}
+                        onEdit={handleEdit}
+                        onWeightRecord={handleWeightRecord}
+                        onDelete={handleDelete}
+                      />
                     ))}
                     {maleManagementService.getMalesNeedingAttention(filteredAnimals).length === 0 && (
                       <div className="text-center py-8 text-muted-foreground">
@@ -918,36 +850,15 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid gap-4" dir="rtl">
+                  <div className="grid gap-4">
                     {filteredAnimals.map((male) => (
-                      <div key={male.id} className="space-y-2">
-                        <MaleLifecycleCard
-                          animal={male}
-                        />
-                        <div className="flex gap-2 justify-end">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEdit(male)}
-                          >
-                            تعديل
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleWeightRecord(male)}
-                          >
-                            تسجيل وزن
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleDelete(male)}
-                          >
-                            حذف
-                          </Button>
-                        </div>
-                      </div>
+                      <MaleLifecycleCard
+                        key={male.id}
+                        male={male}
+                        onEdit={handleEdit}
+                        onWeightRecord={handleWeightRecord}
+                        onDelete={handleDelete}
+                      />
                     ))}
                     {filteredAnimals.length === 0 && (
                       <div className="text-center py-8 text-muted-foreground">
@@ -969,8 +880,8 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="rounded-md border" dir="rtl">
-                <Table className="rtl:text-right">
+              <div className="rounded-md border">
+                <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead className="text-right">رقم الأذن</TableHead>
@@ -1005,12 +916,12 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                           )}
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex items-center justify-start gap-1">
+                          <div className="flex items-center justify-end gap-1">
                             {farmHelpers.formatWeight(animal.weight)}
                             {recentlyUpdatedAnimals.has(animal.id) && (
                               <Badge 
                                 variant="outline" 
-                                className="bg-green-50 text-green-600 text-xs mr-1"
+                                className="bg-green-50 text-green-600 text-xs"
                               >
                                 محدث
                               </Badge>
@@ -1030,7 +941,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                             className="flex items-center w-fit"
                           >
                             <MapPin className="h-3 w-3 ml-1" />
-                            {getBarnName(animal.barnId)}
+                            {animal.barnId}
                           </Badge>
                         </TableCell>
                         {animalType === "female" && (
@@ -1061,33 +972,30 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                           {animal.supplier || "-"}
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex items-center gap-1 justify-start">
+                          <div className="flex items-center gap-1 justify-end">
                             <Button
-                              variant="destructive"
+                              variant="outline"
                               size="sm"
-                              onClick={() => handleDelete(animal)}
+                              onClick={() => handleEdit(animal)}
                               className="h-8 w-8 p-0"
-                              title="حذف"
                             >
-                              <Trash2 className="h-3 w-3" />
+                              <Edit className="h-3 w-3" />
                             </Button>
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => handleWeightRecord(animal)}
                               className="h-8 w-8 p-0 text-green-600 hover:text-green-700"
-                              title="تسجيل وزن"
                             >
                               <Scale className="h-3 w-3" />
                             </Button>
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleEdit(animal)}
-                              className="h-8 w-8 p-0"
-                              title="تعديل"
+                              onClick={() => handleDelete(animal)}
+                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
                             >
-                              <Edit className="h-3 w-3" />
+                              <Trash2 className="h-3 w-3" />
                             </Button>
                           </div>
                         </TableCell>
@@ -1114,7 +1022,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
       {/* Lifecycle Card Modal for Males */}
       {animalType === "male" && showLifecycleCard && selectedAnimal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto" dir="rtl">
+          <div className="bg-white p-6 rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold">دورة حياة الذكر {selectedAnimal.earTagId}</h3>
               <Button
@@ -1126,31 +1034,11 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
               </Button>
             </div>
             <MaleLifecycleCard
-              animal={selectedAnimal}
+              male={selectedAnimal}
+              onEdit={handleEdit}
+              onWeightRecord={handleWeightRecord}
+              onDelete={handleDelete}
             />
-            <div className="flex gap-2 justify-end mt-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleEdit(selectedAnimal)}
-              >
-                تعديل
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleWeightRecord(selectedAnimal)}
-              >
-                تسجيل وزن
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => handleDelete(selectedAnimal)}
-              >
-                حذف
-              </Button>
-            </div>
           </div>
         </div>
       )}
