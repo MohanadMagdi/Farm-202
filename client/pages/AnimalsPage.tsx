@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import AnimalFormModal from "@/components/forms/AnimalFormModal";
 import WeightRecordModal from "@/components/forms/WeightRecordModal";
 import MaleLifecycleCard from "@/components/MaleLifecycleCard";
+import FemaleLifecycleCard from "@/components/FemaleLifecycleCard";
 import {
   Select,
   SelectContent,
@@ -32,6 +33,7 @@ import {
 import { formatArabicDate } from "@/lib/arabic-utils";
 import { dataService, farmHelpers } from "@/lib/data-service";
 import { maleManagementService } from "@/lib/male-management-service";
+import { femaleManagementService } from "@/lib/female-management-service";
 import { exportAnimalsReport } from "@/lib/export-utils";
 import type { Animal, AnimalCategory, Barn } from "@shared/types";
 import { toast } from "@/hooks/use-toast";
@@ -51,6 +53,7 @@ import {
   DollarSign,
   Filter,
   Users,
+  Baby,
 } from "lucide-react";
 
 interface AnimalsPageProps {
@@ -86,6 +89,9 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
     needingAttention: 0,
     averageAge: 0,
     expectedProfit: 0,
+    // Enhanced analytics for females
+    readyForBreeding: 0,
+    breedingEfficiency: 0,
   });
 
   useEffect(() => {
@@ -143,6 +149,12 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
     let averageAge = 0;
     let expectedProfit = 0;
 
+    // Enhanced analytics for females
+    let readyForBreeding = 0;
+    let femalesNeedingAttention = 0;
+    let breedingEfficiency = 0;
+    let productionValue = 0;
+
     if (animalType === "male") {
       readyForSale = maleManagementService.getMalesReadyForSale(animalsData).length;
       needingAttention = maleManagementService.getMalesNeedingAttention(animalsData).length;
@@ -153,6 +165,16 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
         const profit = maleManagementService.calculateExpectedProfit(male);
         return sum + profit.profit;
       }, 0);
+    } else if (animalType === "female") {
+      const femaleAnalytics = femaleManagementService.calculateFemaleAnalytics(animalsData);
+      readyForBreeding = femaleAnalytics.readyForBreeding;
+      femalesNeedingAttention = femaleAnalytics.needingAttention;
+      averageAge = femaleAnalytics.averageAge;
+      breedingEfficiency = femaleAnalytics.breedingEfficiency;
+      productionValue = femaleAnalytics.productionValue;
+    } else {
+      averageAge = totalCount > 0 ? 
+        animalsData.reduce((sum, animal) => sum + (animal.ageMonths || 0), 0) / totalCount : 0;
     }
 
     setAnalytics({
@@ -163,9 +185,12 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
       pregnantCount,
       isolatedCount,
       readyForSale,
-      needingAttention,
+      needingAttention: animalType === "male" ? needingAttention : femalesNeedingAttention,
       averageAge,
-      expectedProfit,
+      expectedProfit: animalType === "male" ? expectedProfit : productionValue,
+      // Female specific analytics
+      readyForBreeding,
+      breedingEfficiency,
     });
   };
 
@@ -546,6 +571,91 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
         )}
 
         {animalType === "female" && (
+          <>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">الحوامل</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-pink-600">
+                  {analytics.pregnantCount}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center">
+                  <Heart className="h-4 w-4 ml-1 text-green-600" />
+                  جاهزة للتلقيح
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">
+                  {analytics.readyForBreeding}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center">
+                  <AlertTriangle className="h-4 w-4 ml-1 text-red-600" />
+                  تحتاج متابعة
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-red-600">
+                  {analytics.needingAttention}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center">
+                  <Calendar className="h-4 w-4 ml-1 text-blue-600" />
+                  متوسط العمر
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-blue-600">
+                  {analytics.averageAge.toFixed(1)} شهر
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center">
+                  <TrendingUp className="h-4 w-4 ml-1 text-green-600" />
+                  كفاءة التكاثر
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">
+                  {analytics.breedingEfficiency.toFixed(1)}%
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center">
+                  <DollarSign className="h-4 w-4 ml-1 text-green-600" />
+                  قيمة الإنتاج المتوقعة
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">
+                  {farmHelpers.formatCurrency(analytics.expectedProfit)}
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
+
+        {animalType !== "male" && animalType !== "female" && (
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">الحوامل</CardTitle>
@@ -591,6 +701,55 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
               <AlertDescription className="text-red-800">
                 يوجد {analytics.needingAttention} ذكر يحتاج انتباه فوري! 
                 قد تكون أوزانهم منخفضة أو تجاوزت فترة التربية المثلى.
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
+      )}
+
+      {/* Enhanced Alerts for Females */}
+      {animalType === "female" && (
+        <div className="space-y-4">
+          {/* Ready for Breeding Alert */}
+          {analytics.readyForBreeding > 0 && (
+            <Alert className="border-green-200 bg-green-50">
+              <Heart className="h-4 w-4 text-green-600" />
+              <AlertDescription className="text-green-800">
+                يوجد {analytics.readyForBreeding} أنثى جاهزة للتلقيح! 
+                في سن التكاثر المثلى ومناسبة للحمل.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Pregnant Alert */}
+          {analytics.pregnantCount > 0 && (
+            <Alert className="border-pink-200 bg-pink-50">
+              <Baby className="h-4 w-4 text-pink-600" />
+              <AlertDescription className="text-pink-800">
+                يوجد {analytics.pregnantCount} أنثى حامل. 
+                تأكد من المتابعة الدورية والتحضير للولادة.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Attention Needed Alert */}
+          {analytics.needingAttention > 0 && (
+            <Alert className="border-red-200 bg-red-50">
+              <AlertTriangle className="h-4 w-4 text-red-600" />
+              <AlertDescription className="text-red-800">
+                يوجد {analytics.needingAttention} أنثى تحتاج متابعة فورية! 
+                قد تكون قريبة من الولادة أو تحتاج رعاية خاصة.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Low Breeding Efficiency Alert */}
+          {analytics.breedingEfficiency < 70 && analytics.totalCount > 0 && (
+            <Alert className="border-orange-200 bg-orange-50">
+              <TrendingUp className="h-4 w-4 text-orange-600" />
+              <AlertDescription className="text-orange-800">
+                كفاءة التكاثر منخفضة ({analytics.breedingEfficiency.toFixed(1)}%). 
+                راجع أعمار الإناث وحالتهن الصحية.
               </AlertDescription>
             </Alert>
           )}
@@ -959,8 +1118,310 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
               </Card>
             </TabsContent>
           </Tabs>
+        ) : animalType === "female" ? (
+          // Enhanced Females Table with Tabs
+          <Tabs defaultValue="all" className="w-full" dir="rtl">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="all">جميع الإناث ({analytics.totalCount})</TabsTrigger>
+              <TabsTrigger value="ready">جاهزة للتلقيح ({analytics.readyForBreeding})</TabsTrigger>
+              <TabsTrigger value="pregnant">حوامل ({analytics.pregnantCount})</TabsTrigger>
+              <TabsTrigger value="lifecycle">دورة الحياة</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="all" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>قائمة جميع الإناث</CardTitle>
+                  <CardDescription>
+                    إجمالي {filteredAnimals.length} من الإناث
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="rounded-md border" dir="rtl">
+                    <Table className="rtl:text-right">
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-right">رقم الأذن</TableHead>
+                          <TableHead className="text-right">الوزن الحالي</TableHead>
+                          <TableHead className="text-right">الحالة الصحية</TableHead>
+                          <TableHead className="text-right">الحظيرة</TableHead>
+                          <TableHead className="text-right">حالة الحمل</TableHead>
+                          <TableHead className="text-right">السعر الحالي</TableHead>
+                          <TableHead className="text-right">المورد</TableHead>
+                          <TableHead className="text-right">الإجراءات</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredAnimals.map((animal) => (
+                          <TableRow key={animal.id}>
+                            <TableCell className="font-medium text-right">
+                              {animal.earTagId}
+                              {animal.isIsolated && (
+                                <Badge
+                                  variant="outline"
+                                  className="mr-2 bg-orange-50 text-orange-700"
+                                >
+                                  عزل
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-start gap-1">
+                                {farmHelpers.formatWeight(animal.weight)}
+                                {recentlyUpdatedAnimals.has(animal.id) && (
+                                  <Badge 
+                                    variant="outline" 
+                                    className="bg-green-50 text-green-600 text-xs mr-1"
+                                  >
+                                    محدث
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Badge
+                                className={getHealthStatusColor(animal.healthStatus)}
+                              >
+                                {animal.healthStatus}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Badge
+                                variant="outline"
+                                className="flex items-center w-fit"
+                              >
+                                <MapPin className="h-3 w-3 ml-1" />
+                                {getBarnName(animal.barnId)}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {animal.isPregnant ? (
+                                <Badge className="bg-pink-100 text-pink-800">
+                                  حامل
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline">غير حامل</Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {farmHelpers.formatCurrency(
+                                animal.currentPrice || animal.purchasePrice,
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {animal.supplier || "-"}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center gap-1 justify-start">
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => handleDelete(animal)}
+                                  className="h-8 w-8 p-0"
+                                  title="حذف"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleWeightRecord(animal)}
+                                  className="h-8 w-8 p-0 text-green-600 hover:text-green-700"
+                                  title="تسجيل وزن"
+                                >
+                                  <Scale className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleEdit(animal)}
+                                  className="h-8 w-8 p-0"
+                                  title="تعديل"
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedAnimal(animal);
+                                    setShowLifecycleCard(true);
+                                  }}
+                                  className="h-8 w-8 p-0 text-pink-600 hover:text-pink-700"
+                                  title="عرض دورة الحياة"
+                                >
+                                  <Heart className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        {filteredAnimals.length === 0 && (
+                          <TableRow>
+                            <TableCell colSpan={8} className="text-center py-8">
+                              لا توجد نتائج مطابقة للبحث
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="ready" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Heart className="h-5 w-5 ml-2 text-green-600" />
+                    الإناث الجاهزة للتلقيح
+                  </CardTitle>
+                  <CardDescription>
+                    الإناث في سن التكاثر المثلى والجاهزة للحمل
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-4" dir="rtl">
+                    {femaleManagementService.getFemalesReadyForBreeding(filteredAnimals).map((female) => (
+                      <div key={female.id} className="space-y-2">
+                        <FemaleLifecycleCard animal={female} />
+                        <div className="flex gap-2 justify-end">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(female)}
+                          >
+                            تعديل
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleWeightRecord(female)}
+                          >
+                            تسجيل وزن
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDelete(female)}
+                          >
+                            حذف
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    {femaleManagementService.getFemalesReadyForBreeding(filteredAnimals).length === 0 && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        لا يوجد إناث جاهزة للتلقيح حالياً
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="pregnant" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Baby className="h-5 w-5 ml-2 text-pink-600" />
+                    الإناث الحوامل
+                  </CardTitle>
+                  <CardDescription>
+                    الإناث الحوامل والمتابعة المطلوبة لهن
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-4" dir="rtl">
+                    {filteredAnimals.filter(animal => animal.isPregnant).map((female) => (
+                      <div key={female.id} className="space-y-2">
+                        <FemaleLifecycleCard animal={female} />
+                        <div className="flex gap-2 justify-end">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(female)}
+                          >
+                            تعديل
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleWeightRecord(female)}
+                          >
+                            تسجيل وزن
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDelete(female)}
+                          >
+                            حذف
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    {filteredAnimals.filter(animal => animal.isPregnant).length === 0 && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        لا يوجد إناث حوامل حالياً
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="lifecycle" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>دورة حياة الإناث التفصيلية</CardTitle>
+                  <CardDescription>
+                    عرض تفصيلي لدورة حياة كل أنثى في المزرعة
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-4" dir="rtl">
+                    {filteredAnimals.map((female) => (
+                      <div key={female.id} className="space-y-2">
+                        <FemaleLifecycleCard animal={female} />
+                        <div className="flex gap-2 justify-end">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(female)}
+                          >
+                            تعديل
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleWeightRecord(female)}
+                          >
+                            تسجيل وزن
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDelete(female)}
+                          >
+                            حذف
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    {filteredAnimals.length === 0 && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        لا توجد نتائج مطابقة للبحث
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         ) : (
-          // Regular Animals Table for Females and Newborns
+          // Regular Animals Table for Newborns
           <Card>
             <CardHeader>
               <CardTitle>قائمة {getAnimalTypeLabel(animalType)}</CardTitle>
@@ -1111,12 +1572,17 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
         )}
       </div>
 
-      {/* Lifecycle Card Modal for Males */}
-      {animalType === "male" && showLifecycleCard && selectedAnimal && (
+      {/* Lifecycle Card Modal for Males and Females */}
+      {((animalType === "male") || (animalType === "female")) && showLifecycleCard && selectedAnimal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto" dir="rtl">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold">دورة حياة الذكر {selectedAnimal.earTagId}</h3>
+              <h3 className="text-xl font-bold">
+                {animalType === "male" 
+                  ? `دورة حياة الذكر ${selectedAnimal.earTagId}`
+                  : `دورة حياة الأنثى ${selectedAnimal.earTagId}`
+                }
+              </h3>
               <Button
                 variant="outline"
                 size="sm"
@@ -1125,9 +1591,11 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                 إغلاق
               </Button>
             </div>
-            <MaleLifecycleCard
-              animal={selectedAnimal}
-            />
+            {animalType === "male" ? (
+              <MaleLifecycleCard animal={selectedAnimal} />
+            ) : (
+              <FemaleLifecycleCard animal={selectedAnimal} />
+            )}
             <div className="flex gap-2 justify-end mt-4">
               <Button
                 variant="outline"
