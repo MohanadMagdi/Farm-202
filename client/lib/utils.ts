@@ -18,3 +18,14 @@ export function formatDate(date: Date): string {
 export function formatDateRange(startDate: Date, endDate: Date): string {
   return `${formatDate(startDate)} - ${formatDate(endDate)}`;
 }
+
+export function formatEGP(amount: number): string {
+  if (!amount && amount !== 0) return "0 ج.م";
+  
+  return new Intl.NumberFormat("ar-EG", {
+    style: "currency",
+    currency: "EGP",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}

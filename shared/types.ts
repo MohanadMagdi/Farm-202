@@ -91,6 +91,12 @@ export interface Animal {
   birthDate?: Date;
   weaningDate?: Date;
 
+  // Transfer tracking (for automatic weaning transfers)
+  transferDate?: Date;
+  transferReason?: string;
+  previousCategory?: AnimalCategory;
+  internalProduction?: boolean; // true if born on farm
+
   // Timestamps
   createdAt: Date;
   updatedAt: Date;

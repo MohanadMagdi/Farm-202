@@ -46,7 +46,7 @@ const navigation = [
     children: [
       { name: "الذكور", href: "/animals/males", permission: "animals" },
       { name: "الإناث", href: "/animals/females", permission: "animals" },
-      { name: "الصغار", href: "/animals/newborns", permission: "animals" },
+      { name: "المواليد والإنتاج الداخلي", href: "/animals/internal-production", permission: "animals" },
     ],
   },
   {

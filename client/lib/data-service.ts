@@ -455,6 +455,63 @@ export const farmHelpers = {
   },
 };
 
+// جدولة النقل التلقائي للمواليد
+export const automaticTransferScheduler = {
+  
+  // فحص دوري كل ساعة للمواليد التي تحتاج نقل
+  startPeriodicCheck() {
+    // فحص فوري عند البدء
+    this.checkAndTransfer();
+    
+    // جدولة فحص كل ساعة
+    setInterval(() => {
+      this.checkAndTransfer();
+    }, 60 * 60 * 1000); // كل ساعة
+    
+    console.log('🔄 Automatic Transfer Scheduler Started - checking every hour');
+  },
+
+  // فحص وتنفيذ النقل التلقائي
+  async checkAndTransfer() {
+    try {
+      const { automaticWeaningTransferService } = await import('./automatic-weaning-transfer-service');
+      const pendingCheck = await automaticWeaningTransferService.checkForPendingTransfers();
+      
+      if (pendingCheck.overdueCount > 0) {
+        console.log(`🚨 Found ${pendingCheck.overdueCount} overdue animals for transfer`);
+        
+        // تنفيذ النقل التلقائي للمتأخرين فقط
+        const result = await automaticWeaningTransferService.runAutomaticTransfer();
+        
+        if (result.totalTransferred > 0) {
+          console.log(`✅ Auto transferred ${result.totalTransferred} animals successfully`);
+          
+          // يمكن إضافة إشعار للمستخدم هنا
+          // notificationService.send(`تم نقل ${result.totalTransferred} مولود تلقائياً`);
+        }
+      }
+    } catch (error) {
+      console.error('Error in automatic transfer check:', error);
+    }
+  },
+
+  // تشغيل النقل الفوري (استدعاء يدوي)
+  async runImmediateTransfer() {
+    try {
+      const { automaticWeaningTransferService } = await import('./automatic-weaning-transfer-service');
+      return await automaticWeaningTransferService.runAutomaticTransfer();
+    } catch (error) {
+      console.error('Error in immediate transfer:', error);
+      return {
+        readyAnimals: [],
+        transferResults: [],
+        totalTransferred: 0,
+        errors: ['خطأ في النقل الفوري']
+      };
+    }
+  }
+};
+
 // Export data mode for debugging
 export const dataMode = useMockData ? "mock" : "firebase";
 

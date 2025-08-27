@@ -13,7 +13,9 @@ import {
   AlertTriangle, 
   CheckCircle, 
   DollarSign,
-  Clock
+  Clock,
+  Edit,
+  Trash2
 } from "lucide-react";
 import { formatArabicDate } from "@/lib/arabic-utils";
 import { farmHelpers } from "@/lib/data-service";
@@ -25,13 +27,19 @@ interface MaleLifecycleCardProps {
   onSaleReady?: (animal: Animal) => void;
   showProfitAnalysis?: boolean;
   currentMarketPrice?: number;
+  onEdit?: (animal: Animal) => void;
+  onWeightRecord?: (animal: Animal) => void;
+  onDelete?: (animal: Animal) => void;
 }
 
 export default function MaleLifecycleCard({ 
   animal, 
   onSaleReady,
   showProfitAnalysis = true,
-  currentMarketPrice = 0
+  currentMarketPrice = 0,
+  onEdit,
+  onWeightRecord,
+  onDelete
 }: MaleLifecycleCardProps) {
   // Get cycle information
   const cycleInfo = maleManagementService.getFarmCycleInfo(animal);
@@ -215,6 +223,42 @@ export default function MaleLifecycleCard({
             <span>مدة التربية: {businessRules.farmCycleDuration.min}-{businessRules.farmCycleDuration.max} شهور</span>
           </div>
         </div>
+
+        {/* Action Buttons */}
+        {(onEdit || onWeightRecord || onDelete) && (
+          <div className="flex items-center gap-2 pt-3 border-t" dir="rtl">
+            {onEdit && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onEdit(animal)}
+                className="text-blue-600 hover:text-blue-700"
+              >
+                تعديل
+              </Button>
+            )}
+            {onWeightRecord && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onWeightRecord(animal)}
+                className="text-green-600 hover:text-green-700"
+              >
+                تسجيل وزن
+              </Button>
+            )}
+            {onDelete && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onDelete(animal)}
+                className="text-red-600 hover:text-red-700"
+              >
+                حذف
+              </Button>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

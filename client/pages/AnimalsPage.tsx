@@ -67,6 +67,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [healthFilter, setHealthFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [productionTypeFilter, setProductionTypeFilter] = useState<string>("all"); // جديد: فلتر نوع الإنتاج
   const [recentlyUpdatedAnimals, setRecentlyUpdatedAnimals] = useState<Set<string>>(new Set());
   const [showLifecycleCard, setShowLifecycleCard] = useState(false);
 
@@ -84,6 +85,11 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
     totalValue: 0,
     pregnantCount: 0,
     isolatedCount: 0,
+    // إحصائيات نوع الإنتاج
+    internalProductionCount: 0,
+    purchasedCount: 0,
+    internalProductionValue: 0,
+    purchasedValue: 0,
     // Enhanced analytics for males
     readyForSale: 0,
     needingAttention: 0,
@@ -142,6 +148,16 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
     );
     const pregnantCount = animalsData.filter((a) => a.isPregnant).length;
     const isolatedCount = animalsData.filter((a) => a.isIsolated).length;
+    
+    // إحصائيات نوع الإنتاج
+    const internalProductionCount = animalsData.filter((a) => a.internalProduction).length;
+    const purchasedCount = animalsData.filter((a) => !a.internalProduction).length;
+    const internalProductionValue = animalsData
+      .filter((a) => a.internalProduction)
+      .reduce((sum, animal) => sum + (animal.currentPrice || animal.purchasePrice || 0), 0);
+    const purchasedValue = animalsData
+      .filter((a) => !a.internalProduction)
+      .reduce((sum, animal) => sum + (animal.currentPrice || animal.purchasePrice || 0), 0);
 
     // Enhanced analytics for males
     let readyForSale = 0;
@@ -184,6 +200,11 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
       totalValue,
       pregnantCount,
       isolatedCount,
+      // إحصائيات نوع الإنتاج
+      internalProductionCount,
+      purchasedCount,
+      internalProductionValue,
+      purchasedValue,
       readyForSale,
       needingAttention: animalType === "male" ? needingAttention : femalesNeedingAttention,
       averageAge,
@@ -318,6 +339,13 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
       (animal) =>
         healthFilter === "all" || animal.healthStatus === healthFilter,
     )
+    .filter((animal) => {
+      // فلتر نوع الإنتاج
+      if (productionTypeFilter === "all") return true;
+      if (productionTypeFilter === "purchased") return !animal.internalProduction;
+      if (productionTypeFilter === "internal") return animal.internalProduction;
+      return true;
+    })
     .filter((animal) => {
       if (animalType !== "male" || statusFilter === "all") return true;
       
@@ -570,7 +598,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
           </>
         )}
 
-        {animalType === "female" && (
+        {(animalType as string) === "female" && (
           <>
             <Card>
               <CardHeader className="pb-2">
@@ -675,6 +703,41 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">
               {analytics.isolatedCount}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* بطاقات نوع الإنتاج */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center">
+              <Users className="h-4 w-4 ml-1 text-green-600" />
+              إنتاج داخلي
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+              {analytics.internalProductionCount}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {farmHelpers.formatCurrency(analytics.internalProductionValue)}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center">
+              <DollarSign className="h-4 w-4 ml-1 text-blue-600" />
+              مشترى
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">
+              {analytics.purchasedCount}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {farmHelpers.formatCurrency(analytics.purchasedValue)}
             </div>
           </CardContent>
         </Card>
@@ -791,6 +854,17 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
               </SelectContent>
             </Select>
 
+            <Select value={productionTypeFilter} onValueChange={setProductionTypeFilter}>
+              <SelectTrigger className="w-full md:w-48">
+                <SelectValue placeholder="نوع الإنتاج" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">جميع الأنواع</SelectItem>
+                <SelectItem value="purchased">مشترى</SelectItem>
+                <SelectItem value="internal">إنتاج داخلي</SelectItem>
+              </SelectContent>
+            </Select>
+
             {/* Enhanced status filter for males */}
             {animalType === "male" && (
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -836,6 +910,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                       <TableHeader>
                         <TableRow>
                           <TableHead className="text-right">رقم الأذن</TableHead>
+                          <TableHead className="text-right">نوع الإنتاج</TableHead>
                           <TableHead className="text-right">العمر</TableHead>
                           <TableHead className="text-right">الوزن الحالي</TableHead>
                           <TableHead className="text-right">حالة الذكر</TableHead>
@@ -859,6 +934,16 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                                   عزل
                                 </Badge>
                               )}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Badge 
+                                className={animal.internalProduction 
+                                  ? "bg-green-100 text-green-800" 
+                                  : "bg-blue-100 text-blue-800"
+                                }
+                              >
+                                {animal.internalProduction ? "إنتاج داخلي" : "مشترى"}
+                              </Badge>
                             </TableCell>
                             <TableCell className="text-right">
                               {animal.ageMonths ? `${animal.ageMonths} شهر` : "غير محدد"}
@@ -1142,6 +1227,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                       <TableHeader>
                         <TableRow>
                           <TableHead className="text-right">رقم الأذن</TableHead>
+                          <TableHead className="text-right">نوع الإنتاج</TableHead>
                           <TableHead className="text-right">الوزن الحالي</TableHead>
                           <TableHead className="text-right">الحالة الصحية</TableHead>
                           <TableHead className="text-right">الحظيرة</TableHead>
@@ -1164,6 +1250,16 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                                   عزل
                                 </Badge>
                               )}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Badge 
+                                className={animal.internalProduction 
+                                  ? "bg-green-100 text-green-800" 
+                                  : "bg-blue-100 text-blue-800"
+                                }
+                              >
+                                {animal.internalProduction ? "إنتاج داخلي" : "مشترى"}
+                              </Badge>
                             </TableCell>
                             <TableCell className="text-right">
                               <div className="flex items-center justify-start gap-1">
@@ -1438,10 +1534,10 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                       <TableHead className="text-right">الوزن الحالي</TableHead>
                       <TableHead className="text-right">الحالة الصحية</TableHead>
                       <TableHead className="text-right">الحظيرة</TableHead>
-                      {animalType === "female" && (
+                      {(animalType as string) === "female" && (
                         <TableHead className="text-right">حالة الحمل</TableHead>
                       )}
-                      {animalType === "newborn" && (
+                      {(animalType as string) === "newborn" && (
                         <TableHead className="text-right">الأم</TableHead>
                       )}
                       {animalType !== "newborn" && (
@@ -1494,7 +1590,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                             {getBarnName(animal.barnId)}
                           </Badge>
                         </TableCell>
-                        {animalType === "female" && (
+                        {(animalType as string) === "female" && (
                           <TableCell className="text-right">
                             {animal.isPregnant ? (
                               <Badge className="bg-pink-100 text-pink-800">
@@ -1505,13 +1601,13 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                             )}
                           </TableCell>
                         )}
-                        {animalType === "newborn" && (
+                        {(animalType as string) === "newborn" && (
                           <TableCell className="text-right">
                             {animal.motherEarTagId ||
                               (animal.motherId ? "غير محدد" : "-")}
                           </TableCell>
                         )}
-                        {animalType !== "newborn" && (
+                        {(animalType as string) !== "newborn" && (
                           <TableCell className="text-right">
                             {farmHelpers.formatCurrency(
                               animal.currentPrice || animal.purchasePrice,

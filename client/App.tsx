@@ -24,6 +24,7 @@ import FeedingPage from "./pages/FeedingPage";
 import ReportsPage from "./pages/ReportsPage";
 import WeightReportsPage from "./pages/WeightReportsPage";
 import UsersPage from "./pages/UsersPage";
+import { InternalProductionDashboard } from "@/components/InternalProductionDashboard";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ const FeedingManagement = () => <FeedingPage />;
 const ReportsManagement = () => <ReportsPage />;
 const WeightReportsManagement = () => <WeightReportsPage />;
 const UsersManagement = () => <UsersPage />;
+const InternalProductionManagement = () => <InternalProductionDashboard />;
 
 // Protected route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -107,16 +109,6 @@ function AppRoutes() {
         }
       />
       <Route
-        path="/animals/newborns"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <NewbornsPage />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
         path="/barns"
         element={
           <ProtectedRoute>
@@ -142,6 +134,16 @@ function AppRoutes() {
           <ProtectedRoute>
             <Layout>
               <FeedingManagement />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/animals/internal-production"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <InternalProductionManagement />
             </Layout>
           </ProtectedRoute>
         }
@@ -203,6 +205,14 @@ const App = () => {
       automaticWeaningService.start();
       console.log("Automatic weaning service initialized");
     }
+
+    // Initialize automatic transfer scheduler
+    import("./lib/data-service").then(({ automaticTransferScheduler }) => {
+      automaticTransferScheduler.startPeriodicCheck();
+      console.log("Automatic transfer scheduler initialized");
+    }).catch(error => {
+      console.error("Error initializing automatic transfer scheduler:", error);
+    });
 
     // Suppress ResizeObserver loop error
     const handleResizeObserverError = (e: ErrorEvent) => {

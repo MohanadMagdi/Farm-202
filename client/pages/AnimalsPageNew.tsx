@@ -282,15 +282,17 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
       
       switch (statusFilter) {
         case "ready":
-          return maleManagementService.isMaleReadyForSale(animal);
+          const readyMales = maleManagementService.getMalesReadyForSale([animal]);
+          return readyMales.length > 0;
         case "attention":
-          return maleManagementService.doesMaleNeedAttention(animal);
+          const needsAttention = maleManagementService.getMalesNeedingAttention([animal]);
+          return needsAttention.length > 0;
         case "early":
           const cycleInfo = maleManagementService.getFarmCycleInfo(animal);
-          return cycleInfo.farmMonths < 4;
+          return cycleInfo.timeInFarm < 4;
         case "late":
           const lateInfo = maleManagementService.getFarmCycleInfo(animal);
-          return lateInfo.farmMonths > 5;
+          return lateInfo.timeInFarm > 5;
         default:
           return true;
       }
@@ -298,11 +300,15 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
 
   // Helper functions for males
   const getMaleStatusCategory = (animal: Animal) => {
-    if (maleManagementService.isMaleReadyForSale(animal)) return "ready";
-    if (maleManagementService.doesMaleNeedAttention(animal)) return "attention";
+    const readyMales = maleManagementService.getMalesReadyForSale([animal]);
+    if (readyMales.length > 0) return "ready";
+    
+    const needsAttention = maleManagementService.getMalesNeedingAttention([animal]);
+    if (needsAttention.length > 0) return "attention";
+    
     const cycleInfo = maleManagementService.getFarmCycleInfo(animal);
-    if (cycleInfo.farmMonths < 4) return "early";
-    if (cycleInfo.farmMonths > 5) return "late";
+    if (cycleInfo.timeInFarm < 4) return "early";
+    if (cycleInfo.timeInFarm > 5) return "late";
     return "normal";
   };
 
@@ -793,7 +799,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                     {maleManagementService.getMalesReadyForSale(filteredAnimals).map((male) => (
                       <MaleLifecycleCard
                         key={male.id}
-                        male={male}
+                        animal={male}
                         onEdit={handleEdit}
                         onWeightRecord={handleWeightRecord}
                         onDelete={handleDelete}
@@ -822,10 +828,10 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-4">
-                    {maleManagementService.getMalesNeedingAttention(filteredAnimals).map((male) => (
+                    {maleManagementService.getMalesNeedingAttention(filteredAnimals).map((result) => (
                       <MaleLifecycleCard
-                        key={male.id}
-                        male={male}
+                        key={result.animal.id}
+                        animal={result.animal}
                         onEdit={handleEdit}
                         onWeightRecord={handleWeightRecord}
                         onDelete={handleDelete}
@@ -854,7 +860,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                     {filteredAnimals.map((male) => (
                       <MaleLifecycleCard
                         key={male.id}
-                        male={male}
+                        animal={male}
                         onEdit={handleEdit}
                         onWeightRecord={handleWeightRecord}
                         onDelete={handleDelete}
@@ -1034,7 +1040,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
               </Button>
             </div>
             <MaleLifecycleCard
-              male={selectedAnimal}
+              animal={selectedAnimal}
               onEdit={handleEdit}
               onWeightRecord={handleWeightRecord}
               onDelete={handleDelete}

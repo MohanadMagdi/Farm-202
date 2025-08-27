@@ -152,6 +152,62 @@ export default function AnimalFormModal({
     }
   }, [formData.motherId, formData.category, animals]);
 
+  // Auto-calculate weaning date when birth date changes for newborns
+  useEffect(() => {
+    if (formData.category === "newborn" && formData.birthDate && mode === "add") {
+      const birthDate = new Date(formData.birthDate);
+      const weaningDate = new Date(birthDate);
+      weaningDate.setDate(weaningDate.getDate() + 67); // 67 يوم (متوسط بين 60-75)
+      
+      setFormData(prev => ({
+        ...prev,
+        weaningDate: weaningDate.toISOString().split("T")[0]
+      }));
+    }
+  }, [formData.birthDate, formData.category, mode]);
+
+  // Auto-assign barn when mother is selected for newborns
+  useEffect(() => {
+    if (formData.category === "newborn" && formData.motherId && formData.motherId !== "none") {
+      const mother = animals.find(a => a.id === formData.motherId);
+      if (mother && mother.barnId && mother.barnId !== formData.barnId) {
+        setFormData(prev => ({
+          ...prev,
+          barnId: mother.barnId // تعيين نفس حظيرة الأم
+        }));
+      }
+    }
+  }, [formData.motherId, formData.category, animals]);
+
+  // Auto-calculate age in months for newborns based on birth date
+  useEffect(() => {
+    if (formData.category === "newborn" && formData.birthDate) {
+      const birthDate = new Date(formData.birthDate);
+      const today = new Date();
+      const ageInDays = Math.floor((today.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24));
+      const ageInMonths = Math.floor(ageInDays / 30.44); // متوسط أيام الشهر
+      
+      setFormData(prev => ({
+        ...prev,
+        ageMonths: ageInMonths.toString()
+      }));
+    }
+  }, [formData.birthDate, formData.category]);
+
+  // Auto-calculate weaning date based on birth date (60-75 days after birth)
+  useEffect(() => {
+    if (formData.category === "newborn" && formData.birthDate && mode === "add") {
+      const birthDate = new Date(formData.birthDate);
+      const weaningDate = new Date(birthDate);
+      weaningDate.setDate(weaningDate.getDate() + 67); // متوسط 67 يوم (وسط بين 60-75)
+      
+      setFormData(prev => ({
+        ...prev,
+        weaningDate: weaningDate.toISOString().split("T")[0]
+      }));
+    }
+  }, [formData.birthDate, formData.category, mode]);
+
   // Helper function to convert form data to Animal-like object for pricing
   const createAnimalFromFormData = (data: typeof formData) => {
     const animalLike = {
@@ -214,6 +270,7 @@ export default function AnimalFormModal({
       category: animalData.category,
       sex: animalData.sex,
       weight: animalData.weight.toString(),
+      ageMonths: animalData.ageMonths?.toString() || "",
       supplier: animalData.supplier || "",
       purchaseDate: animalData.purchaseDate.toISOString().split("T")[0],
       purchasePrice: animalData.purchasePrice.toString(),
@@ -244,11 +301,19 @@ export default function AnimalFormModal({
   };
 
   const resetForm = () => {
+    const isNewborn = animalType === "newborn";
+    const today = new Date();
+    
+    // حساب تاريخ الفطام المتوقع (60-75 يوم من اليوم)
+    const expectedWeaningDate = new Date(today);
+    expectedWeaningDate.setDate(expectedWeaningDate.getDate() + 67); // متوسط 67 يوم (وسط بين 60-75)
+    
     setFormData({
       earTagId: "",
       category: animalType,
-      sex: animalType === "female" ? "female" : "male",
-      weight: "",
+      sex: animalType === "female" ? "female" : animalType === "newborn" ? "male" : "male",
+      weight: isNewborn ? "3" : "", // وزن افتراضي للمواليد 3 كج
+      ageMonths: isNewborn ? "0" : "", // عمر 0 للمواليد
       supplier: "",
       purchaseDate: new Date().toISOString().split("T")[0],
       purchasePrice: "",
@@ -267,10 +332,10 @@ export default function AnimalFormModal({
       expectedBirthDate: "",
       offspringCount: "",
 
-      // For newborns
+      // For newborns - قيم تلقائية
       motherId: "none",
-      birthDate: new Date().toISOString().split("T")[0],
-      weaningDate: "",
+      birthDate: new Date().toISOString().split("T")[0], // تاريخ اليوم
+      weaningDate: isNewborn ? expectedWeaningDate.toISOString().split("T")[0] : "", // تاريخ الفطام المتوقع
     });
     setEarTagExists(false);
   };
@@ -364,6 +429,8 @@ export default function AnimalFormModal({
         animalData.weaningDate = formData.weaningDate
           ? new Date(formData.weaningDate)
           : undefined;
+        // تحديد أن هذا إنتاج داخلي
+        animalData.internalProduction = true;
       }
 
       if (formData.isIsolated) {
@@ -442,9 +509,34 @@ export default function AnimalFormModal({
     }
   };
 
-  const filteredBarns = barns.filter(
-    (barn) => barn.type === formData.category || barn.type === "mixed",
-  );
+  // Filter barns based on category and sex
+  const getFilteredBarns = () => {
+    // للمواليد: عرض جميع الحظائر (سيتم تعيين حظيرة الأم تلقائياً)
+    if (formData.category === "newborn") {
+      return barns.filter(barn => barn.isActive);
+    }
+    
+    // للذكور: حظائر الذكور والمختلطة
+    if (formData.category === "male" || formData.sex === "male") {
+      return barns.filter(barn => 
+        barn.isActive && (barn.type === "male" || barn.type === "mixed")
+      );
+    }
+    
+    // للإناث: حظائر الإناث والمختلطة
+    if (formData.category === "female" || formData.sex === "female") {
+      return barns.filter(barn => 
+        barn.isActive && (barn.type === "female" || barn.type === "mixed")
+      );
+    }
+    
+    // افتراضي: فلترة حسب النوع أو مختلط
+    return barns.filter(barn => 
+      barn.isActive && (barn.type === formData.category || barn.type === "mixed")
+    );
+  };
+
+  const filteredBarns = getFilteredBarns();
 
   const potentialMothers = animals.filter(
     (a) => a.category === "female" && a.id !== animal?.id,
@@ -519,7 +611,32 @@ export default function AnimalFormModal({
               </div>
 
               <div>
-                <Label htmlFor="ageMonths">العمر (شهور) *</Label>
+                <Label htmlFor="sex">النوع (الجنس) *</Label>
+                <Select
+                  value={formData.sex}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, sex: value as "male" | "female" })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="اختر النوع" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">ذكر</SelectItem>
+                    <SelectItem value="female">أنثى</SelectItem>
+                  </SelectContent>
+                </Select>
+                {formData.category === "newborn" && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    سيتم النقل التلقائي بعد الفطام حسب النوع: الذكور → حظيرة ذكور، الإناث → حظيرة إناث
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="ageMonths">
+                  العمر {formData.category === "newborn" ? "(تلقائي)" : "(شهور)"} *
+                </Label>
                 <Input
                   id="ageMonths"
                   type="number"
@@ -528,8 +645,15 @@ export default function AnimalFormModal({
                   onChange={(e) =>
                     setFormData({ ...formData, ageMonths: e.target.value })
                   }
-                  placeholder="12"
+                  placeholder={formData.category === "newborn" ? "0 (يحسب تلقائياً)" : "12"}
+                  disabled={formData.category === "newborn"} // للمواليد يحسب تلقائياً
                 />
+                {formData.category === "newborn" && formData.birthDate && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    العمر يحسب تلقائياً من تاريخ الميلاد: 
+                    {Math.floor((new Date().getTime() - new Date(formData.birthDate).getTime()) / (1000 * 60 * 60 * 24))} يوم
+                  </p>
+                )}
               </div>
 
               <div>
@@ -546,11 +670,20 @@ export default function AnimalFormModal({
                   <SelectContent>
                     {filteredBarns.map((barn) => (
                       <SelectItem key={barn.id} value={barn.id}>
-                        {barn.name}
+                        {barn.name} ({barn.type === "mixed" ? "مختلط" : barn.type === "male" ? "ذكور" : barn.type === "female" ? "إناث" : "صغار"})
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                {/* معلومات إضافية عن فلترة الحظائر */}
+                <p className="text-xs text-muted-foreground mt-1">
+                  {formData.category === "newborn" 
+                    ? "جميع الحظائر متاحة (سيتم تعيين حظيرة الأم تلقائياً)"
+                    : formData.category === "male" || formData.sex === "male"
+                      ? "حظائر الذكور والمختلطة فقط"
+                      : "حظائر الإناث والمختلطة فقط"
+                  }
+                </p>
               </div>
             </div>
 
@@ -868,7 +1001,7 @@ export default function AnimalFormModal({
                       <SelectItem value="none">بدون أم محددة</SelectItem>
                       {potentialMothers.map((mother) => (
                         <SelectItem key={mother.id} value={mother.id}>
-                          {mother.earTagId}
+                          {mother.earTagId} - الحظيرة: {barns.find(b => b.id === mother.barnId)?.name || 'غير محدد'}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -931,6 +1064,15 @@ export default function AnimalFormModal({
                                   سيتم ربط المولود بالأم تلقائياً مع تحديث
                                   إحصائيات الأم
                                 </p>
+                                {(() => {
+                                  const selectedMother = animals.find(a => a.id === formData.motherId);
+                                  const motherBarn = barns.find(b => b.id === selectedMother?.barnId);
+                                  return selectedMother && motherBarn && (
+                                    <p className="text-sm text-green-700 mt-1">
+                                      🏠 سيبقى في حظيرة الأم: {motherBarn.name}
+                                    </p>
+                                  );
+                                })()}
                               </div>
                             </div>
                           </div>
@@ -949,10 +1091,17 @@ export default function AnimalFormModal({
                       setFormData({ ...formData, birthDate: e.target.value })
                     }
                   />
+                  {/* عرض العمر الحالي */}
+                  {formData.birthDate && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      العمر الحالي: {Math.floor((new Date().getTime() - new Date(formData.birthDate).getTime()) / (1000 * 60 * 60 * 24))} يوم
+                      ({Math.floor((new Date().getTime() - new Date(formData.birthDate).getTime()) / (1000 * 60 * 60 * 24 * 7))} أسبوع)
+                    </p>
+                  )}
                 </div>
 
                 <div>
-                  <Label htmlFor="weaningDate">تاريخ الفطام</Label>
+                  <Label htmlFor="weaningDate">تاريخ الفطام المتوقع</Label>
                   <Input
                     id="weaningDate"
                     type="date"
@@ -961,6 +1110,33 @@ export default function AnimalFormModal({
                       setFormData({ ...formData, weaningDate: e.target.value })
                     }
                   />
+                  {/* تحذير حول الفطام المبكر/المتأخر */}
+                  {formData.birthDate && formData.weaningDate && (
+                    <div className="mt-1">
+                      {(() => {
+                        const ageDays = Math.floor((new Date(formData.weaningDate).getTime() - new Date(formData.birthDate).getTime()) / (1000 * 60 * 60 * 24));
+                        if (ageDays < 60) {
+                          return (
+                            <p className="text-xs text-red-600">
+                              ⚠️ فطام مبكر ({ageDays} يوم) - الأفضل بعد 60 يوم
+                            </p>
+                          );
+                        } else if (ageDays >= 60 && ageDays <= 75) {
+                          return (
+                            <p className="text-xs text-green-600">
+                              ✅ توقيت مثالي للفطام ({ageDays} يوم)
+                            </p>
+                          );
+                        } else {
+                          return (
+                            <p className="text-xs text-orange-600">
+                              ⚠️ فطام متأخر ({ageDays} يوم) - الأفضل قبل 75 يوم
+                            </p>
+                          );
+                        }
+                      })()}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
