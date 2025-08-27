@@ -129,8 +129,10 @@ class AutomaticWeaningTransferService {
         ...weanedAnimal,
         category: newCategory,
         barnId: newBarnId,
-        // إضافة علامة الإنتاج الداخلي إذا كان له أم محددة
-        internalProduction: !!(weanedAnimal.motherId && weanedAnimal.motherId !== 'none'),
+        // الحفاظ على علامة الإنتاج الداخلي دائماً للمواليد المحلية
+        internalProduction: true,
+        // إضافة علامة أن الحيوان مفطوم ولكن لا يزال جزءاً من الإنتاج الداخلي
+        showInInternalProduction: true,
         transferDate: new Date(),
         transferReason: 'automatic_weaning_transfer',
         previousCategory: 'newborn',
@@ -163,6 +165,70 @@ class AutomaticWeaningTransferService {
         newCategory: this.determineNewCategory(weanedAnimal),
         errors: [`خطأ في نقل المولود: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`],
         warnings: []
+      };
+    }
+  }
+
+  // البحث عن الحيوانات الجاهزة للنقل التلقائي (بناءً على يوم الفطام)
+  async findAnimalsReadyForWeaningTransfer(): Promise<Animal[]> {
+    try {
+      const allAnimals = await dataService.animals.getAll();
+      
+      return allAnimals.filter(animal => {
+        // فقط المواليد (newborn) هي التي تحتاج للنقل
+        if (animal.category !== 'newborn') return false;
+        
+        // التحقق من تاريخ الفطام أو عمر 60-75 يوم
+        if (animal.weaningDate) {
+          const weaningDate = new Date(animal.weaningDate);
+          const today = new Date();
+          return today >= weaningDate;
+        }
+        
+        // إذا لم يكن هناك تاريخ فطام محدد، استخدم العمر (60-75 يوم)
+        if (animal.birthDate) {
+          const birthDate = new Date(animal.birthDate);
+          const today = new Date();
+          const ageInDays = Math.floor((today.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24));
+          return ageInDays >= 60; // بحد أدنى 60 يوم
+        }
+        
+        return false;
+      });
+    } catch (error) {
+      console.error('Error finding animals ready for weaning transfer:', error);
+      return [];
+    }
+  }
+
+  // تشغيل النقل التلقائي لجميع الحيوانات الجاهزة
+  async runAutomaticWeaningTransfer(): Promise<AutomaticTransferBatch> {
+    try {
+      // العثور على الحيوانات الجاهزة للنقل
+      const readyAnimals = await this.findAnimalsReadyForWeaningTransfer();
+      
+      if (readyAnimals.length === 0) {
+        return {
+          readyAnimals: [],
+          transferResults: [],
+          totalTransferred: 0,
+          errors: ['لا توجد حيوانات جاهزة للنقل التلقائي في الوقت الحالي']
+        };
+      }
+
+      // جلب الحظائر المتاحة
+      const availableBarns = await dataService.barns.getAll();
+      
+      // تشغيل النقل الدفعي
+      return await this.batchTransferWeanedAnimals(readyAnimals, availableBarns);
+      
+    } catch (error) {
+      console.error('Error running automatic weaning transfer:', error);
+      return {
+        readyAnimals: [],
+        transferResults: [],
+        totalTransferred: 0,
+        errors: [`خطأ في تشغيل النقل التلقائي: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`]
       };
     }
   }

@@ -96,6 +96,7 @@ export interface Animal {
   transferReason?: string;
   previousCategory?: AnimalCategory;
   internalProduction?: boolean; // true if born on farm
+  showInInternalProduction?: boolean; // true if should appear in internal production dashboard
 
   // Timestamps
   createdAt: Date;

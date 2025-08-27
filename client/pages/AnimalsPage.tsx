@@ -108,9 +108,50 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
   const loadAnimals = async () => {
     try {
       setLoading(true);
-      const animalsData = await dataService.animals.getByCategory(animalType);
+      let animalsData: Animal[] = [];
+      
+      if (animalType === "male" || animalType === "female") {
+        // استرداد جميع الحيوانات ثم فلترتها حسب الجنس
+        // هذا يتيح استرداد المواليد والذكور/الإناث والإنتاج الداخلي
+        const allAnimals = await dataService.animals.getAll();
+        console.log(`تم استرداد ${allAnimals.length} حيوان من قاعدة البيانات`);
+        
+        // إحصاء الأنواع للتصحيح
+        const maleCount = allAnimals.filter(a => a.sex === "male").length;
+        const femaleCount = allAnimals.filter(a => a.sex === "female").length;
+        const newbornCount = allAnimals.filter(a => a.category === "newborn").length;
+        const newbornMaleCount = allAnimals.filter(a => a.category === "newborn" && a.sex === "male").length;
+        const newbornFemaleCount = allAnimals.filter(a => a.category === "newborn" && a.sex === "female").length;
+        
+        console.log(`إجمالي الذكور: ${maleCount}, الإناث: ${femaleCount}, المواليد: ${newbornCount}`);
+        console.log(`المواليد الذكور: ${newbornMaleCount}, المواليد الإناث: ${newbornFemaleCount}`);
+        
+        animalsData = allAnimals.filter(animal => {
+          if (animalType === "male") {
+            return animal.sex === "male";
+          } else {
+            return animal.sex === "female";
+          }
+        });
+        
+        console.log(`تم اختيار ${animalsData.length} حيوان ${animalType} للعرض`);
+      } else {
+        // بالنسبة للمواليد والفئات الأخرى، استخدم الطريقة العادية
+        animalsData = await dataService.animals.getByCategory(animalType);
+        console.log(`تم استرداد ${animalsData.length} حيوان من فئة ${animalType}`);
+      }
+      
       setAnimals(animalsData);
       calculateAnalytics(animalsData);
+      
+      // إظهار إشعار تأكيد إذا كان هناك مواليد من نفس الجنس
+      if ((animalType === "male" || animalType === "female") && 
+          animalsData.filter(a => a.category === "newborn").length > 0) {
+        toast({
+          title: "تم تحميل المواليد بنجاح",
+          description: `تم عرض ${animalsData.filter(a => a.category === "newborn").length} مولود ${animalType === "male" ? "ذكر" : "أنثى"} في الجدول`,
+        });
+      }
     } catch (error) {
       console.error("Error loading animals:", error);
       toast({
@@ -172,6 +213,9 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
     let productionValue = 0;
 
     if (animalType === "male") {
+      const allMales = maleManagementService.getAllMales(animalsData);
+      const newbornMales = maleManagementService.getNewbornMales(animalsData);
+      
       readyForSale = maleManagementService.getMalesReadyForSale(animalsData).length;
       needingAttention = maleManagementService.getMalesNeedingAttention(animalsData).length;
       averageAge = totalCount > 0 ? 
@@ -181,6 +225,10 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
         const profit = maleManagementService.calculateExpectedProfit(male);
         return sum + profit.profit;
       }, 0);
+
+      // إحصائيات إضافية للمواليد الذكور
+      const newbornMalesCount = newbornMales.length;
+      console.log(`المواليد الذكور في النظام: ${newbornMalesCount}`);
     } else if (animalType === "female") {
       const femaleAnalytics = femaleManagementService.calculateFemaleAnalytics(animalsData);
       readyForBreeding = femaleAnalytics.readyForBreeding;
@@ -224,9 +272,24 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
     try {
       setLoading(true);
 
-      // Filter animals based on current type
+      // Filter animals based on current type - include all animals of same gender
       const filteredAnimals = animalType
-        ? animals.filter((animal) => animal.category === animalType)
+        ? animals.filter((animal) => {
+            // For males page: include all male animals (purchased, internal production, and newborns)
+            if (animalType === "male") {
+              return animal.sex === "male";
+            }
+            // For females page: include all female animals (purchased, internal production, and newborns)
+            if (animalType === "female") {
+              return animal.sex === "female";
+            }
+            // For newborns page: include only newborns (all genders)
+            if (animalType === "newborn") {
+              return animal.category === "newborn";
+            }
+            // For other categories, keep original logic
+            return animal.category === animalType;
+          })
         : animals;
 
       await exportAnimalsReport(filteredAnimals, "excel", animalType);
@@ -329,7 +392,28 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
     }
   };
 
+  // يتم تطبيق هذه الفلترة بعد تحميل البيانات، وهي فلترة ثانوية
   const filteredAnimals = animals
+    .filter((animal) => {
+      // Filter by animal type/gender first - show all animals of the selected gender
+      if (animalType === "male") {
+        // Show all male animals: purchased males, internal production males, and newborn males
+        // جميع الحيوانات الذكور، بغض النظر عن التصنيف (مشتراة، إنتاج داخلي، مواليد ذكور)
+        return animal.sex === "male";
+      }
+      if (animalType === "female") {
+        // Show all female animals: purchased females, internal production females, and newborn females
+        // جميع الحيوانات الإناث، بغض النظر عن التصنيف (مشتراة، إنتاج داخلي، مواليد إناث)
+        return animal.sex === "female";
+      }
+      if (animalType === "newborn") {
+        // Show all newborns regardless of gender
+        // جميع المواليد بغض النظر عن الجنس
+        return animal.category === "newborn";
+      }
+      // If no type selected, show all
+      return true;
+    })
     .filter(
       (animal) =>
         animal.earTagId.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -415,6 +499,54 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
     return "bg-gray-100 text-gray-800";
   };
 
+  // Helper function to check if animal is weaned from internal production
+  const isWeanedFromInternalProduction = (animal: Animal) => {
+    return (
+      !animal.internalProduction && 
+      animal.supplier === "مزرعة داخلية - مفطوم" &&
+      animal.weaningDate
+    );
+  };
+
+  // Helper function to get supplier display with weaning indicator
+  const getSupplierDisplay = (animal: Animal) => {
+    if (isWeanedFromInternalProduction(animal)) {
+      return (
+        <div className="flex items-center gap-2">
+          <span>{animal.supplier || "-"}</span>
+          <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+            <Baby className="h-3 w-3 mr-1" />
+            مفطوم
+          </Badge>
+        </div>
+      );
+    }
+    return animal.supplier || "-";
+  };
+
+  // Helper function to get animal production type badge
+  const getProductionTypeBadge = (animal: Animal) => {
+    if (isWeanedFromInternalProduction(animal)) {
+      return (
+        <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+          مفطوم ← مشترى
+        </Badge>
+      );
+    }
+    return (
+      <Badge
+        variant="outline"
+        className={
+          animal.internalProduction
+            ? "bg-blue-50 text-blue-700 border-blue-200"
+            : "bg-green-50 text-green-700 border-green-200"
+        }
+      >
+        {animal.internalProduction ? "إنتاج داخلي" : "مشترى"}
+      </Badge>
+    );
+  };
+
   const getAnimalTypeLabel = (type?: AnimalCategory) => {
     switch (type) {
       case "male":
@@ -496,6 +628,11 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
             <div className="text-2xl font-bold text-farm-800">
               {analytics.totalCount}
             </div>
+            <p className="text-xs text-muted-foreground">
+              {animalType === "male" ? "جميع الذكور (مشترى + إنتاج داخلي)" : 
+               animalType === "female" ? "جميع الإناث (مشترى + إنتاج داخلي)" :
+               "جميع الحيوانات المسجلة"}
+            </p>
           </CardContent>
         </Card>
 
@@ -520,6 +657,27 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
               {analytics.healthyCount}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center">
+              <TrendingUp className="h-4 w-4 ml-1 text-blue-600" />
+              التوزيع
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col gap-1 text-sm">
+              <div className="flex justify-between">
+                <span>مشترى:</span>
+                <span className="font-bold text-blue-600">{analytics.purchasedCount || 0}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>إنتاج داخلي:</span>
+                <span className="font-bold text-green-600">{analytics.internalProductionCount || 0}</span>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -746,6 +904,38 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
       {/* Enhanced Alerts for Males */}
       {animalType === "male" && (
         <div className="space-y-4">
+          {/* Auto-registration confirmation */}
+          <Alert className="border-blue-200 bg-blue-50">
+            <Users className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="text-blue-800">
+              <strong>تم عرض جميع الذكور المسجلين في قاعدة البيانات تلقائياً</strong> - 
+              يشمل ذلك الحيوانات المشتراة والإنتاج الداخلي والمواليد الجدد.
+              إجمالي: {analytics.totalCount} ذكر ({analytics.purchasedCount || 0} مشترى + {analytics.internalProductionCount || 0} إنتاج داخلي)
+            </AlertDescription>
+          </Alert>
+
+          {/* New Male Calves Alert */}
+          {maleManagementService.getNewbornMales(filteredAnimals).length > 0 && (
+            <Alert className="border-blue-200 bg-blue-50">
+              <Baby className="h-4 w-4 text-blue-600" />
+              <AlertDescription className="text-blue-800">
+                يوجد {maleManagementService.getNewbornMales(filteredAnimals).length} مولود ذكر في النظام! 
+                تم إدراجهم تلقائياً في إدارة الذكور وسيتم نقلهم لحظيرة الذكور عند الفطام.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Weaned Animals Alert */}
+          {filteredAnimals.filter(isWeanedFromInternalProduction).length > 0 && (
+            <Alert className="border-green-200 bg-green-50">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <AlertDescription className="text-green-800">
+                يوجد {filteredAnimals.filter(isWeanedFromInternalProduction).length} حيوان مفطوم من الإنتاج الداخلي! 
+                تم تصنيفهم كحيوانات مشتراة وأصبحوا جاهزين لدورة الإنتاج.
+              </AlertDescription>
+            </Alert>
+          )}
+          
           {/* Ready for Sale Alert */}
           {analytics.readyForSale > 0 && (
             <Alert className="border-green-200 bg-green-50">
@@ -773,6 +963,27 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
       {/* Enhanced Alerts for Females */}
       {animalType === "female" && (
         <div className="space-y-4">
+          {/* Auto-registration confirmation */}
+          <Alert className="border-pink-200 bg-pink-50">
+            <Users className="h-4 w-4 text-pink-600" />
+            <AlertDescription className="text-pink-800">
+              <strong>تم عرض جميع الإناث المسجلات في قاعدة البيانات تلقائياً</strong> - 
+              يشمل ذلك الحيوانات المشتراة والإنتاج الداخلي والمواليد الجدد.
+              إجمالي: {analytics.totalCount} أنثى ({analytics.purchasedCount || 0} مشترى + {analytics.internalProductionCount || 0} إنتاج داخلي)
+            </AlertDescription>
+          </Alert>
+
+          {/* Weaned Females Alert */}
+          {filteredAnimals.filter(isWeanedFromInternalProduction).length > 0 && (
+            <Alert className="border-green-200 bg-green-50">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <AlertDescription className="text-green-800">
+                يوجد {filteredAnimals.filter(isWeanedFromInternalProduction).length} أنثى مفطومة من الإنتاج الداخلي! 
+                تم تصنيفهن كحيوانات مشتراة وأصبحن جاهزات لدورة التكاثر.
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Ready for Breeding Alert */}
           {analytics.readyForBreeding > 0 && (
             <Alert className="border-green-200 bg-green-50">
@@ -936,14 +1147,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                               )}
                             </TableCell>
                             <TableCell className="text-right">
-                              <Badge 
-                                className={animal.internalProduction 
-                                  ? "bg-green-100 text-green-800" 
-                                  : "bg-blue-100 text-blue-800"
-                                }
-                              >
-                                {animal.internalProduction ? "إنتاج داخلي" : "مشترى"}
-                              </Badge>
+                              {getProductionTypeBadge(animal)}
                             </TableCell>
                             <TableCell className="text-right">
                               {animal.ageMonths ? `${animal.ageMonths} شهر` : "غير محدد"}
@@ -986,7 +1190,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                               )}
                             </TableCell>
                             <TableCell className="text-right">
-                              {animal.supplier || "-"}
+                              {getSupplierDisplay(animal)}
                             </TableCell>
                             <TableCell className="text-right">
                               <div className="flex items-center gap-1 justify-start">
@@ -1252,14 +1456,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                               )}
                             </TableCell>
                             <TableCell className="text-right">
-                              <Badge 
-                                className={animal.internalProduction 
-                                  ? "bg-green-100 text-green-800" 
-                                  : "bg-blue-100 text-blue-800"
-                                }
-                              >
-                                {animal.internalProduction ? "إنتاج داخلي" : "مشترى"}
-                              </Badge>
+                              {getProductionTypeBadge(animal)}
                             </TableCell>
                             <TableCell className="text-right">
                               <div className="flex items-center justify-start gap-1">
@@ -1305,7 +1502,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                               )}
                             </TableCell>
                             <TableCell className="text-right">
-                              {animal.supplier || "-"}
+                              {getSupplierDisplay(animal)}
                             </TableCell>
                             <TableCell className="text-right">
                               <div className="flex items-center gap-1 justify-start">
@@ -1615,7 +1812,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                           </TableCell>
                         )}
                         <TableCell className="text-right">
-                          {animal.supplier || "-"}
+                          {getSupplierDisplay(animal)}
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center gap-1 justify-start">

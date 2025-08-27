@@ -69,9 +69,11 @@ export function InternalProductionDashboard({}: InternalProductionDashboardProps
         dataService.barns.getAll()
       ]);
       
-      // فلترة الحيوانات: المواليد (جميعهم إنتاج داخلي) + الحيوانات المصنفة كإنتاج داخلي
+      // فلترة الحيوانات: المواليد + الحيوانات التي يجب إظهارها في الإنتاج الداخلي
       const internalAnimals = allAnimals.filter(animal => 
-        animal.category === 'newborn' || animal.internalProduction === true
+        animal.category === 'newborn' || 
+        animal.internalProduction === true || 
+        animal.showInInternalProduction === true
       );
       
       // حساب الإحصائيات
@@ -111,6 +113,13 @@ export function InternalProductionDashboard({}: InternalProductionDashboardProps
     const newbornCount = animalsData.filter(a => a.category === 'newborn').length;
     const weanedCount = animalsData.filter(a => a.category !== 'newborn').length;
     
+    // إحصائيات خاصة بالمواليد الذكور
+    const newbornMalesCount = animalsData.filter(a => a.sex === 'male' && a.category === 'newborn').length;
+    const malesReadyForTransfer = animalsData.filter(a => {
+      if (a.sex !== 'male' || a.category !== 'newborn') return false;
+      return getAnimalTransferStatus(a).status === 'ready';
+    }).length;
+    
     const byCategory = {} as Record<string, number>;
     animalsData.forEach(animal => {
       byCategory[animal.category] = (byCategory[animal.category] || 0) + 1;
@@ -127,6 +136,8 @@ export function InternalProductionDashboard({}: InternalProductionDashboardProps
       femaleCount,
       newbornCount,
       weanedCount,
+      newbornMalesCount,
+      malesReadyForTransfer,
       byCategory,
       totalWeight,
       averageAge
@@ -184,6 +195,41 @@ export function InternalProductionDashboard({}: InternalProductionDashboardProps
     }
   };
 
+  // تحديد حالة الحيوان (جاهز للنقل أم لا)
+  const getAnimalTransferStatus = (animal: Animal) => {
+    if (animal.category !== 'newborn') {
+      return { status: 'transferred', label: 'تم النقل', color: 'bg-green-600' };
+    }
+    
+    // التحقق من تاريخ الفطام
+    if (animal.weaningDate) {
+      const weaningDate = new Date(animal.weaningDate);
+      const today = new Date();
+      if (today >= weaningDate) {
+        return { status: 'ready', label: 'جاهز للنقل', color: 'bg-orange-600' };
+      } else {
+        const daysLeft = Math.ceil((weaningDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        return { status: 'pending', label: `${daysLeft} يوم`, color: 'bg-blue-600' };
+      }
+    }
+    
+    // استخدام تاريخ الميلاد لحساب العمر بالأيام
+    if (animal.birthDate) {
+      const birthDate = new Date(animal.birthDate);
+      const today = new Date();
+      const ageInDays = Math.floor((today.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (ageInDays >= 60) {
+        return { status: 'ready', label: 'جاهز للنقل', color: 'bg-orange-600' };
+      } else {
+        const daysLeft = 60 - ageInDays;
+        return { status: 'pending', label: `${daysLeft} يوم`, color: 'bg-blue-600' };
+      }
+    }
+    
+    return { status: 'unknown', label: 'غير محدد', color: 'bg-gray-600' };
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96" dir="rtl">
@@ -230,7 +276,7 @@ export function InternalProductionDashboard({}: InternalProductionDashboardProps
 
       {/* Overview Statistics */}
       {stats && (
-        <div className="grid gap-4 md:grid-cols-5">
+        <div className="grid gap-4 md:grid-cols-6">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium flex items-center">
@@ -267,6 +313,40 @@ export function InternalProductionDashboard({}: InternalProductionDashboardProps
               </div>
               <p className="text-xs text-muted-foreground">
                 ذكر / أنثى
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center">
+                <Baby className="h-4 w-4 ml-1 text-blue-600" />
+                المواليد الذكور
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-600">
+                {stats.newbornMalesCount}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                مولود ذكر في النظام
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center">
+                <Clock className="h-4 w-4 ml-1 text-orange-600" />
+                جاهز للنقل
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-orange-600">
+                {stats.malesReadyForTransfer}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                ذكر جاهز للنقل
               </p>
             </CardContent>
           </Card>
@@ -419,6 +499,7 @@ export function InternalProductionDashboard({}: InternalProductionDashboardProps
                     <TableHead className="text-right">رقم الأذن</TableHead>
                     <TableHead className="text-right">النوع</TableHead>
                     <TableHead className="text-right">الحالة</TableHead>
+                    <TableHead className="text-right">حالة النقل</TableHead>
                     <TableHead className="text-right">رقم أذن الأم</TableHead>
                     <TableHead className="text-right">الوزن</TableHead>
                     <TableHead className="text-right">العمر</TableHead>
@@ -461,6 +542,17 @@ export function InternalProductionDashboard({}: InternalProductionDashboardProps
                               إنتاج داخلي
                             </Badge>
                           </div>
+                        </TableCell>
+                        <TableCell>
+                          {(() => {
+                            const transferStatus = getAnimalTransferStatus(animal);
+                            return (
+                              <Badge className={`text-white ${transferStatus.color}`}>
+                                <Clock className="h-3 w-3 ml-1" />
+                                {transferStatus.label}
+                              </Badge>
+                            );
+                          })()}
                         </TableCell>
                         <TableCell>
                           {animal.motherEarTagId && animal.motherEarTagId !== 'none' ? (

@@ -248,12 +248,17 @@ export async function performWeaningTransfer(
     // Generate new ear tag ID for the new category
     const newEarTagId = await dataService.animals.getNextEarTagId(newCategory);
 
-    // Update the animal
+    // Update the animal - convert to purchased animal status after weaning
     const updatedAnimal: Partial<Animal> = {
       category: newCategory,
       earTagId: newEarTagId,
       barnId: newBarnId,
       weaningDate,
+      // Mark as purchased animal (no longer internal production) after weaning
+      internalProduction: false,
+      // Set a purchase price based on current market value or weight
+      purchasePrice: newborn.weight * 50, // Example calculation: 50 EGP per kg
+      supplier: "مزرعة داخلية - مفطوم", // Mark as internal farm weaned
       updatedAt: new Date(),
       updatedBy: options.recordedBy,
     };
@@ -262,7 +267,6 @@ export async function performWeaningTransfer(
 
     // Record barn movement
     await dataService.barnMovements.create({
-      id: `bm_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       animalId: newbornId,
       fromBarnId: newborn.barnId,
       toBarnId: newBarnId,

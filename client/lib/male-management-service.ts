@@ -23,6 +23,57 @@ export interface MaleFarmCycleInfo {
 export class MaleManagementService {
   private rules: MaleBusinessRules = MALE_BUSINESS_RULES;
 
+  // إضافة مولود ذكر جديد إلى إدارة الذكور
+  addNewbornMale(newbornMale: Animal): MaleValidationResult {
+    const warnings: string[] = [];
+    const errors: string[] = [];
+
+    // التحقق من أن الحيوان ذكر
+    if (newbornMale.sex !== 'male') {
+      errors.push('الحيوان ليس ذكراً');
+      return { isValid: false, warnings, errors };
+    }
+
+    // التحقق من أن الحيوان مولود
+    if (newbornMale.category !== 'newborn') {
+      warnings.push('الحيوان ليس مصنفاً كمولود');
+    }
+
+    // التحقق من وجود تاريخ ميلاد
+    if (!newbornMale.birthDate) {
+      warnings.push('لا يوجد تاريخ ميلاد محدد للمولود');
+    }
+
+    // التحقق من الوزن (المواليد عادة 25-35 كج)
+    if (newbornMale.weight < 20) {
+      warnings.push(`وزن المولود منخفض (${newbornMale.weight} كج). قد يحتاج رعاية خاصة`);
+    } else if (newbornMale.weight > 40) {
+      warnings.push(`وزن المولود مرتفع (${newbornMale.weight} كج). تأكد من صحة البيانات`);
+    }
+
+    // إضافة معلومات إضافية للمولود الذكر
+    warnings.push('تم إضافة المولود الذكر إلى قائمة إدارة الذكور تلقائياً');
+    warnings.push('سيتم نقله تلقائياً لحظيرة الذكور عند الفطام (60-75 يوم)');
+
+    return {
+      isValid: true,
+      warnings,
+      errors
+    };
+  }
+
+  // الحصول على جميع الذكور (بما في ذلك المواليد الذكور)
+  getAllMales(animals: Animal[]): Animal[] {
+    return animals.filter(animal => animal.sex === 'male');
+  }
+
+  // الحصول على المواليد الذكور فقط
+  getNewbornMales(animals: Animal[]): Animal[] {
+    return animals.filter(animal => 
+      animal.sex === 'male' && animal.category === 'newborn'
+    );
+  }
+
   // Validate male at purchase
   validatePurchase(weight: number, ageMonths: number): MaleValidationResult {
     const warnings: string[] = [];

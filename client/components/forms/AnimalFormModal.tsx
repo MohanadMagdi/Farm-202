@@ -311,7 +311,7 @@ export default function AnimalFormModal({
     setFormData({
       earTagId: "",
       category: animalType,
-      sex: animalType === "female" ? "female" : animalType === "newborn" ? "male" : "male",
+      sex: animalType === "female" ? "female" : animalType === "male" ? "male" : "male", // للمواليد يمكن اختيار الجنس
       weight: isNewborn ? "3" : "", // وزن افتراضي للمواليد 3 كج
       ageMonths: isNewborn ? "0" : "", // عمر 0 للمواليد
       supplier: "",
@@ -429,8 +429,9 @@ export default function AnimalFormModal({
         animalData.weaningDate = formData.weaningDate
           ? new Date(formData.weaningDate)
           : undefined;
-        // تحديد أن هذا إنتاج داخلي
+        // تحديد أن هذا إنتاج داخلي ويجب إظهاره في جميع الصفحات المناسبة
         animalData.internalProduction = true;
+        animalData.showInInternalProduction = true;
       }
 
       if (formData.isIsolated) {
@@ -488,9 +489,21 @@ export default function AnimalFormModal({
           });
         } else {
           await dataService.animals.create(animalData);
+          
+          // إضافة المواليد إلى الإدارة المناسبة تلقائياً
+          if (animalData.category === 'newborn') {
+            if (animalData.sex === 'male') {
+              const maleValidation = maleManagementService.addNewbornMale(animalData as Animal);
+              if (maleValidation.warnings.length > 0) {
+                console.log('تحذيرات إضافة المولود الذكر:', maleValidation.warnings);
+              }
+            }
+            // يمكن إضافة منطق للإناث هنا إذا لزم الأمر
+          }
+          
           toast({
             title: "تم الإضافة بنجاح",
-            description: `تم إضافة الحيوان ${formData.earTagId} بنجاح`,
+            description: `تم إضافة الحيوان ${formData.earTagId} بنجاح${animalData.category === 'newborn' ? ` وإدراجه في قائمة ${animalData.sex === 'male' ? 'الذكور' : 'الإناث'}` : ''}`,
           });
         }
       }
