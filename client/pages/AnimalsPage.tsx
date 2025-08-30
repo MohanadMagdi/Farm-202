@@ -70,6 +70,25 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
   const [productionTypeFilter, setProductionTypeFilter] = useState<string>("all"); // جديد: فلتر نوع الإنتاج
   const [recentlyUpdatedAnimals, setRecentlyUpdatedAnimals] = useState<Set<string>>(new Set());
   const [showLifecycleCard, setShowLifecycleCard] = useState(false);
+  
+  // Helper function to check if animal is internal production (including newborns)
+  const isInternalProduction = (animal: Animal) => {
+    // المواليد دائماً إنتاج داخلي
+    if (animal.category === "newborn") {
+      return true;
+    }
+    // باقي الحيوانات حسب الخاصية internalProduction
+    return animal.internalProduction;
+  };
+
+  // Helper function to check if animal is weaned from internal production
+  const isWeanedFromInternalProduction = (animal: Animal) => {
+    return (
+      !animal.internalProduction && 
+      animal.supplier === "مزرعة داخلية - مفطوم" &&
+      animal.weaningDate
+    );
+  };
 
   // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -190,14 +209,14 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
     const pregnantCount = animalsData.filter((a) => a.isPregnant).length;
     const isolatedCount = animalsData.filter((a) => a.isIsolated).length;
     
-    // إحصائيات نوع الإنتاج
-    const internalProductionCount = animalsData.filter((a) => a.internalProduction).length;
-    const purchasedCount = animalsData.filter((a) => !a.internalProduction).length;
+    // إحصائيات نوع الإنتاج - استخدام دالة isInternalProduction لضمان اعتبار المواليد إنتاج داخلي
+    const internalProductionCount = animalsData.filter((a) => isInternalProduction(a)).length;
+    const purchasedCount = animalsData.filter((a) => !isInternalProduction(a)).length;
     const internalProductionValue = animalsData
-      .filter((a) => a.internalProduction)
+      .filter((a) => isInternalProduction(a))
       .reduce((sum, animal) => sum + (animal.currentPrice || animal.purchasePrice || 0), 0);
     const purchasedValue = animalsData
-      .filter((a) => !a.internalProduction)
+      .filter((a) => !isInternalProduction(a))
       .reduce((sum, animal) => sum + (animal.currentPrice || animal.purchasePrice || 0), 0);
 
     // Enhanced analytics for males
@@ -424,10 +443,10 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
         healthFilter === "all" || animal.healthStatus === healthFilter,
     )
     .filter((animal) => {
-      // فلتر نوع الإنتاج
+      // فلتر نوع الإنتاج - استخدام الدالة المساعدة للتعامل مع المواليد
       if (productionTypeFilter === "all") return true;
-      if (productionTypeFilter === "purchased") return !animal.internalProduction;
-      if (productionTypeFilter === "internal") return animal.internalProduction;
+      if (productionTypeFilter === "purchased") return !isInternalProduction(animal);
+      if (productionTypeFilter === "internal") return isInternalProduction(animal);
       return true;
     })
     .filter((animal) => {
@@ -499,15 +518,6 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
     return "bg-gray-100 text-gray-800";
   };
 
-  // Helper function to check if animal is weaned from internal production
-  const isWeanedFromInternalProduction = (animal: Animal) => {
-    return (
-      !animal.internalProduction && 
-      animal.supplier === "مزرعة داخلية - مفطوم" &&
-      animal.weaningDate
-    );
-  };
-
   // Helper function to get supplier display with weaning indicator
   const getSupplierDisplay = (animal: Animal) => {
     if (isWeanedFromInternalProduction(animal)) {
@@ -526,6 +536,16 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
 
   // Helper function to get animal production type badge
   const getProductionTypeBadge = (animal: Animal) => {
+    // المواليد دائماً يظهرون كإنتاج داخلي
+    if (animal.category === "newborn") {
+      return (
+        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+          إنتاج داخلي
+        </Badge>
+      );
+    }
+    
+    // الحيوانات المفطومة
     if (isWeanedFromInternalProduction(animal)) {
       return (
         <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
@@ -533,6 +553,8 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
         </Badge>
       );
     }
+    
+    // الحالات الأخرى
     return (
       <Badge
         variant="outline"

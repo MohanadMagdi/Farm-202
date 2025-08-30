@@ -141,14 +141,33 @@ class MockAnimalsService extends MockServiceAdapter<Animal> {
       return `${prefix}001`;
     }
 
-    // Sort by earTagId and get the last one
-    const sortedAnimals = animals.sort((a, b) =>
-      a.earTagId.localeCompare(b.earTagId),
+    // فلترة الحيوانات بحسب البادئة الصحيحة
+    const filteredAnimals = animals.filter(animal => 
+      animal.earTagId && animal.earTagId.startsWith(prefix)
     );
-    const lastEarTag = sortedAnimals[sortedAnimals.length - 1].earTagId;
-    const lastNumber = parseInt(lastEarTag.substring(1));
-    const nextNumber = lastNumber + 1;
-
+    
+    if (filteredAnimals.length === 0) {
+      return `${prefix}001`;
+    }
+    
+    // استخراج الأرقام من أرقام الأذن وإيجاد أعلى رقم
+    let maxNumber = 0;
+    
+    for (const animal of filteredAnimals) {
+      try {
+        const numPart = animal.earTagId.substring(1);
+        const num = parseInt(numPart, 10);
+        if (!isNaN(num) && num > maxNumber) {
+          maxNumber = num;
+        }
+      } catch (e) {
+        console.error("Error parsing ear tag number:", animal.earTagId);
+      }
+    }
+    
+    const nextNumber = maxNumber + 1;
+    
+    // تنسيق الرقم بإضافة أصفار متقدمة (على سبيل المثال، 1 يصبح 001)
     return `${prefix}${nextNumber.toString().padStart(3, "0")}`;
   }
 }

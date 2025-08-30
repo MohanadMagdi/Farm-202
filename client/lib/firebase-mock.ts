@@ -184,6 +184,7 @@ class MockFirestore {
           updatedBy: "user_001",
           purchaseDate: new Date("2024-01-10"),
           purchasePrice: 0,
+          weaningDate: new Date("2024-03-10"),
         },
         {
           id: "anim_005",
@@ -210,6 +211,7 @@ class MockFirestore {
           updatedBy: "user_001",
           purchaseDate: new Date("2024-01-10"),
           purchasePrice: 0,
+          weaningDate: new Date("2024-03-10"),
         },
         // Test animal with many weight entries to demonstrate dynamic columns
         {

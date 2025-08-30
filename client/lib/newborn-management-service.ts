@@ -41,6 +41,7 @@ export interface NewbornStatus {
     currentBarn: string;
     shouldStayWithMother: boolean;
     recommendedBarnType: 'male' | 'female' | 'newborn';
+    hasBeenTransferred: boolean;  // إضافة خاصية لتتبع ما إذا كان المولود قد تم نقله
   };
 }
 
@@ -125,7 +126,15 @@ export class NewbornManagementService {
 
   // التحقق من حالة الفطام
   isWeaned(newborn: Animal): boolean {
-    return !!newborn.weaningDate;
+    // إذا لم يكن هناك تاريخ فطام محدد، فإن المولود لم يتم فطامه
+    if (!newborn.weaningDate) return false;
+    
+    // تحقق مما إذا كان تاريخ الفطام قد مر بالفعل
+    const today = new Date();
+    const weaningDate = new Date(newborn.weaningDate);
+    
+    // المولود يعتبر مفطومًا فقط إذا كان تاريخ الفطام سابقًا لتاريخ اليوم
+    return weaningDate < today;
   }
 
   // حساب الأيام المتبقية للفطام
@@ -177,15 +186,29 @@ export class NewbornManagementService {
     currentBarn: string;
     shouldStayWithMother: boolean;
     recommendedBarnType: 'male' | 'female' | 'newborn';
+    hasBeenTransferred: boolean;  // إضافة خاصية لتتبع ما إذا كان المولود قد تم نقله
   } {
     const isWeaned = this.isWeaned(newborn);
     
+    // تحديد ما إذا تم نقل المولود من حظيرة الأم
+    const hasBeenTransferred = (() => {
+      // إذا لم تكن هناك معلومات عن الأم، لا يمكننا التحقق من النقل
+      if (!mother || !mother.barnId) return false;
+      
+      // إذا لم يكن للمولود حظيرة محددة، فلم يتم نقله بعد
+      if (!newborn.barnId) return false;
+      
+      // تحقق مما إذا كانت حظيرة المولود مختلفة عن حظيرة الأم
+      return newborn.barnId !== mother.barnId;
+    })();
+    
     // قبل الفطام - يجب البقاء مع الأم
-    if (!isWeaned && this.businessRules.stayWithMother) {
+    if (!isWeaned && this.businessRules.stayWithMother && !hasBeenTransferred) {
       return {
         currentBarn: newborn.barnId || mother?.barnId || '',
         shouldStayWithMother: true,
-        recommendedBarnType: 'newborn'
+        recommendedBarnType: 'newborn',
+        hasBeenTransferred: false
       };
     }
     
@@ -195,7 +218,8 @@ export class NewbornManagementService {
     return {
       currentBarn: newborn.barnId || '',
       shouldStayWithMother: false,
-      recommendedBarnType
+      recommendedBarnType,
+      hasBeenTransferred: hasBeenTransferred
     };
   }
 
@@ -360,13 +384,24 @@ export class NewbornManagementService {
     ageLabel: string;
     weaningCategoryLabel: string;
     weaningCategoryColor: string;
+    transferStatus?: string;  // إضافة حالة النقل
   } {
     let statusLabel = "";
     let statusColor = "";
+    let transferStatus: string | undefined = undefined;
     
+    // تحديد حالة الفطام والنقل
     if (status.isWeaned) {
-      statusLabel = "تم الفطام";
+      // إذا كان المولود مفطوم، يعتبر "مفطوم" بدلاً من "مواليد"
+      statusLabel = "مفطوم";
       statusColor = "bg-green-100 text-green-800";
+      
+      // إذا تم نقله من حظيرة الأم، أضف حالة النقل
+      if (status.barnAssignment.hasBeenTransferred) {
+        transferStatus = "تم النقل";
+      } else {
+        transferStatus = "لم يتم النقل";
+      }
     } else if (status.readyForWeaning) {
       statusLabel = "جاهز للفطام";
       statusColor = "bg-yellow-100 text-yellow-800";

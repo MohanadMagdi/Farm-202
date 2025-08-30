@@ -35,7 +35,7 @@ import {
 } from "@/lib/animal-relationships";
 import type { Animal, Barn, AnimalCategory } from "@shared/types";
 import { toast } from "@/hooks/use-toast";
-import { AlertTriangle, Lightbulb } from "lucide-react";
+import { AlertTriangle, ChevronDown, Lightbulb } from "lucide-react";
 
 interface AnimalFormModalProps {
   isOpen: boolean;
@@ -100,6 +100,22 @@ export default function AnimalFormModal({
       loadSelectData();
       if (mode === "edit" && animal) {
         populateFormData(animal);
+        
+        // التحقق من حالة الفطام للمولود
+        if (animal.category === "newborn" && animal.weaningDate) {
+          const today = new Date();
+          const weaningDate = new Date(animal.weaningDate);
+          const isWeaned = weaningDate < today;
+          
+          if (isWeaned) {
+            // إظهار رسالة تأكيد حالة الفطام
+            toast({
+              title: "حالة المولود",
+              description: "هذا المولود تم فطامه ويعتبر حيوان بالغ الآن",
+              variant: "default",
+            });
+          }
+        }
       } else {
         resetForm();
         generateEarTagSuggestion();
@@ -524,36 +540,43 @@ export default function AnimalFormModal({
 
   // Filter barns based on category and sex
   const getFilteredBarns = () => {
-    // للمواليد: عرض جميع الحظائر (سيتم تعيين حظيرة الأم تلقائياً)
-    if (formData.category === "newborn") {
-      return barns.filter(barn => barn.isActive);
-    }
-    
-    // للذكور: حظائر الذكور والمختلطة
-    if (formData.category === "male" || formData.sex === "male") {
-      return barns.filter(barn => 
-        barn.isActive && (barn.type === "male" || barn.type === "mixed")
-      );
-    }
-    
-    // للإناث: حظائر الإناث والمختلطة
-    if (formData.category === "female" || formData.sex === "female") {
-      return barns.filter(barn => 
-        barn.isActive && (barn.type === "female" || barn.type === "mixed")
-      );
-    }
-    
-    // افتراضي: فلترة حسب النوع أو مختلط
-    return barns.filter(barn => 
-      barn.isActive && (barn.type === formData.category || barn.type === "mixed")
-    );
+    // عرض جميع الحظائر المتاحة بغض النظر عن النوع
+    return barns.filter(barn => barn.isActive);
   };
 
   const filteredBarns = getFilteredBarns();
 
-  const potentialMothers = animals.filter(
-    (a) => a.category === "female" && a.id !== animal?.id,
-  );
+  // فلترة الأمهات المحتملات لتشمل جميع الإناث البالغات (بعد الفطام تعتبر الأنثى بالغة)
+  const potentialMothers = animals.filter((a) => {
+    // يجب أن تكون أنثى وليست الحيوان الحالي
+    if (a.sex !== "female" || a.id === animal?.id) return false;
+    
+    // للمواليد: نتحقق من أنها مفطومة بالفعل (بعد الفطام تعتبر أنثى بالغة)
+    if (a.category === "newborn") {
+      // إذا كان تاريخ الفطام موجود، نتحقق أن الفطام قد تم بالفعل
+      if (a.weaningDate) {
+        const today = new Date();
+        const weaningDate = new Date(a.weaningDate);
+        return weaningDate < today; // تم الفطام، تعتبر بالغة
+      } 
+      // إذا كان عمرها أكثر من 75 يوماً (متوسط وقت الفطام + هامش أمان) وتاريخ الميلاد معروف
+      else if (a.birthDate) {
+        const today = new Date();
+        const birthDate = new Date(a.birthDate);
+        const ageInDays = Math.floor((today.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24));
+        return ageInDays > 75; // عمرها يتجاوز فترة الفطام النموذجية، تعتبر بالغة
+      }
+      // إذا كان عمرها معروف بالشهور ويزيد عن 2.5 شهر
+      else if (a.ageMonths) {
+        return a.ageMonths > 2.5; // أكثر من 75 يوم (2.5 شهر)، تعتبر بالغة
+      }
+      // لا يوجد معلومات كافية، نستبعدها ليكون الاختيار آمنًا
+      return false;
+    }
+    
+    // باقي الإناث (من فئة female أو أخرى) مؤهلات للإنجاب بشكل افتراضي لأنها بالغات
+    return true;
+  });
 
   const isolationTypes = [
     { value: "health_quarantine", label: "حجر صحي للوافدين الجدد" },
@@ -681,20 +704,18 @@ export default function AnimalFormModal({
                     <SelectValue placeholder="اختر الحظيرة" />
                   </SelectTrigger>
                   <SelectContent>
-                    {filteredBarns.map((barn) => (
+                    {filteredBarns.map((barn) =>  (
                       <SelectItem key={barn.id} value={barn.id}>
-                        {barn.name} ({barn.type === "mixed" ? "مختلط" : barn.type === "male" ? "ذكور" : barn.type === "female" ? "إناث" : "صغار"})
+                        {barn.name} 
+                        ({barn.type === "mixed" ? "مختلط" : barn.type === "male" ? "ذكور" : barn.type === "female" ? "إناث" : "صغار"})
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                {/* معلومات إضافية عن فلترة الحظائر */}
+                {/* معلومات إضافية عن الحظائر */}
                 <p className="text-xs text-muted-foreground mt-1">
-                  {formData.category === "newborn" 
-                    ? "جميع الحظائر متاحة (سيتم تعيين حظيرة الأم تلقائياً)"
-                    : formData.category === "male" || formData.sex === "male"
-                      ? "حظائر الذكور والمختلطة فقط"
-                      : "حظائر الإناث والمختلطة فقط"
+                  {formData.category === "newborn" && formData.motherId && formData.motherId !== "none" && 
+                    " (سيتم تعيين حظيرة الأم تلقائياً إذا تم اختيار أم)"
                   }
                 </p>
               </div>
@@ -1000,25 +1021,67 @@ export default function AnimalFormModal({
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="motherId">الأم</Label>
-                  <Select
-                    value={formData.motherId}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, motherId: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="اختر الأم" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">بدون أم محددة</SelectItem>
-                      {potentialMothers.map((mother) => (
-                        <SelectItem key={mother.id} value={mother.id}>
-                          {mother.earTagId} - الحظيرة: {barns.find(b => b.id === mother.barnId)?.name || 'غير محدد'}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex justify-between">
+                    <Label htmlFor="motherId">الأم</Label>
+                    <span className="text-xs text-blue-600">
+                      {potentialMothers.length} أم مؤهلة
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    تشمل جميع الإناث البالغات بما فيها المواليد المفطومة (تعتبر أنثى بالغة بعد الفطام)
+                  </p>
+                  
+                  {/* استبدال Select بعنصر select عادي */}
+                  <div className="relative">
+                    <select
+                      id="mother-select"
+                      value={formData.motherId || "none"}
+                      onChange={(e) => setFormData({ ...formData, motherId: e.target.value === "none" ? "" : e.target.value })}
+                      className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="none">بدون أم محددة</option>
+                      {potentialMothers.map((mother) => {
+                        // إضافة معلومات مفيدة عن الأم
+                        const motherAge = mother.ageMonths ? `${mother.ageMonths} شهر` : 
+                                         mother.birthDate ? `${Math.floor((new Date().getTime() - new Date(mother.birthDate).getTime()) / (1000 * 60 * 60 * 24 * 30))} شهر` : 
+                                         "غير معروف";
+                        
+                        // تحديد نوع الأم مع اعتبار أن المفطومة أنثى بالغة
+                        let motherCategory = "أنثى";
+                        if (mother.internalProduction) {
+                          motherCategory = "إنتاج داخلي";
+                        }
+                        
+                        // إضافة وصف المصدر للأم مع تحديد حالة الفطام
+                        let motherSource = "";
+                        let isWeaned = false;
+                        
+                        if (mother.category === "newborn" && mother.weaningDate) {
+                          // تحقق إذا كانت قد فُطمت بالفعل
+                          const today = new Date();
+                          const weaningDate = new Date(mother.weaningDate);
+                          
+                          if (weaningDate < today) {
+                            isWeaned = true;
+                            motherSource = " (مفطومة - تعتبر بالغة)";
+                          } else {
+                            // تاريخ الفطام المتوقع في المستقبل
+                            const daysToWeaning = Math.ceil((weaningDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                            motherSource = ` (غير مفطومة - متبقي ${daysToWeaning} يوم للفطام)`;
+                          }
+                        }
+                        
+                        return (
+                          <option key={mother.id} value={mother.id}>
+                            {mother.earTagId} - {motherCategory}{motherSource} - العمر: {motherAge} - الحظيرة: {barns.find(b => b.id === mother.barnId)?.name || 'غير محدد'}
+                          </option>
+                        );
+                      })}
+                    </select>
+                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                      <ChevronDown className="h-4 w-4 opacity-50" />
+                    </div>
+                  </div>
 
                   {/* Mother validation feedback */}
                   {formData.motherId && formData.motherId !== "none" && (
@@ -1114,14 +1177,41 @@ export default function AnimalFormModal({
                 </div>
 
                 <div>
-                  <Label htmlFor="weaningDate">تاريخ الفطام المتوقع</Label>
+                  <div className="flex justify-between items-center mb-1">
+                    <Label htmlFor="weaningDate">تاريخ الفطام المتوقع</Label>
+                    
+                    {formData.weaningDate && (
+                      <>
+                        {new Date(formData.weaningDate) < new Date() ? (
+                          <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-green-100 text-green-800">
+                            تم الفطام - يعتبر بالغ
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-yellow-100 text-yellow-800">
+                            {Math.ceil((new Date(formData.weaningDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} يوم متبقي للفطام
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </div>
                   <Input
                     id="weaningDate"
                     type="date"
                     value={formData.weaningDate}
-                    onChange={(e) =>
-                      setFormData({ ...formData, weaningDate: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const newWeaningDate = e.target.value;
+                      setFormData({ ...formData, weaningDate: newWeaningDate });
+                      
+                      // التحقق ما إذا كان تاريخ الفطام الجديد يدل على أن المولود قد فُطم بالفعل
+                      const today = new Date();
+                      if (newWeaningDate && new Date(newWeaningDate) < today) {
+                        toast({
+                          title: "تم الفطام",
+                          description: "تم تعيين تاريخ فطام في الماضي - سيتم اعتبار هذا المولود بالغًا الآن",
+                          variant: "default",
+                        });
+                      }
+                    }}
                   />
                   {/* تحذير حول الفطام المبكر/المتأخر */}
                   {formData.birthDate && formData.weaningDate && (

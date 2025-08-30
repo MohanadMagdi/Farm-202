@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Button } from './ui/button';
-import { AlertTriangle, DollarSign, TrendingUp, Users, Calendar, Baby, ArrowRight } from 'lucide-react';
+import { AlertTriangle, DollarSign, TrendingUp, Users, Calendar, Baby, ArrowRight, ArrowLeftRight } from 'lucide-react';
 import type { Animal, Barn } from '@shared/types';
 import { NewbornCard } from './NewbornCard';
 import { NewbornsTable } from './NewbornsTable';
@@ -14,6 +14,8 @@ import { AutomaticTransferDashboard } from './AutomaticTransferDashboard';
 import { AutoTransferAlert } from './AutoTransferAlert';
 import { newbornManagementService } from '../lib/newborn-management-service';
 import { newbornCostCenterService } from '../lib/newborn-cost-center-service';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 interface NewbornDashboardProps {
   newborns: Animal[];
@@ -22,6 +24,7 @@ interface NewbornDashboardProps {
   onNewbornSelect: (newborn: Animal) => void;
   onWeaningRequest: (newborn: Animal) => void;
   onWeaningConfirm?: (newbornId: string, newBarnId: string, weaningDate: Date) => void;
+  onTransferConfirm?: (newbornId: string, newBarnId: string) => void; // إضافة معالج تأكيد النقل
   onRefresh?: () => void; // إضافة دالة التحديث
 }
 
@@ -32,11 +35,15 @@ export function NewbornDashboard({
   onNewbornSelect, 
   onWeaningRequest,
   onWeaningConfirm,
+  onTransferConfirm,
   onRefresh = () => {} // قيمة افتراضية
 }: NewbornDashboardProps) {
   const [selectedTab, setSelectedTab] = useState('overview');
   const [weaningModalOpen, setWeaningModalOpen] = useState(false);
+  const [transferModalOpen, setTransferModalOpen] = useState(false);
   const [selectedNewbornForWeaning, setSelectedNewbornForWeaning] = useState<Animal | null>(null);
+  const [selectedNewbornForTransfer, setSelectedNewbornForTransfer] = useState<Animal | null>(null);
+  const [selectedBarnForTransfer, setSelectedBarnForTransfer] = useState<string>("");
 
   // حساب الإحصائيات
   const analytics = newbornManagementService.calculateNewbornAnalytics(newborns);
@@ -49,12 +56,27 @@ export function NewbornDashboard({
     setWeaningModalOpen(true);
   };
 
+  const handleTransferRequest = (newborn: Animal) => {
+    setSelectedNewbornForTransfer(newborn);
+    setSelectedBarnForTransfer("");
+    setTransferModalOpen(true);
+  };
+
   const handleWeaningConfirm = (newbornId: string, newBarnId: string, weaningDate: Date) => {
     if (onWeaningConfirm) {
       onWeaningConfirm(newbornId, newBarnId, weaningDate);
     }
     setWeaningModalOpen(false);
     setSelectedNewbornForWeaning(null);
+  };
+
+  const handleTransferConfirm = () => {
+    if (onTransferConfirm && selectedNewbornForTransfer && selectedBarnForTransfer) {
+      onTransferConfirm(selectedNewbornForTransfer.id, selectedBarnForTransfer);
+    }
+    setTransferModalOpen(false);
+    setSelectedNewbornForTransfer(null);
+    setSelectedBarnForTransfer("");
   };
 
   return (
@@ -375,6 +397,7 @@ export function NewbornDashboard({
             mothers={mothers}
             onSelectNewborn={onNewbornSelect}
             onWeaningRequest={handleWeaningRequest}
+            onTransferRequest={handleTransferRequest}
           />
         </TabsContent>
       </Tabs>
@@ -393,6 +416,81 @@ export function NewbornDashboard({
           onConfirmWeaning={handleWeaningConfirm}
         />
       )}
+
+      {/* Transfer Modal */}
+      <Dialog open={transferModalOpen} onOpenChange={(open) => {
+        if (!open) {
+          setTransferModalOpen(false);
+          setSelectedNewbornForTransfer(null);
+          setSelectedBarnForTransfer("");
+        }
+      }}>
+        <DialogContent className="sm:max-w-[425px]" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>نقل الحيوان المفطوم إلى حظيرة جديدة</DialogTitle>
+            <DialogDescription>
+              قم باختيار الحظيرة المناسبة لنقل الحيوان بعد فطامه.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedNewbornForTransfer && (
+            <div className="grid gap-4 py-4">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold">الحيوان:</span>
+                <span>{selectedNewbornForTransfer.earTagId}</span>
+                <Badge className={selectedNewbornForTransfer.sex === 'male' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800'}>
+                  {selectedNewbornForTransfer.sex === 'male' ? 'ذكر' : 'أنثى'}
+                </Badge>
+              </div>
+              
+              <div className="grid">
+                <label htmlFor="barn" className="text-sm font-medium mb-2">
+                  اختر الحظيرة
+                </label>
+                <Select 
+                  value={selectedBarnForTransfer} 
+                  onValueChange={setSelectedBarnForTransfer}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="اختر الحظيرة المناسبة" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableBarns
+                      .filter(barn => 
+                        barn.isActive && 
+                        (barn.type === 'mixed' || 
+                          (selectedNewbornForTransfer.sex === 'male' && barn.type === 'male') ||
+                          (selectedNewbornForTransfer.sex === 'female' && barn.type === 'female'))
+                      )
+                      .map(barn => (
+                        <SelectItem key={barn.id} value={barn.id}>
+                          {barn.name} ({barn.type === 'male' ? 'ذكور' : barn.type === 'female' ? 'إناث' : 'مختلط'})
+                        </SelectItem>
+                      ))
+                    }
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => {
+              setTransferModalOpen(false);
+              setSelectedNewbornForTransfer(null);
+            }}>
+              إلغاء
+            </Button>
+            <Button 
+              type="button" 
+              onClick={handleTransferConfirm} 
+              disabled={!selectedBarnForTransfer}
+              className="flex items-center"
+            >
+              <ArrowLeftRight className="h-4 w-4 ml-1" />
+              تأكيد النقل
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

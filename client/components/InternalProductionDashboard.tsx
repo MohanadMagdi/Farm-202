@@ -34,7 +34,8 @@ import {
   MapPin,
   Heart,
   Baby,
-  Clock
+  Clock,
+  ArrowLeftRight
 } from 'lucide-react';
 import { Animal, Barn } from '@shared/types';
 import { automaticWeaningTransferService } from '@/lib/automatic-weaning-transfer-service';
@@ -54,7 +55,9 @@ export function InternalProductionDashboard({}: InternalProductionDashboardProps
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [selectedAnimal, setSelectedAnimal] = useState<Animal | null>(null);
+  const [selectedBarnForTransfer, setSelectedBarnForTransfer] = useState<string>("");
 
   useEffect(() => {
     loadData();
@@ -192,6 +195,66 @@ export function InternalProductionDashboard({}: InternalProductionDashboardProps
         console.error('خطأ في حذف الحيوان:', error);
         alert('حدث خطأ أثناء حذف الحيوان');
       }
+    }
+  };
+  
+  // معالجة نقل الحيوان إلى حظيرة جديدة
+  const handleTransferAnimal = (animal: Animal) => {
+    setSelectedAnimal(animal);
+    setSelectedBarnForTransfer("");
+    setIsTransferModalOpen(true);
+  };
+  
+  // تنفيذ عملية نقل الحيوان
+  const executeTransfer = async () => {
+    if (!selectedAnimal || !selectedBarnForTransfer) return;
+    
+    try {
+      const newCategory = selectedAnimal.sex === 'male' ? 'male' : 'female';
+      
+      // تحديث بيانات الحيوان
+      const updatedAnimal: Animal = {
+        ...selectedAnimal,
+        category: newCategory,
+        barnId: selectedBarnForTransfer,
+        // الحفاظ على علامة الإنتاج الداخلي
+        internalProduction: true,
+        // إضافة علامة أن الحيوان مفطوم ولكن لا يزال جزءاً من الإنتاج الداخلي
+        showInInternalProduction: true,
+        transferDate: new Date(),
+        transferReason: 'manual_weaning_transfer',
+        previousCategory: 'newborn',
+      };
+      
+      // تحديث البيانات في قاعدة البيانات
+      await dataService.animals.update(selectedAnimal.id, updatedAnimal);
+      
+      // إنشاء سجل النقل
+      await dataService.barnMovements.create({
+        id: '', // سيتم إنشاؤه تلقائيًا
+        animalId: selectedAnimal.id,
+        animalEarTagId: selectedAnimal.earTagId,
+        fromBarnId: selectedAnimal.barnId || '',
+        toBarnId: selectedBarnForTransfer,
+        date: new Date(),
+        reason: 'نقل بعد الفطام',
+        type: 'transfer',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      
+      // إغلاق المودال وإعادة تحميل البيانات
+      setIsTransferModalOpen(false);
+      setSelectedAnimal(null);
+      setSelectedBarnForTransfer("");
+      
+      // تحديث البيانات
+      loadData();
+      
+      alert('تم نقل الحيوان بنجاح!');
+    } catch (error) {
+      console.error('Error transferring animal:', error);
+      alert('حدث خطأ أثناء نقل الحيوان');
     }
   };
 
@@ -590,6 +653,22 @@ export function InternalProductionDashboard({}: InternalProductionDashboardProps
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
+                            {/* زر النقل - يظهر فقط للمواليد المفطومة التي لم يتم نقلها بعد */}
+                            {animal.category === 'newborn' && 
+                             animal.weaningDate && 
+                             new Date(animal.weaningDate) < new Date() && 
+                             getAnimalTransferStatus(animal).status === 'ready' && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="bg-blue-50 hover:bg-blue-100 text-blue-700 h-8 px-2 text-xs"
+                                title="نقل إلى حظيرة"
+                                onClick={() => handleTransferAnimal(animal)}
+                              >
+                                <ArrowLeftRight className="h-3 w-3 ml-1" />
+                                نقل
+                              </Button>
+                            )}
                             <Button
                               variant="outline"
                               size="sm"
@@ -845,6 +924,80 @@ export function InternalProductionDashboard({}: InternalProductionDashboardProps
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Transfer Modal */}
+      <Dialog open={isTransferModalOpen} onOpenChange={(open) => {
+        if (!open) {
+          setIsTransferModalOpen(false);
+          setSelectedAnimal(null);
+          setSelectedBarnForTransfer("");
+        }
+      }}>
+        <DialogContent className="sm:max-w-[425px]" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>نقل الحيوان المفطوم إلى حظيرة جديدة</DialogTitle>
+            <p className="text-sm text-muted-foreground">
+              قم باختيار الحظيرة المناسبة لنقل الحيوان بعد فطامه.
+            </p>
+          </DialogHeader>
+          {selectedAnimal && (
+            <div className="grid gap-4 py-4">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold">الحيوان:</span>
+                <span>{selectedAnimal.earTagId}</span>
+                <Badge className={selectedAnimal.sex === 'male' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800'}>
+                  {selectedAnimal.sex === 'male' ? 'ذكر' : 'أنثى'}
+                </Badge>
+              </div>
+              
+              <div className="grid">
+                <label htmlFor="barn" className="text-sm font-medium mb-2">
+                  اختر الحظيرة
+                </label>
+                <select
+                  value={selectedBarnForTransfer} 
+                  onChange={(e) => setSelectedBarnForTransfer(e.target.value)}
+                  className="w-full px-3 py-2 border border-input bg-background rounded-md"
+                >
+                  <option value="">اختر الحظيرة المناسبة</option>
+                  {barns
+                    .filter(barn => 
+                      barn.isActive && 
+                      (barn.type === 'mixed' || 
+                        (selectedAnimal.sex === 'male' && barn.type === 'male') ||
+                        (selectedAnimal.sex === 'female' && barn.type === 'female'))
+                    )
+                    .map(barn => (
+                      <option key={barn.id} value={barn.id}>
+                        {barn.name} ({barn.type === 'male' ? 'ذكور' : barn.type === 'female' ? 'إناث' : 'مختلط'})
+                      </option>
+                    ))
+                  }
+                </select>
+              </div>
+              
+              <div className="flex justify-end gap-3 mt-4">
+                <Button type="button" variant="outline" onClick={() => {
+                  setIsTransferModalOpen(false);
+                  setSelectedAnimal(null);
+                  setSelectedBarnForTransfer("");
+                }}>
+                  إلغاء
+                </Button>
+                <Button 
+                  type="button" 
+                  onClick={executeTransfer} 
+                  disabled={!selectedBarnForTransfer}
+                  className="flex items-center"
+                >
+                  <ArrowLeftRight className="h-4 w-4 ml-1" />
+                  تأكيد النقل
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

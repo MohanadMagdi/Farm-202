@@ -760,11 +760,12 @@ export default function BarnsPage() {
                         {selectedBarn.isActive ? "نشط" : "غير نشط"}
                       </Badge>
                     </div>
-                    <CardDescription>
+                    <div className="flex items-center mt-1">
+                      <span className="text-sm text-muted-foreground mr-2">النوع:</span>
                       <Badge variant="outline" className={barnTypeColors[selectedBarn.type]}>
                         {barnTypeLabels[selectedBarn.type]}
                       </Badge>
-                    </CardDescription>
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">

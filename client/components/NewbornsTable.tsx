@@ -5,7 +5,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
-import { Search, ChevronDownIcon, Calendar } from 'lucide-react';
+import { Search, ChevronDownIcon, Calendar, ArrowLeftRight } from 'lucide-react';
 import type { Animal } from '@shared/types';
 import { newbornManagementService } from '../lib/newborn-management-service';
 
@@ -14,6 +14,7 @@ interface NewbornsTableProps {
   mothers: Animal[];
   onSelectNewborn: (newborn: Animal) => void;
   onWeaningRequest: (newborn: Animal) => void;
+  onTransferRequest?: (newborn: Animal) => void; // إضافة معالج لطلب النقل
 }
 
 type FilterType = 'all' | 'unweaned' | 'ready-weaning' | 'weaned' | 'needs-attention';
@@ -23,7 +24,8 @@ export function NewbornsTable({
   newborns, 
   mothers, 
   onSelectNewborn, 
-  onWeaningRequest 
+  onWeaningRequest,
+  onTransferRequest
 }: NewbornsTableProps) {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<FilterType>('all');
@@ -165,10 +167,10 @@ export function NewbornsTable({
             </TableHeader>
             <TableBody>
               {sortedNewborns.map(newborn => {
-                const status = newbornManagementService.getNewbornStatus(newborn);
-                const info = newbornManagementService.formatNewbornInfo(status);
-                const financials = newbornManagementService.calculateNewbornFinancials(newborn);
                 const mother = findMother(newborn);
+                const status = newbornManagementService.getNewbornStatus(newborn, mother);
+                const info = newbornManagementService.formatNewbornInfo(status);
+                const financials = newbornManagementService.calculateNewbornFinancials(newborn, mother);
 
                 return (
                   <TableRow
@@ -186,9 +188,21 @@ export function NewbornsTable({
                     <TableCell>{newborn.weight} كجم</TableCell>
                     <TableCell>{mother?.earTagId || newborn.motherEarTagId || '-'}</TableCell>
                     <TableCell>
-                      <Badge className={info.statusColor}>
-                        {info.statusLabel}
-                      </Badge>
+                      <div className="flex flex-col gap-1">
+                        <Badge className={info.statusColor}>
+                          {info.statusLabel}
+                        </Badge>
+                        {info.transferStatus && (
+                          <Badge 
+                            className={info.transferStatus === "تم النقل" 
+                              ? "bg-emerald-100 text-emerald-800" 
+                              : "bg-orange-100 text-orange-800"
+                            }
+                          >
+                            {info.transferStatus}
+                          </Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <Badge className={info.weaningCategoryColor}>
@@ -208,6 +222,21 @@ export function NewbornsTable({
                           >
                             <Calendar className="h-3 w-3 ml-1" />
                             فطام
+                          </Button>
+                        )}
+                        {/* زر النقل - يظهر فقط للمواليد المفطومة التي لم يتم نقلها بعد */}
+                        {status.isWeaned && !status.barnAssignment.hasBeenTransferred && onTransferRequest && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-800"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onTransferRequest(newborn);
+                            }}
+                          >
+                            <ArrowLeftRight className="h-3 w-3 ml-1" />
+                            نقل
                           </Button>
                         )}
                       </div>

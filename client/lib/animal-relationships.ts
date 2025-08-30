@@ -52,9 +52,26 @@ export function validateMotherChildRelationship(
   }
 
   // Validate mother category
+  // أنثى بالغة: إما مصنفة كـ "female" أو مولود تم فطامه (weaningDate)
   if (mother.category !== "female") {
-    result.isValid = false;
-    result.errors.push("يجب أن تكون الأم مصنفة كأنثى بالغة");
+    // للمواليد: نتحقق من أنها مفطومة بالفعل (بعد الفطام تعتبر أنثى بالغة)
+    if (mother.category === "newborn") {
+      // إذا كان تاريخ الفطام موجود، نتحقق أن الفطام قد تم بالفعل
+      if (mother.weaningDate) {
+        const today = new Date();
+        const weaningDate = new Date(mother.weaningDate);
+        if (weaningDate >= today) {
+          result.isValid = false;
+          result.errors.push("يجب أن تكون الأم مصنفة كأنثى بالغة أو أنثى مفطومة بالفعل");
+        }
+      } else {
+        result.isValid = false;
+        result.errors.push("يجب أن تكون الأم مصنفة كأنثى بالغة أو أنثى مفطومة");
+      }
+    } else {
+      result.isValid = false;
+      result.errors.push("يجب أن تكون الأم مصنفة كأنثى بالغة");
+    }
   }
 
   // Validate child category
@@ -337,9 +354,25 @@ export async function syncAllMotherChildRelationships(): Promise<{
     const errors: string[] = [];
 
     // Update all mothers with correct offspring lists
-    const mothers = animals.filter(
-      (animal) => animal.sex === "female" && animal.category === "female",
-    );
+    // تحديد الأمهات المحتملات - إما إناث بالغات أو مواليد إناث تم فطامها
+    const mothers = animals.filter((animal) => {
+      // يجب أن تكون أنثى أولاً
+      if (animal.sex !== "female") return false;
+      
+      // الأنثى البالغة مؤهلة للأمومة افتراضيًا
+      if (animal.category === "female") return true;
+      
+      // للمواليد الإناث: نتحقق من اكتمال الفطام
+      if (animal.category === "newborn") {
+        if (animal.weaningDate) {
+          const today = new Date();
+          const weaningDate = new Date(animal.weaningDate);
+          return weaningDate < today; // تم الفطام
+        }
+      }
+      
+      return false;
+    });
 
     for (const mother of mothers) {
       const offspring = animals.filter(
@@ -426,6 +459,27 @@ export async function validateAllRelationships(): Promise<{
               issue: "الأم المرجعة ليست أنثى",
               severity: "error",
             });
+          }
+          
+          // التحقق من صلاحية الأم: إما بالغة أو مفطومة
+          if (mother.category !== "female") {
+            let isValidWeanedFemale = false;
+            
+            // تحقق من حالة الفطام للمواليد
+            if (mother.category === "newborn" && mother.weaningDate) {
+              const today = new Date();
+              const weaningDate = new Date(mother.weaningDate);
+              isValidWeanedFemale = weaningDate < today;
+            }
+            
+            if (!isValidWeanedFemale) {
+              issues.push({
+                animalId: animal.id,
+                earTagId: animal.earTagId,
+                issue: "الأم ليست بالغة أو مفطومة بعد",
+                severity: "warning",
+              });
+            }
           }
 
           if (!mother.offspringIds?.includes(animal.id)) {
