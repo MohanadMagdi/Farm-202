@@ -244,6 +244,14 @@ export default function AnimalFormModal({
     return animalLike;
   };
 
+  // دالة لحساب تاريخ الولادة المتوقع (5 أشهر بعد تاريخ التلقيح)
+  const calculateExpectedBirthDate = (aiDate: string): string => {
+    if (!aiDate) return "";
+    const date = new Date(aiDate);
+    date.setMonth(date.getMonth() + 5);
+    return date.toISOString().split("T")[0];
+  };
+  
   const loadSelectData = async () => {
     try {
       const [barnsData, animalsData] = await Promise.all([
@@ -303,8 +311,21 @@ export default function AnimalFormModal({
       // For females
       isPregnant: animalData.isPregnant || false,
       aiDate: animalData.aiDate?.toISOString().split("T")[0] || "",
-      expectedBirthDate:
-        animalData.expectedBirthDate?.toISOString().split("T")[0] || "",
+      expectedBirthDate: (() => {
+        // إذا كان هناك تاريخ ولادة متوقع، استخدمه
+        if (animalData.expectedBirthDate) {
+          return animalData.expectedBirthDate.toISOString().split("T")[0];
+        } 
+        // إذا كان هناك تاريخ تلقيح ولكن بدون تاريخ ولادة متوقع، احسب تاريخ الولادة
+        else if (animalData.aiDate) {
+          const aiDateStr = animalData.aiDate.toISOString().split("T")[0];
+          return calculateExpectedBirthDate(aiDateStr);
+        }
+        // إذا لم يكن هناك تواريخ، أعد سلسلة فارغة
+        else {
+          return "";
+        }
+      })(),
       offspringCount: animalData.offspringCount?.toString() || "",
 
       // For newborns
@@ -337,7 +358,7 @@ export default function AnimalFormModal({
       pricingMethod: "formula" as "manual" | "formula" | "market_rate",
       formulaMultiplier: "",
       barnId: "",
-      healthStatus: animalType === "female" ? "سليمة" : "سليم",
+      healthStatus: "سليم",
       isIsolated: false,
       isolationType: "",
       isolationReason: "",
@@ -735,11 +756,10 @@ export default function AnimalFormModal({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="سليم">سليم</SelectItem>
-                    <SelectItem value="سليمة">سليمة</SelectItem>
                     <SelectItem value="مريض">مريض</SelectItem>
-                    <SelectItem value="مريضة">مريضة</SelectItem>
                     <SelectItem value="تحت العلاج">تحت العلاج</SelectItem>
-                    <SelectItem value="حجر صحي">حجر صحي</SelectItem>
+                    <SelectItem value="متابعة تغذية">متابعة تغذية</SelectItem>
+                    <SelectItem value="متابعة ولادة">متابعة ولادة</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -971,9 +991,19 @@ export default function AnimalFormModal({
                       id="aiDate"
                       type="date"
                       value={formData.aiDate}
-                      onChange={(e) =>
-                        setFormData({ ...formData, aiDate: e.target.value })
-                      }
+                      onChange={(e) => {
+                        const aiDate = e.target.value;
+                        
+                        // حساب تاريخ الولادة المتوقع (إضافة 5 أشهر لتاريخ التلقيح)
+                        const expectedDate = calculateExpectedBirthDate(aiDate);
+                        
+                        setFormData({ 
+                          ...formData, 
+                          aiDate: aiDate,
+                          // تعيين تاريخ الولادة المتوقع تلقائياً
+                          expectedBirthDate: expectedDate 
+                        });
+                      }}
                     />
                   </div>
                   <div>
@@ -990,7 +1020,11 @@ export default function AnimalFormModal({
                           expectedBirthDate: e.target.value,
                         })
                       }
+                      placeholder="يحسب تلقائياً من تاريخ التلقيح"
                     />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      يتم الحساب تلقائياً (5 أشهر من تاريخ التلقيح)
+                    </p>
                   </div>
                   <div>
                     <Label htmlFor="offspringCount">
