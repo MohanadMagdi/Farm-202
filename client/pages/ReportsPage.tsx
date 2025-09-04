@@ -32,6 +32,10 @@ import {
   calculateWeightGain,
   calculateAgeInDays,
 } from "@/lib/arabic-utils";
+import { 
+  calculateGroupCostBreakdown, 
+  AnimalCostBreakdown 
+} from "@/lib/animal-pricing-calculator";
 import AdvancedAnalyticsDashboard from "@/components/AdvancedAnalyticsDashboard";
 import {
   db,
@@ -55,6 +59,9 @@ import {
   Utensils,
   DollarSign,
   Scale,
+  Users,
+  Zap,
+  AlertCircle,
   Eye,
   Filter,
 } from "lucide-react";
@@ -66,12 +73,19 @@ interface ReportData {
   feedingRecords: FeedingRecord[];
 }
 
+interface ExtendedReportData extends ReportData {
+  animalCosts: AnimalCostBreakdown[];
+  weightRecords: any[]; // Add weight records for cost calculations
+}
+
 export default function ReportsPage() {
-  const [reportData, setReportData] = useState<ReportData>({
+  const [reportData, setReportData] = useState<ExtendedReportData>({
     animals: [],
     inventoryItems: [],
     stockMovements: [],
     feedingRecords: [],
+    animalCosts: [],
+    weightRecords: [],
   });
   const [loading, setLoading] = useState(true);
   const [reportPeriod, setReportPeriod] = useState("month");
@@ -95,24 +109,38 @@ export default function ReportsPage() {
         inventorySnapshot,
         movementsSnapshot,
         feedingSnapshot,
+        weightSnapshot,
       ] = await Promise.all([
         db.collection("animals").get(),
         db.collection("inventory").get(),
         db.collection("stockMovements").get(),
         db.collection("feedingRecords").get(),
+        db.collection("weightRecords").get(),
       ]);
 
+      const animals = animalsSnapshot.docs.map((doc) => doc.data() as Animal);
+      const weightRecords = weightSnapshot.docs.map((doc) => doc.data());
+      const feedingRecords = feedingSnapshot.docs.map((doc) => doc.data() as FeedingRecord);
+      
+      // Calculate cost breakdown for all animals using the specified formulas
+      const animalCosts = calculateGroupCostBreakdown(
+        animals, 
+        weightRecords, 
+        feedingRecords, 
+        3.5 // Average feed cost per kg
+      );
+
       setReportData({
-        animals: animalsSnapshot.docs.map((doc) => doc.data() as Animal),
+        animals,
         inventoryItems: inventorySnapshot.docs.map(
           (doc) => doc.data() as InventoryItem,
         ),
         stockMovements: movementsSnapshot.docs.map(
           (doc) => doc.data() as StockMovement,
         ),
-        feedingRecords: feedingSnapshot.docs.map(
-          (doc) => doc.data() as FeedingRecord,
-        ),
+        feedingRecords,
+        animalCosts,
+        weightRecords,
       });
     } catch (error) {
       console.error("Error loading report data:", error);
@@ -137,7 +165,7 @@ export default function ReportsPage() {
   }
 
   // Calculate key metrics
-  const { animals, inventoryItems, stockMovements, feedingRecords } =
+  const { animals, inventoryItems, stockMovements, feedingRecords, animalCosts } =
     reportData;
 
   const activeAnimals = animals.filter((a) => a); // All animals are considered active
@@ -149,6 +177,14 @@ export default function ReportsPage() {
     const currentStock = db.getCurrentStock(item.id);
     return sum + currentStock * (item.unitPrice || 0);
   }, 0);
+
+  // Calculate total investment and profit based on cost breakdown
+  const totalInvestment = animalCosts.reduce((sum, cost) => sum + cost.totalInvestment, 0);
+  const totalFeedCost = animalCosts.reduce((sum, cost) => sum + cost.totalFeedCost, 0);
+  const totalProfitLoss = animalCosts.reduce((sum, cost) => sum + cost.profitLoss, 0);
+  const averageProfitMargin = animalCosts.length > 0 
+    ? animalCosts.reduce((sum, cost) => sum + cost.profitMargin, 0) / animalCosts.length 
+    : 0;
 
   // Monthly growth calculation
   const lastMonth = new Date();
@@ -310,8 +346,9 @@ export default function ReportsPage() {
       </div>
 
       <Tabs defaultValue="animals" className="w-full" dir="rtl">
-        <TabsList className="grid w-full grid-cols-5" dir="rtl">
+        <TabsList className="grid w-full grid-cols-6" dir="rtl">
           <TabsTrigger value="animals">تقرير الحيوانات</TabsTrigger>
+          <TabsTrigger value="pricing">التكاليف والتسعير</TabsTrigger>
           <TabsTrigger value="inventory">تقرير المخزون</TabsTrigger>
           <TabsTrigger value="feeding">تقرير التغذية</TabsTrigger>
           <TabsTrigger value="financial">التقرير المالي</TabsTrigger>
@@ -505,6 +542,252 @@ export default function ReportsPage() {
                     })}
                   </TableBody>
                 </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="pricing" className="space-y-4" dir="rtl">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {/* Cost Summary Cards */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">
+                  إجمالي الاستثمار
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-farm-800">
+                  {formatEGP(totalInvestment)}
+                </div>
+                <p className="text-xs text-muted-foreground">شراء + علف</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">
+                  تكلفة العلف الفعلية
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-farm-800">
+                  {formatEGP(totalFeedCost)}
+                </div>
+                <p className="text-xs text-muted-foreground">حسب الصيغ المحددة</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">
+                  إجمالي الربح/الخسارة
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className={`text-2xl font-bold ${totalProfitLoss > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {formatEGP(totalProfitLoss)}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {averageProfitMargin.toFixed(1)}% هامش ربح متوسط
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">
+                  عدد الحيوانات المحسوبة
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-farm-800">
+                  {formatArabicNumber(animalCosts.length)}
+                </div>
+                <p className="text-xs text-muted-foreground">حيوان مع تكاليف محسوبة</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Detailed Cost Analysis Table */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2 space-x-reverse">
+                <Scale className="h-5 w-5 text-farm-600" />
+                <span>تحليل التكاليف التفصيلي لجميع الحيوانات</span>
+              </CardTitle>
+              <p className="text-sm text-muted-foreground mt-2">
+                <strong>الصيغ المستخدمة:</strong> ADG = (وزن 2 - وزن 1) / عدد الأيام | 
+                كمية العلف الفعلية = (ADG الفردي / مجموع ADG الكلي) × إجمالي العلف
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-md border">
+                <Table dir="rtl">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-right">رقم الأذن</TableHead>
+                      <TableHead className="text-right">الفئة</TableHead>
+                      <TableHead className="text-right">ADG (كيلو/يوم)</TableHead>
+                      <TableHead className="text-right">نسبة الزيادة (%)</TableHead>
+                      <TableHead className="text-right">العلف الفعلي (كيلو)</TableHead>
+                      <TableHead className="text-right">تكلفة العلف (ج.م)</TableHead>
+                      <TableHead className="text-right">سعر الشراء (ج.م)</TableHead>
+                      <TableHead className="text-right">إجمالي الاستثمار (ج.م)</TableHead>
+                      <TableHead className="text-right">السعر الحالي (ج.م)</TableHead>
+                      <TableHead className="text-right">الربح/الخسارة (ج.م)</TableHead>
+                      <TableHead className="text-right">السعر المقترح (ج.م)</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {animalCosts
+                      .sort((a, b) => b.profitMargin - a.profitMargin)
+                      .map((animalCost) => {
+                        const animal = animals.find(a => a.id === animalCost.animalId);
+                        const category = animal?.category === "male" ? "ذكر" : 
+                                       animal?.category === "female" ? "أنثى" : "مولود";
+                        const categoryColor = animal?.category === "male" ? "bg-blue-100 text-blue-800" : 
+                                            animal?.category === "female" ? "bg-pink-100 text-pink-800" : 
+                                            "bg-green-100 text-green-800";
+                        
+                        return (
+                          <TableRow key={animalCost.animalId}>
+                            <TableCell className="font-medium text-right">
+                              {animalCost.earTagId}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Badge className={categoryColor}>
+                                {category}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                animalCost.avgDailyGain > 0.8 ? 'bg-green-100 text-green-800' :
+                                animalCost.avgDailyGain > 0.5 ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-red-100 text-red-800'
+                              }`}>
+                                {animalCost.avgDailyGain.toFixed(3)}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <span className="font-medium text-blue-600">
+                                {(animalCost.growthPercentage * 100).toFixed(1)}%
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-right font-medium">
+                              {animalCost.actualFeedConsumption.toFixed(1)}
+                            </TableCell>
+                            <TableCell className="text-right font-medium text-orange-600">
+                              {formatEGP(animalCost.totalFeedCost)}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {formatEGP(animalCost.purchasePrice)}
+                            </TableCell>
+                            <TableCell className="text-right font-bold text-gray-800">
+                              {formatEGP(animalCost.totalInvestment)}
+                            </TableCell>
+                            <TableCell className="text-right font-medium text-purple-600">
+                              {formatEGP(animalCost.currentMarketPrice)}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                animalCost.profitLoss > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                              }`}>
+                                {formatEGP(animalCost.profitLoss)} ({animalCost.profitMargin.toFixed(1)}%)
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-right font-bold text-green-700">
+                              {formatEGP(animalCost.recommendedSellPrice)}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Performance Analysis by Category */}
+          <div className="grid gap-6 md:grid-cols-3">
+            {(['male', 'female', 'newborn'] as const).map(category => {
+              const categoryCosts = animalCosts.filter(cost => {
+                const animal = animals.find(a => a.id === cost.animalId);
+                return animal?.category === category;
+              });
+              
+              const categoryName = category === 'male' ? 'الذكور' : 
+                                 category === 'female' ? 'الإناث' : 'المواليد';
+              
+              const avgProfitMargin = categoryCosts.length > 0 
+                ? categoryCosts.reduce((sum, cost) => sum + cost.profitMargin, 0) / categoryCosts.length 
+                : 0;
+              
+              const totalCategoryInvestment = categoryCosts.reduce((sum, cost) => sum + cost.totalInvestment, 0);
+              const totalCategoryProfit = categoryCosts.reduce((sum, cost) => sum + cost.profitLoss, 0);
+              
+              return (
+                <Card key={category}>
+                  <CardHeader>
+                    <CardTitle className="text-lg">{categoryName}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">العدد:</span>
+                        <span className="font-semibold">{categoryCosts.length}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">إجمالي الاستثمار:</span>
+                        <span className="font-semibold">{formatEGP(totalCategoryInvestment)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">إجمالي الربح:</span>
+                        <span className={`font-semibold ${totalCategoryProfit > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {formatEGP(totalCategoryProfit)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">متوسط هامش الربح:</span>
+                        <span className="font-semibold">{avgProfitMargin.toFixed(1)}%</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          {/* Formula Explanation */}
+          <Card className="bg-blue-50 border border-blue-200">
+            <CardHeader>
+              <CardTitle className="text-lg text-blue-800">شرح الصيغ المستخدمة في الحسابات</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="bg-white p-4 rounded-lg border">
+                  <h4 className="font-bold text-blue-700 mb-2">1. متوسط الزيادة اليومية (ADG):</h4>
+                  <p className="text-gray-700 mb-2">ADG = (وزن 2 - وزن 1) ÷ فرق التواريخ (عدد الأيام)</p>
+                  <p className="text-xs text-muted-foreground">يقيس معدل نمو الحيوان يومياً</p>
+                </div>
+                
+                <div className="bg-white p-4 rounded-lg border">
+                  <h4 className="font-bold text-blue-700 mb-2">2. كمية الأكل الغير فعلي:</h4>
+                  <p className="text-gray-700 mb-2">= إجمالي العلف ÷ عدد الحيوانات</p>
+                  <p className="text-xs text-muted-foreground">التوزيع المتساوي للعلف</p>
+                </div>
+                
+                <div className="bg-white p-4 rounded-lg border">
+                  <h4 className="font-bold text-blue-700 mb-2">3. نسبة الزيادة (%):</h4>
+                  <p className="text-gray-700 mb-2">= ADG الفردي ÷ مجموع ADG الكلي</p>
+                  <p className="text-xs text-muted-foreground">تحدد نصيب كل حيوان من النمو</p>
+                </div>
+                
+                <div className="bg-white p-4 rounded-lg border">
+                  <h4 className="font-bold text-blue-700 mb-2">4. كمية الأكل الفعلية:</h4>
+                  <p className="text-gray-700 mb-2">= نسبة الزيادة × إجمالي العلف</p>
+                  <p className="text-xs text-muted-foreground">الاستهلاك الفعلي حسب النمو</p>
+                </div>
               </div>
             </CardContent>
           </Card>

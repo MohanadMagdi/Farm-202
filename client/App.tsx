@@ -24,6 +24,7 @@ import FeedingPage from "./pages/FeedingPage";
 import ReportsPage from "./pages/ReportsPage";
 import WeightReportsPage from "./pages/WeightReportsPage";
 import UsersPage from "./pages/UsersPage";
+import BirthAnalyticsPage from "./pages/BirthAnalyticsPage";
 import { InternalProductionDashboard } from "@/components/InternalProductionDashboard";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const FeedingManagement = () => <FeedingPage />;
 const ReportsManagement = () => <ReportsPage />;
 const WeightReportsManagement = () => <WeightReportsPage />;
 const UsersManagement = () => <UsersPage />;
+const BirthAnalyticsManagement = () => <BirthAnalyticsPage />;
 const InternalProductionManagement = () => <InternalProductionDashboard />;
 
 // Protected route wrapper
@@ -174,6 +176,16 @@ function AppRoutes() {
           <ProtectedRoute>
             <Layout>
               <UsersManagement />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/birth-analytics"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <BirthAnalyticsManagement />
             </Layout>
           </ProtectedRoute>
         }

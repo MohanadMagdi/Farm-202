@@ -12,8 +12,11 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatArabicDate } from "@/lib/arabic-utils";
-import { dataService, farmHelpers } from "@/lib/data-service";
+import dataService from "@/lib/data-service-unified";
+import { farmHelpers } from "@/lib/data-service";
 import BreedingWorkflowDashboard from "@/components/BreedingWorkflowDashboard";
+import AnimalPerformanceDashboard from "@/components/PerformanceDashboard";
+import { Input } from "@/components/ui/input";
 import type { Animal, AnimalCategory, Barn } from "@shared/types";
 import {
   CircleDot,
@@ -30,12 +33,14 @@ import {
   BarChart3,
   Truck,
   Baby,
+  Search,
 } from "lucide-react";
 
 export default function AnimalsOverviewPage() {
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [barns, setBarns] = useState<Barn[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const [analytics, setAnalytics] = useState({
     totalAnimals: 0,
     maleCount: 0,
@@ -59,8 +64,8 @@ export default function AnimalsOverviewPage() {
   const loadAnimals = async () => {
     try {
       const [animalsData, barnsData] = await Promise.all([
-        dataService.animals.getAll(),
-        dataService.barns.getAll(),
+        dataService.getAnimals(),
+        dataService.getBarns(),
       ]);
       setAnimals(animalsData);
       setBarns(barnsData);
@@ -125,6 +130,13 @@ export default function AnimalsOverviewPage() {
     });
   };
 
+  // Filter animals based on search query
+  const filteredAnimals = animals.filter(animal =>
+    animal.earTagId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    animal.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (animal.supplier && animal.supplier.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -146,8 +158,8 @@ export default function AnimalsOverviewPage() {
     return barn ? barn.name : barnId; // Fallback to barnId if not found
   };
 
-  // Animals by barn
-  const animalsByBarn = animals.reduce(
+  // Animals by barn (filtered)
+  const animalsByBarn = filteredAnimals.reduce(
     (acc, animal) => {
       if (!acc[animal.barnId]) {
         acc[animal.barnId] = [];
@@ -158,12 +170,12 @@ export default function AnimalsOverviewPage() {
     {} as Record<string, Animal[]>,
   );
 
-  // Recent activities (mock data based on real animals)
+  // Recent activities (mock data based on filtered animals)
   const recentActivities = [
     {
       id: "1",
       type: "birth",
-      animal: animals.find((a) => a.category === "newborn"),
+      animal: filteredAnimals.find((a) => a.category === "newborn"),
       message: "ولادة جديدة",
       time: "منذ ساعتين",
       icon: Baby,
@@ -172,7 +184,7 @@ export default function AnimalsOverviewPage() {
     {
       id: "2",
       type: "weight",
-      animal: animals.find((a) => a.category === "male"),
+      animal: filteredAnimals.find((a) => a.category === "male"),
       message: "تسجيل وزن جديد",
       time: "منذ 4 ساعات",
       icon: Scale,
@@ -181,7 +193,7 @@ export default function AnimalsOverviewPage() {
     {
       id: "3",
       type: "health",
-      animal: animals.find((a) => a.category === "female"),
+      animal: filteredAnimals.find((a) => a.category === "female"),
       message: "فحص صحي",
       time: "أمس",
       icon: Heart,
@@ -190,7 +202,7 @@ export default function AnimalsOverviewPage() {
     {
       id: "4",
       type: "isolation",
-      animal: animals.find((a) => a.isIsolated),
+      animal: filteredAnimals.find((a) => a.isIsolated),
       message: "نقل إلى العزل",
       time: "منذ يومين",
       icon: AlertTriangle,
@@ -326,6 +338,95 @@ export default function AnimalsOverviewPage() {
         </Card>
       </div>
 
+      {/* Animal Performance Analytics Section */}
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-farm-800 flex items-center gap-2">
+              <TrendingUp className="h-6 w-6 text-farm-600" />
+              تحليلات أداء الحيوانات
+            </h2>
+            <p className="text-muted-foreground">
+              مؤشرات الأداء والنمو لجميع فئات الحيوانات مع تحليل الحظائر والتكاليف
+              {searchQuery && (
+                <span className="text-farm-600 font-medium mr-2">
+                  • {filteredAnimals.length} نتيجة للبحث "{searchQuery}"
+                </span>
+              )}
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="البحث في الحيوانات..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pr-9 w-64"
+              />
+            </div>
+            <Button variant="outline" onClick={() => navigate("/reports")}>
+              <BarChart3 className="h-4 w-4 ml-2" />
+              تقرير تفصيلي
+            </Button>
+          </div>
+        </div>
+
+        {/* Unified Performance Dashboard with All Tabs */}
+        <Card>
+          <CardContent className="p-6">
+            <Tabs defaultValue="males" className="w-full" dir="rtl">
+
+              <TabsContent value="males" className="mt-4">
+                <AnimalPerformanceDashboard animalType="male" />
+              </TabsContent>
+
+              <TabsContent value="females" className="mt-4">
+                <AnimalPerformanceDashboard animalType="female" />
+              </TabsContent>
+
+              <TabsContent value="newborns" className="mt-4">
+                <AnimalPerformanceDashboard animalType="newborn" />
+              </TabsContent>
+
+              <TabsContent value="all" className="mt-4">
+                <AnimalPerformanceDashboard animalType="all" />
+              </TabsContent>
+
+              <TabsContent value="barns" className="mt-4">
+                <AnimalPerformanceDashboard animalType="male" />
+              </TabsContent>
+
+              <TabsContent value="pricing" className="mt-4">
+                <AnimalPerformanceDashboard animalType="male" />
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Search Results Notification */}
+      {searchQuery && filteredAnimals.length === 0 && (
+        <Card className="border-yellow-200 bg-yellow-50">
+          <CardContent className="text-center py-8">
+            <Search className="h-12 w-12 text-yellow-600 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-yellow-800 mb-2">
+              لا توجد نتائج للبحث
+            </h3>
+            <p className="text-yellow-700">
+              لم يتم العثور على حيوانات تتطابق مع "{searchQuery}"
+            </p>
+            <Button 
+              variant="outline" 
+              className="mt-4"
+              onClick={() => setSearchQuery("")}
+            >
+              مسح البحث
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid gap-6 md:grid-cols-2">
         {/* Animal Distribution */}
         <Card>
@@ -354,14 +455,14 @@ export default function AnimalsOverviewPage() {
                         <span className="font-medium">الذكور</span>
                         <p className="text-sm text-muted-foreground">
                           متوسط الوزن:{" "}
-                          {analytics.maleCount > 0
+                          {filteredAnimals.filter((a) => a.category === "male").length > 0
                             ? farmHelpers.formatWeight(
-                                animals
+                                filteredAnimals
                                   .filter((a) => a.category === "male")
                                   .reduce(
                                     (sum, animal) => sum + animal.weight,
                                     0,
-                                  ) / analytics.maleCount,
+                                  ) / filteredAnimals.filter((a) => a.category === "male").length,
                               )
                             : "0 كيلو"}
                         </p>
@@ -369,12 +470,12 @@ export default function AnimalsOverviewPage() {
                     </div>
                     <div className="text-right">
                       <div className="text-lg font-semibold">
-                        {analytics.maleCount}
+                        {filteredAnimals.filter((a) => a.category === "male").length}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {analytics.totalAnimals > 0
+                        {filteredAnimals.length > 0
                           ? Math.round(
-                              (analytics.maleCount / analytics.totalAnimals) *
+                              (filteredAnimals.filter((a) => a.category === "male").length / filteredAnimals.length) *
                                 100,
                             )
                           : 0}
@@ -392,14 +493,14 @@ export default function AnimalsOverviewPage() {
                         <span className="font-medium">الإناث</span>
                         <p className="text-sm text-muted-foreground">
                           متوسط الوزن:{" "}
-                          {analytics.femaleCount > 0
+                          {filteredAnimals.filter((a) => a.category === "female").length > 0
                             ? farmHelpers.formatWeight(
-                                animals
+                                filteredAnimals
                                   .filter((a) => a.category === "female")
                                   .reduce(
                                     (sum, animal) => sum + animal.weight,
                                     0,
-                                  ) / analytics.femaleCount,
+                                  ) / filteredAnimals.filter((a) => a.category === "female").length,
                               )
                             : "0 كيلو"}
                         </p>
@@ -407,12 +508,12 @@ export default function AnimalsOverviewPage() {
                     </div>
                     <div className="text-right">
                       <div className="text-lg font-semibold">
-                        {analytics.femaleCount}
+                        {filteredAnimals.filter((a) => a.category === "female").length}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {analytics.totalAnimals > 0
+                        {filteredAnimals.length > 0
                           ? Math.round(
-                              (analytics.femaleCount / analytics.totalAnimals) *
+                              (filteredAnimals.filter((a) => a.category === "female").length / filteredAnimals.length) *
                                 100,
                             )
                           : 0}
@@ -430,14 +531,14 @@ export default function AnimalsOverviewPage() {
                         <span className="font-medium">الصغار</span>
                         <p className="text-sm text-muted-foreground">
                           متوسط الوزن:{" "}
-                          {analytics.newbornCount > 0
+                          {filteredAnimals.filter((a) => a.category === "newborn").length > 0
                             ? farmHelpers.formatWeight(
-                                animals
+                                filteredAnimals
                                   .filter((a) => a.category === "newborn")
                                   .reduce(
                                     (sum, animal) => sum + animal.weight,
                                     0,
-                                  ) / analytics.newbornCount,
+                                  ) / filteredAnimals.filter((a) => a.category === "newborn").length,
                               )
                             : "0 كيلو"}
                         </p>
@@ -445,13 +546,13 @@ export default function AnimalsOverviewPage() {
                     </div>
                     <div className="text-right">
                       <div className="text-lg font-semibold">
-                        {analytics.newbornCount}
+                        {filteredAnimals.filter((a) => a.category === "newborn").length}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {analytics.totalAnimals > 0
+                        {filteredAnimals.length > 0
                           ? Math.round(
-                              (analytics.newbornCount /
-                                analytics.totalAnimals) *
+                              (filteredAnimals.filter((a) => a.category === "newborn").length /
+                                filteredAnimals.length) *
                                 100,
                             )
                           : 0}
@@ -465,7 +566,7 @@ export default function AnimalsOverviewPage() {
               <TabsContent value="males">
                 <div className="text-center py-4">
                   <div className="text-3xl font-bold text-blue-600">
-                    {analytics.maleCount}
+                    {filteredAnimals.filter((a) => a.category === "male").length}
                   </div>
                   <p className="text-muted-foreground">إجمالي الذكور</p>
                   <Link to="/animals/males">
@@ -478,14 +579,14 @@ export default function AnimalsOverviewPage() {
                 <div className="space-y-2">
                   <div className="text-center">
                     <div className="text-3xl font-bold text-pink-600">
-                      {analytics.femaleCount}
+                      {filteredAnimals.filter((a) => a.category === "female").length}
                     </div>
                     <p className="text-muted-foreground">إجمالي الإناث</p>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>حوامل:</span>
                     <span className="font-semibold">
-                      {analytics.pregnantCount}
+                      {filteredAnimals.filter((a) => a.category === "female" && a.isPregnant).length}
                     </span>
                   </div>
                   <Link to="/animals/females">
@@ -497,7 +598,7 @@ export default function AnimalsOverviewPage() {
               <TabsContent value="newborns">
                 <div className="text-center py-4">
                   <div className="text-3xl font-bold text-green-600">
-                    {analytics.newbornCount}
+                    {filteredAnimals.filter((a) => a.category === "newborn").length}
                   </div>
                   <p className="text-muted-foreground">إجمالي الصغار</p>
                   <Link to="/animals/newborns">

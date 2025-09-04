@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableHeader, TableRow, TableCell, TableBody } from "@/components/ui/table";
-import { dataService, farmHelpers } from "@/lib/data-service";
+import dataService from "@/lib/data-service-unified";
+import { farmHelpers } from "@/lib/data-service";
 import type { Animal, Barn } from "@shared/types";
 import { Users, Heart, Scale, AlertTriangle, Baby } from "lucide-react";
 
@@ -13,8 +14,8 @@ export default function AnimalReportPage() {
 
   useEffect(() => {
     Promise.all([
-      dataService.animals.getAll(),
-      dataService.barns.getAll(),
+      dataService.getAnimals(),
+      dataService.getBarns(),
     ]).then(([animalsData, barnsData]) => {
       setAnimals(animalsData);
       setBarns(barnsData);

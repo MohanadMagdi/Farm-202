@@ -13,8 +13,36 @@ import {
   WeightEntry,
   AnimalWeightReport
 } from './weights';
-import { dataService } from './data-service';
-import type { Animal } from '@shared/types';
+import dataService from './data-service-unified';
+import { weightEvents } from './weight-events';
+import type { Animal, WeightRecord } from '@shared/types';
+
+/**
+ * Update animal's current weight to match the latest weight record
+ */
+async function updateAnimalCurrentWeight(animalId: string): Promise<void> {
+  try {
+    // Get all weight records for this animal
+    const allWeightRecords = await dataService.getWeightRecords();
+    const animalWeightRecords = allWeightRecords
+      .filter(record => record.animalId === animalId)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    if (animalWeightRecords.length > 0) {
+      const latestWeight = animalWeightRecords[0].weight;
+      
+      // Update animal's current weight
+      await dataService.updateAnimal(animalId, {
+        weight: latestWeight,
+        updatedAt: new Date(),
+      } as any);
+
+      console.log(`🔄 Updated current weight for animal ${animalId} to ${latestWeight} kg`);
+    }
+  } catch (error) {
+    console.error('Error updating animal current weight:', error);
+  }
+}
 
 /**
  * Get animal weight report
@@ -26,7 +54,7 @@ export async function getAnimalWeightReport(
 ): Promise<AnimalWeightReport> {
   try {
     // Get animal data
-    const animal = await dataService.animals.getById(animalId);
+    const animal = await dataService.getAnimalById(animalId);
     if (!animal) {
       throw new Error('الحيوان غير موجود');
     }
@@ -60,13 +88,13 @@ export async function getBarnWeightReport(
 ) {
   try {
     // Get barn data
-    const barn = await dataService.barns.getById(barnId);
+    const barn = await dataService.getBarnById(barnId);
     if (!barn) {
       throw new Error('الحظيرة غير موجودة');
     }
 
     // Get animals in barn
-    const allAnimals = await dataService.animals.getAll();
+    const allAnimals = await dataService.getAnimals();
     const barnAnimals = allAnimals.filter(animal => animal.barnId === barnId);
 
     // Convert to weight history format
@@ -82,7 +110,7 @@ export async function getBarnWeightReport(
     // Get feeding records for the barn (if available)
     let feedingRecords: any[] = [];
     try {
-      const allFeeding = await dataService.feedingRecords.getAll();
+      const allFeeding = await dataService.getFeedingRecords();
       feedingRecords = allFeeding.filter(record => record.barnId === barnId);
     } catch (error) {
       console.warn('Feeding records not available:', error);
@@ -133,7 +161,7 @@ export async function addAnimalWeight(
     }
 
     // Get current animal data
-    const animal = await dataService.animals.getById(animalId);
+    const animal = await dataService.getAnimalById(animalId);
     if (!animal) {
       throw new Error('الحيوان غير موجود');
     }
@@ -155,12 +183,47 @@ export async function addAnimalWeight(
     const updatedWeightHistory = [...existingWeights, newWeightEntry]
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-    // Update animal record
-    await dataService.animals.update(animalId, {
+    // 🔥 IMPORTANT: Also add to main weightRecords collection
+    const weightRecord = {
+      id: `weight_${Date.now()}_${animalId}`,
+      animalId: animalId,
+      weight: parseFloat(weightKg.toString()),
+      date: new Date(date),
+      recordedBy: 'user_001', // TODO: Get actual user
+      notes: 'تم إدخاله من نموذج تسجيل الأوزان',
+    };
+
+    // Add to weightRecords collection
+    await dataService.createWeightRecord(weightRecord);
+
+    // Update animal record with both weightHistory and current weight
+    await dataService.updateAnimal(animalId, {
       weightHistory: updatedWeightHistory,
-      weight: parseFloat(weightKg.toString()), // Update current weight
+      weight: parseFloat(weightKg.toString()), // Update current weight to match latest entry
       updatedAt: new Date(),
     } as any);
+
+    // Ensure animal's current weight is synced with latest weight record
+    await updateAnimalCurrentWeight(animalId);
+
+    console.log(`✅ Weight added successfully for animal ${animal.earTagId}:`, {
+      animalId,
+      newWeight: weightKg,
+      date,
+      updatedCurrentWeight: weightKg,
+      totalWeightRecords: updatedWeightHistory.length,
+      addedToMainWeightRecords: true,
+      measurementPeriodInfo: {
+        firstWeightDate: updatedWeightHistory[0]?.date,
+        lastWeightDate: updatedWeightHistory[updatedWeightHistory.length - 1]?.date,
+        totalDaysFromFirstToLast: updatedWeightHistory.length > 1 ? 
+          Math.ceil((new Date(updatedWeightHistory[updatedWeightHistory.length - 1].date).getTime() - 
+                    new Date(updatedWeightHistory[0].date).getTime()) / (1000 * 60 * 60 * 24)) : 0
+      }
+    });
+
+    // 🔔 Notify all components about the weight update
+    weightEvents.notifyWeightUpdate(animalId, parseFloat(weightKg.toString()));
 
     // Generate and return updated report
     const weightHistory: AnimalWeightHistory = {
@@ -186,7 +249,7 @@ export async function addAnimalWeight(
 export async function deleteAnimalWeight(animalId: string, weightId: string): Promise<void> {
   try {
     // Get current animal data
-    const animal = await dataService.animals.getById(animalId);
+    const animal = await dataService.getAnimalById(animalId);
     if (!animal) {
       throw new Error('الحيوان غير موجود');
     }
@@ -208,7 +271,7 @@ export async function deleteAnimalWeight(animalId: string, weightId: string): Pr
       : animal.weight; // Keep existing if no weights remain
 
     // Update animal record
-    await dataService.animals.update(animalId, {
+    await dataService.updateAnimal(animalId, {
       weightHistory: updatedWeightHistory,
       weight: latestWeight,
       updatedAt: new Date(),
@@ -225,7 +288,7 @@ export async function deleteAnimalWeight(animalId: string, weightId: string): Pr
  */
 export async function getAllAnimalsWithWeights(): Promise<AnimalWeightReport[]> {
   try {
-    const allAnimals = await dataService.animals.getAll();
+    const allAnimals = await dataService.getAnimals();
     
     const reports = allAnimals
       .filter(animal => animal.weightHistory && animal.weightHistory.length > 0)
@@ -255,7 +318,7 @@ export async function getAllAnimalsWithWeights(): Promise<AnimalWeightReport[]> 
  */
 export async function getWeightStatistics() {
   try {
-    const allAnimals = await dataService.animals.getAll();
+    const allAnimals = await dataService.getAnimals();
     
     const animalsWithWeights = allAnimals.filter(animal => 
       animal.weightHistory && animal.weightHistory.length > 0
@@ -303,5 +366,48 @@ export async function getWeightStatistics() {
   } catch (error) {
     console.error('Error getting weight statistics:', error);
     throw new Error('حدث خطأ أثناء جلب إحصائيات الأوزان');
+  }
+}
+
+/**
+ * Sync all animals' current weights with their latest weight records
+ * Call this on app initialization to ensure data consistency
+ */
+export async function syncAllAnimalWeights(): Promise<void> {
+  try {
+    console.log('🔄 Starting sync of all animal weights...');
+    
+    const [animals, weightRecords] = await Promise.all([
+      dataService.getAnimals(),
+      dataService.getWeightRecords()
+    ]);
+
+    let updatedCount = 0;
+    
+    for (const animal of animals) {
+      // Get latest weight record for this animal
+      const animalWeightRecords = weightRecords
+        .filter(record => record.animalId === animal.id)
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+      if (animalWeightRecords.length > 0) {
+        const latestWeight = animalWeightRecords[0].weight;
+        
+        // Update only if current weight is different
+        if (animal.weight !== latestWeight) {
+          await dataService.updateAnimal(animal.id, {
+            weight: latestWeight,
+            updatedAt: new Date(),
+          } as any);
+          
+          console.log(`✅ Synced weight for ${animal.earTagId}: ${animal.weight} → ${latestWeight} kg`);
+          updatedCount++;
+        }
+      }
+    }
+
+    console.log(`🎯 Weight sync completed: ${updatedCount} animals updated`);
+  } catch (error) {
+    console.error('Error syncing animal weights:', error);
   }
 }

@@ -49,6 +49,11 @@ import {
   type BarnFeedingComparison,
   type FeedingTrends,
 } from "@/lib/feeding-analytics";
+import {
+  calculateAnimalPerformanceMetrics,
+  type FeedEfficiencyResult,
+  type AnimalPerformanceMetrics
+} from "@/lib/animal-performance-analytics";
 import { exportFeedingReport } from "@/lib/export-utils";
 import { toast } from "@/hooks/use-toast";
 import type {
@@ -71,6 +76,7 @@ export default function FeedingEfficiencyDashboard({
     BarnFeedingComparison[]
   >([]);
   const [trends, setTrends] = useState<FeedingTrends[]>([]);
+  const [animalPerformance, setAnimalPerformance] = useState<FeedEfficiencyResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState<string>("30");
 
@@ -127,9 +133,18 @@ export default function FeedingEfficiencyDashboard({
         Math.min(days, 30),
       );
 
+      // Calculate animal performance metrics
+      const performance = calculateAnimalPerformanceMetrics(
+        animals,
+        filteredWeights,
+        filteredRecords,
+        days
+      );
+
       setMetrics(calculatedMetrics);
       setBarnComparisons(barnComparison);
       setTrends(trendsData);
+      setAnimalPerformance(performance);
     } catch (error) {
       console.error("Error loading efficiency data:", error);
     } finally {
@@ -419,9 +434,10 @@ export default function FeedingEfficiencyDashboard({
 
       {/* Tabs for detailed analysis */}
       <Tabs defaultValue="recommendations" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="recommendations">توصيات التحسين</TabsTrigger>
           <TabsTrigger value="barn-comparison">مقارنة الحظائر</TabsTrigger>
+          <TabsTrigger value="animal-performance">أداء الحيوانات</TabsTrigger>
           <TabsTrigger value="trends">الاتجاهات</TabsTrigger>
         </TabsList>
 
@@ -512,6 +528,113 @@ export default function FeedingEfficiencyDashboard({
                   ))}
                 </TableBody>
               </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="animal-performance" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Scale className="h-5 w-5 ml-2" />
+                أداء الحيوانات وكفاءة التغذية
+              </CardTitle>
+              <CardDescription>
+                تحليل متوسط النمو اليومي والعلف الفعلي لكل حيوان
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {animalPerformance && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                      <h3 className="font-medium text-green-800">متوسط النمو اليومي</h3>
+                      <div className="text-2xl font-bold text-green-700">
+                        {animalPerformance.averageDailyGain.toFixed(2)} كيلو/يوم
+                      </div>
+                      <p className="text-sm text-muted-foreground">لجميع الحيوانات</p>
+                    </div>
+                    
+                    <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                      <h3 className="font-medium text-blue-800">إجمالي العلف المستهلك</h3>
+                      <div className="text-2xl font-bold text-blue-700">
+                        {animalPerformance.totalFeedConsumption.toFixed(1)} كيلو
+                      </div>
+                      <p className="text-sm text-muted-foreground">خلال الفترة</p>
+                    </div>
+                    
+                    <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                      <h3 className="font-medium text-purple-800">كفاءة التغذية الكلية</h3>
+                      <div className="text-2xl font-bold text-purple-700">
+                        {animalPerformance.overallFeedEfficiency.toFixed(2)}
+                      </div>
+                      <p className="text-sm text-muted-foreground">كيلو علف/كيلو نمو</p>
+                    </div>
+                  </div>
+                  
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-right">رقم الترقيم</TableHead>
+                          <TableHead className="text-right">الوزن الأولي</TableHead>
+                          <TableHead className="text-right">الوزن الحالي</TableHead>
+                          <TableHead className="text-right">الزيادة</TableHead>
+                          <TableHead className="text-right">متوسط النمو اليومي</TableHead>
+                          <TableHead className="text-right">العلف المقدّر</TableHead>
+                          <TableHead className="text-right">العلف الفعلي</TableHead>
+                          <TableHead className="text-right">كفاءة التغذية</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {animalPerformance.animalPerformance
+                          .sort((a, b) => b.avgDailyGain - a.avgDailyGain)
+                          .slice(0, 10)
+                          .map((animal) => (
+                            <TableRow key={animal.animalId}>
+                              <TableCell className="font-medium">
+                                {animal.earTagId}
+                              </TableCell>
+                              <TableCell>
+                                {animal.initialWeight.toFixed(1)} كيلو
+                              </TableCell>
+                              <TableCell>
+                                {animal.currentWeight.toFixed(1)} كيلو
+                              </TableCell>
+                              <TableCell className="text-green-600 font-medium">
+                                +{animal.weightGain.toFixed(1)} كيلو
+                              </TableCell>
+                              <TableCell>
+                                {animal.avgDailyGain.toFixed(2)} كيلو/يوم
+                              </TableCell>
+                              <TableCell>
+                                {animal.estimatedFeedConsumption.toFixed(1)} كيلو
+                              </TableCell>
+                              <TableCell className="font-medium">
+                                {animal.actualFeedConsumption.toFixed(1)} كيلو
+                              </TableCell>
+                              <TableCell>
+                                <Badge 
+                                  className={
+                                    animal.feedEfficiencyRatio <= 3.5 ? "bg-green-100 text-green-800" :
+                                    animal.feedEfficiencyRatio <= 5.0 ? "bg-blue-100 text-blue-800" :
+                                    animal.feedEfficiencyRatio <= 6.5 ? "bg-yellow-100 text-yellow-800" :
+                                    "bg-red-100 text-red-800"
+                                  }
+                                >
+                                  {animal.feedEfficiencyRatio.toFixed(2)}
+                                </Badge>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                      </TableBody>
+                    </Table>
+                    <div className="p-4 text-center text-sm text-muted-foreground">
+                      عرض أفضل 10 حيوانات من حيث معدل النمو اليومي
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

@@ -34,6 +34,13 @@ interface WeightColumn {
   diffLabel?: string;
   daysLabel?: string;
   adgLabel?: string;
+  // Advanced ADG columns for weights 3+
+  advancedAdgColumns?: Array<{
+    toPrevIndex: number;
+    daysLabel: string;
+    diffLabel: string;
+    adgLabel: string;
+  }>;
 }
 
 interface ProcessedWeightData {
@@ -45,6 +52,14 @@ interface ProcessedWeightData {
     daysDiff?: number;
     weightDiff?: number;
     adg?: number;
+    // Advanced ADG calculations for multiple previous weights
+    adgToPrevious?: Array<{
+      toWeightIndex: number;
+      daysDiff: number;
+      weightDiff: number;
+      adg: number;
+      label: string;
+    }>;
   }>;
 }
 
@@ -76,6 +91,25 @@ export function EnhancedWeightTrackingTable({
     const columns: WeightColumn[] = [];
     
     for (let i = 1; i <= maxWeightEntries; i++) {
+      const advancedAdgColumns: Array<{
+        toPrevIndex: number;
+        daysLabel: string;
+        diffLabel: string;
+        adgLabel: string;
+      }> = [];
+      
+      // For weights 3+, add advanced ADG columns
+      if (i >= 3) {
+        for (let j = i - 2; j >= 1; j--) {
+          advancedAdgColumns.push({
+            toPrevIndex: j,
+            daysLabel: `أيام ${formatArabicNumber(i)}-${formatArabicNumber(j)}`,
+            diffLabel: `فرق ${formatArabicNumber(i)}-${formatArabicNumber(j)} (كجم)`,
+            adgLabel: `ADG ${formatArabicNumber(i)}-${formatArabicNumber(j)} (جم/يوم)`,
+          });
+        }
+      }
+      
       columns.push({
         index: i,
         dateLabel: `تاريخ الوزن ${formatArabicNumber(i)}`,
@@ -83,6 +117,7 @@ export function EnhancedWeightTrackingTable({
         diffLabel: i > 1 ? `الفرق ${formatArabicNumber(i-1)}-${formatArabicNumber(i)} (كجم)` : undefined,
         daysLabel: i > 1 ? `الأيام ${formatArabicNumber(i-1)}-${formatArabicNumber(i)}` : undefined,
         adgLabel: i > 1 ? `ADG ${formatArabicNumber(i-1)}-${formatArabicNumber(i)} (جم/يوم)` : undefined,
+        advancedAdgColumns: advancedAdgColumns.length > 0 ? advancedAdgColumns : undefined,
       });
     }
     
@@ -99,6 +134,13 @@ export function EnhancedWeightTrackingTable({
       let daysDiff: number | undefined;
       let weightDiff: number | undefined;
       let adg: number | undefined;
+      let adgToPrevious: Array<{
+        toWeightIndex: number;
+        daysDiff: number;
+        weightDiff: number;
+        adg: number;
+        label: string;
+      }> = [];
 
       if (index > 0) {
         const prevWeight = sortedWeights[index - 1];
@@ -107,12 +149,33 @@ export function EnhancedWeightTrackingTable({
         adg = daysDiff > 0 ? (weightDiff / daysDiff) * 1000 : 0;
       }
 
+      // Calculate ADG to all previous weights for weights 3+ (index >= 2)
+      if (index >= 2) {
+        // For weight 3 (index 2): calculate ADG to weight 2 and weight 1
+        // For weight 4 (index 3): calculate ADG to weight 3, weight 2, and weight 1
+        for (let prevIndex = index - 1; prevIndex >= 0; prevIndex--) {
+          const prevWeight = sortedWeights[prevIndex];
+          const daysDiffToPrev = calculateDaysDifference(prevWeight.date, weight.date);
+          const weightDiffToPrev = weight.weightKg - prevWeight.weightKg;
+          const adgToPrev = daysDiffToPrev > 0 ? (weightDiffToPrev / daysDiffToPrev) * 1000 : 0;
+          
+          adgToPrevious.push({
+            toWeightIndex: prevIndex + 1, // 1-based index for display
+            daysDiff: daysDiffToPrev,
+            weightDiff: weightDiffToPrev,
+            adg: adgToPrev,
+            label: `ADG ${formatArabicNumber(index + 1)}-${formatArabicNumber(prevIndex + 1)}`
+          });
+        }
+      }
+
       return {
         date: weight.date,
         weight: weight.weightKg,
         daysDiff,
         weightDiff,
         adg,
+        adgToPrevious,
       };
     });
 
@@ -166,7 +229,23 @@ export function EnhancedWeightTrackingTable({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>تتبع الأوزان المتقدم - جميع القياسات</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <Scale className="h-5 w-5 text-green-600" />
+          تتبع الأوزان المتقدم - حسابات ADG الشاملة
+        </CardTitle>
+        <p className="text-sm text-muted-foreground mt-2">
+          عرض جميع أوزان الحيوانات مع حسابات ADG متقدمة. للحيوانات ذات 3+ أوزان: يتم حساب ADG بين كل وزن وجميع الأوزان السابقة
+        </p>
+        <div className="flex flex-wrap gap-4 mt-3 text-xs">
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 bg-green-100 border border-green-300 rounded"></div>
+            <span>أعمدة ADG العادية</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 bg-blue-50 border border-blue-300 rounded"></div>
+            <span>أعمدة ADG المتقدمة (3+ أوزان)</span>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
@@ -185,6 +264,14 @@ export function EnhancedWeightTrackingTable({
                         <TableHead className="text-right">{col.adgLabel}</TableHead>
                       </>
                     )}
+                    {/* Advanced ADG columns for weights 3+ */}
+                    {col.advancedAdgColumns && col.advancedAdgColumns.map((advCol) => (
+                      <React.Fragment key={`adv-${col.index}-${advCol.toPrevIndex}`}>
+                        <TableHead className="text-right bg-blue-50">{advCol.daysLabel}</TableHead>
+                        <TableHead className="text-right bg-blue-50">{advCol.diffLabel}</TableHead>
+                        <TableHead className="text-right bg-blue-50">{advCol.adgLabel}</TableHead>
+                      </React.Fragment>
+                    ))}
                   </React.Fragment>
                 ))}
                 <TableHead className="text-right">الإجراءات</TableHead>
@@ -248,6 +335,42 @@ export function EnhancedWeightTrackingTable({
                               </TableCell>
                             </>
                           )}
+                          
+                          {/* Advanced ADG columns for weights 3+ */}
+                          {col.advancedAdgColumns && col.advancedAdgColumns.map((advCol) => {
+                            const advancedData = weightEntry?.adgToPrevious?.find(
+                              adg => adg.toWeightIndex === advCol.toPrevIndex
+                            );
+                            
+                            return (
+                              <React.Fragment key={`adv-${col.index}-${advCol.toPrevIndex}`}>
+                                {/* Advanced Days */}
+                                <TableCell className="text-right bg-blue-50">
+                                  {advancedData ? `${formatArabicNumber(advancedData.daysDiff)} يوم` : '-'}
+                                </TableCell>
+                                
+                                {/* Advanced Weight Difference */}
+                                <TableCell className="text-right bg-blue-50">
+                                  {advancedData ? (
+                                    <span className={advancedData.weightDiff >= 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
+                                      {advancedData.weightDiff >= 0 ? '+' : ''}
+                                      {formatArabicNumber(advancedData.weightDiff)} كجم
+                                    </span>
+                                  ) : '-'}
+                                </TableCell>
+                                
+                                {/* Advanced ADG */}
+                                <TableCell className="text-right bg-blue-50">
+                                  {advancedData ? (
+                                    <span className={advancedData.adg >= 0 ? 'text-blue-600 font-bold' : 'text-red-600 font-bold'}>
+                                      {advancedData.adg >= 0 ? '+' : ''}
+                                      {formatArabicNumber(Number(advancedData.adg.toFixed(1)))} جم/يوم
+                                    </span>
+                                  ) : '-'}
+                                </TableCell>
+                              </React.Fragment>
+                            );
+                          })}
                         </React.Fragment>
                       );
                     })}

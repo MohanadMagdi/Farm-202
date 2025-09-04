@@ -17,7 +17,7 @@ import {
   formatArabicNumber,
   animalTypes,
 } from "@/lib/arabic-utils";
-import { dataService } from "@/lib/data-service";
+import dataService from "@/lib/data-service-unified";
 import type { Animal, Barn, WarehouseItem, StockMovement, FeedingRecord } from "@/../../shared/types";
 import {
   CircleDot,
@@ -50,11 +50,11 @@ export default function Index() {
     try {
       const [animalsData, barnsData, warehouseData, stockData, feedingData] =
         await Promise.all([
-          dataService.animals.getAll(),
-          dataService.barns.getAll(),
-          dataService.warehouseItems.getAll(),
-          dataService.stockMovements.getAll(),
-          dataService.feedingRecords.getAll(),
+          dataService.getAnimals(),
+          dataService.getBarns(),
+          dataService.getWarehouseItems(),
+          dataService.getStockMovements(),
+          dataService.getFeedingRecords(),
         ]);
 
       setAnimals(animalsData);

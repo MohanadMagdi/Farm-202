@@ -35,7 +35,8 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { formatArabicDate, formatArabicNumber } from "@/lib/arabic-utils";
-import { db, User } from "@/lib/firebase-mock";
+import dataService from "@/lib/data-service-unified";
+import { User } from "shared/types";
 import {
   Plus,
   Search,
@@ -51,6 +52,7 @@ import {
   AlertTriangle,
   CheckCircle,
 } from "lucide-react";
+import { db } from "@/lib/firebase-mock";
 
 const roleLabels = {
   owner: "مالك المزرعة",
@@ -115,7 +117,7 @@ export default function UsersPage() {
       const userDoc = {
         ...newUser,
         uid: `firebase_uid_${Date.now()}`,
-        active: true,
+        isActive: true,
         claimsSynced: false,
       };
 
@@ -134,7 +136,7 @@ export default function UsersPage() {
   ) => {
     try {
       await db.collection("users").doc(userId).update({
-        active: !currentStatus,
+        isActive: !currentStatus,
       });
       loadUsers();
     } catch (error) {
@@ -161,7 +163,7 @@ export default function UsersPage() {
   const handleEditUser = (user: User) => {
     setSelectedUser(user);
     setEditUser({
-      name: user.name,
+      name: user.displayName || user.email || '',
       email: user.email,
       role: user.role,
     });
@@ -175,7 +177,7 @@ export default function UsersPage() {
       await db.collection("users").doc(selectedUser.id).update({
         ...editUser,
         timestamps: {
-          ...selectedUser.timestamps,
+          ...((selectedUser as any).timestamps || { createdAt: new Date() }),
           updatedAt: new Date(),
         },
       });
@@ -210,18 +212,18 @@ export default function UsersPage() {
   const filteredUsers = users
     .filter(
       (user) =>
-        user.name.includes(searchTerm) ||
+        (user.displayName || user.email || '').includes(searchTerm) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase()),
     )
     .filter((user) => roleFilter === "all" || user.role === roleFilter)
     .filter((user) => {
       if (statusFilter === "all") return true;
-      if (statusFilter === "active") return user.active;
-      if (statusFilter === "inactive") return !user.active;
+      if (statusFilter === "active") return user.isActive;
+      if (statusFilter === "inactive") return !user.isActive;
       return true;
     });
 
-  const activeUsers = users.filter((u) => u.active);
+  const activeUsers = users.filter((u) => u.isActive);
   const roleDistribution = Object.keys(roleLabels).map((role) => ({
     role: role as keyof typeof roleLabels,
     count: users.filter((u) => u.role === role).length,
@@ -339,7 +341,7 @@ export default function UsersPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="text-sm font-medium">الاسم</Label>
-                      <p className="text-sm text-muted-foreground">{selectedUser.name}</p>
+                      <p className="text-sm text-muted-foreground">{selectedUser.displayName || selectedUser.email}</p>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-sm font-medium">البريد الإلكتروني</Label>
@@ -353,20 +355,26 @@ export default function UsersPage() {
                     </div>
                     <div className="space-y-2">
                       <Label className="text-sm font-medium">الحالة</Label>
-                      <Badge variant={selectedUser.active ? "default" : "destructive"}>
-                        {selectedUser.active ? "نشط" : "غير نشط"}
+                      <Badge variant={selectedUser.isActive ? "default" : "destructive"}>
+                        {selectedUser.isActive ? "نشط" : "غير نشط"}
                       </Badge>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-sm font-medium">تاريخ الإنشاء</Label>
                       <p className="text-sm text-muted-foreground">
-                        {formatArabicDate(selectedUser.timestamps.createdAt)}
+                        {(selectedUser as any).timestamps?.createdAt 
+                          ? formatArabicDate((selectedUser as any).timestamps.createdAt)
+                          : 'غير متوفر'
+                        }
                       </p>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-sm font-medium">آخر تحديث</Label>
                       <p className="text-sm text-muted-foreground">
-                        {formatArabicDate(selectedUser.timestamps.updatedAt)}
+                        {(selectedUser as any).timestamps?.updatedAt 
+                          ? formatArabicDate((selectedUser as any).timestamps.updatedAt)
+                          : 'غير متوفر'
+                        }
                       </p>
                     </div>
                   </div>
@@ -382,7 +390,7 @@ export default function UsersPage() {
                     </div>
                   </div>
 
-                  {!selectedUser.claimsSynced && (
+                  {!(selectedUser as any).claimsSynced && (
                     <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
                       <div className="flex items-center space-x-2 space-x-reverse">
                         <AlertTriangle className="h-4 w-4 text-yellow-600" />
@@ -533,8 +541,8 @@ export default function UsersPage() {
                             .filter((u) => u.role === role)
                             .map((user) => (
                               <Badge key={user.id} variant="outline" className="text-xs">
-                                {user.name}
-                                {!user.active && " (غير نشط)"}
+                                {user.displayName || user.email}
+                                {!user.isActive && " (غير نشط)"}
                               </Badge>
                             ))}
                         </div>
@@ -615,13 +623,13 @@ export default function UsersPage() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center space-x-2 space-x-reverse">
-              {users.filter((u) => !u.claimsSynced).length > 0 ? (
+              {users.filter((u) => !(u as any).claimsSynced).length > 0 ? (
                 <>
                   <AlertTriangle className="h-5 w-5 text-yellow-500" />
                   <div>
                     <div className="text-2xl font-bold text-yellow-600">
                       {formatArabicNumber(
-                        users.filter((u) => !u.claimsSynced).length,
+                        users.filter((u) => !(u as any).claimsSynced).length,
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground">
@@ -753,7 +761,7 @@ export default function UsersPage() {
                     <TableCell>
                       <div className="flex items-center space-x-2 space-x-reverse">
                         <UserCheck className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">{user.name}</span>
+                        <span className="font-medium">{user.displayName || user.email}</span>
                       </div>
                     </TableCell>
                     <TableCell>{user.email}</TableCell>
@@ -764,14 +772,14 @@ export default function UsersPage() {
                       <div className="flex flex-col space-y-1">
                         <Badge
                           className={
-                            user.active
+                            user.isActive
                               ? "bg-green-100 text-green-800"
                               : "bg-red-100 text-red-800"
                           }
                         >
-                          {user.active ? "نشط" : "غير نشط"}
+                          {user.isActive ? "نشط" : "غير نشط"}
                         </Badge>
-                        {!user.claimsSynced && (
+                        {!(user as any).claimsSynced && (
                           <Badge
                             variant="outline"
                             className="text-xs bg-yellow-100 text-yellow-800"
@@ -782,10 +790,16 @@ export default function UsersPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {formatArabicDate(user.timestamps.createdAt)}
+                      {(user as any).timestamps?.createdAt 
+                        ? formatArabicDate((user as any).timestamps.createdAt)
+                        : 'غير متوفر'
+                      }
                     </TableCell>
                     <TableCell>
-                      {formatArabicDate(user.timestamps.updatedAt)}
+                      {(user as any).timestamps?.updatedAt 
+                        ? formatArabicDate((user as any).timestamps.updatedAt)
+                        : 'غير متوفر'
+                      }
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2 space-x-reverse">
@@ -809,11 +823,11 @@ export default function UsersPage() {
                           variant="outline"
                           size="sm"
                           onClick={() =>
-                            handleToggleUserStatus(user.id, user.active)
+                            handleToggleUserStatus(user.id, user.isActive)
                           }
-                          title={user.active ? "تعطيل المستخدم" : "تفعيل المستخدم"}
+                          title={user.isActive ? "تعطيل المستخدم" : "تفعيل المستخدم"}
                         >
-                          {user.active ? (
+                          {user.isActive ? (
                             <Lock className="h-3 w-3" />
                           ) : (
                             <Unlock className="h-3 w-3" />

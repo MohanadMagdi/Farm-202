@@ -50,6 +50,12 @@ const navigation = [
     ],
   },
   {
+    name: "تحليلات الولادة",
+    href: "/birth-analytics",
+    icon: Baby,
+    permission: "reports",
+  },
+  {
     name: "الحظائر",
     href: "/barns",
     icon: Building2,

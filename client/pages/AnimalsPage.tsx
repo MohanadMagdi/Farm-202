@@ -15,6 +15,7 @@ import AnimalFormModal from "@/components/forms/AnimalFormModal";
 import WeightRecordModal from "@/components/forms/WeightRecordModal";
 import MaleLifecycleCard from "@/components/MaleLifecycleCard";
 import FemaleLifecycleCard from "@/components/FemaleLifecycleCard";
+import AnimalPerformanceDashboard from "@/components/PerformanceDashboard";
 import {
   Select,
   SelectContent,
@@ -31,11 +32,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatArabicDate } from "@/lib/arabic-utils";
-import { dataService, farmHelpers } from "@/lib/data-service";
+import dataService from "@/lib/data-service-unified";
+import { farmHelpers } from "@/lib/data-service";
 import { maleManagementService } from "@/lib/male-management-service";
 import { femaleManagementService } from "@/lib/female-management-service";
 import { exportAnimalsReport } from "@/lib/export-utils";
-import type { Animal, AnimalCategory, Barn } from "@shared/types";
+import type { Animal, AnimalCategory, Barn, WeightRecord, FeedingRecord } from "@shared/types";
 import { toast } from "@/hooks/use-toast";
 import {
   Search,
@@ -54,6 +56,7 @@ import {
   Filter,
   Users,
   Baby,
+  BarChart3,
 } from "lucide-react";
 
 interface AnimalsPageProps {
@@ -63,11 +66,14 @@ interface AnimalsPageProps {
 export default function AnimalsPage({ animalType }: AnimalsPageProps) {
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [barns, setBarns] = useState<Barn[]>([]);
+  const [weightRecords, setWeightRecords] = useState<WeightRecord[]>([]);
+  const [feedingRecords, setFeedingRecords] = useState<FeedingRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [healthFilter, setHealthFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [productionTypeFilter, setProductionTypeFilter] = useState<string>("all"); // جديد: فلتر نوع الإنتاج
+  const [currentTab, setCurrentTab] = useState("animals"); // جديد: إدارة التبويبات
   const [recentlyUpdatedAnimals, setRecentlyUpdatedAnimals] = useState<Set<string>>(new Set());
   const [showLifecycleCard, setShowLifecycleCard] = useState(false);
   
@@ -122,6 +128,8 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
   useEffect(() => {
     loadAnimals();
     loadBarns();
+    loadWeightRecords();
+    loadFeedingRecords();
   }, [animalType]);
 
   const loadAnimals = async () => {
@@ -132,7 +140,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
       if (animalType === "male" || animalType === "female") {
         // استرداد جميع الحيوانات ثم فلترتها حسب الجنس
         // هذا يتيح استرداد المواليد والذكور/الإناث والإنتاج الداخلي
-        const allAnimals = await dataService.animals.getAll();
+        const allAnimals = await dataService.getAnimals();
         console.log(`تم استرداد ${allAnimals.length} حيوان من قاعدة البيانات`);
         
         // إحصاء الأنواع للتصحيح
@@ -156,7 +164,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
         console.log(`تم اختيار ${animalsData.length} حيوان ${animalType} للعرض`);
       } else {
         // بالنسبة للمواليد والفئات الأخرى، استخدم الطريقة العادية
-        animalsData = await dataService.animals.getByCategory(animalType);
+        animalsData = await dataService.getAnimalsByCategory(animalType);
         console.log(`تم استرداد ${animalsData.length} حيوان من فئة ${animalType}`);
       }
       
@@ -185,10 +193,28 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
 
   const loadBarns = async () => {
     try {
-      const barnsData = await dataService.barns.getAll();
+      const barnsData = await dataService.getBarns();
       setBarns(barnsData);
     } catch (error) {
       console.error("Error loading barns:", error);
+    }
+  };
+
+  const loadWeightRecords = async () => {
+    try {
+      const weightRecordsData = await dataService.getWeightRecords();
+      setWeightRecords(weightRecordsData);
+    } catch (error) {
+      console.error("Error loading weight records:", error);
+    }
+  };
+
+  const loadFeedingRecords = async () => {
+    try {
+      const feedingRecordsData = await dataService.getFeedingRecords();
+      setFeedingRecords(feedingRecordsData);
+    } catch (error) {
+      console.error("Error loading feeding records:", error);
     }
   };
 
@@ -393,7 +419,7 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
   const handleDelete = async (animal: Animal) => {
     if (window.confirm(`هل أنت متأكد من حذف الحيوان ${animal.earTagId}؟`)) {
       try {
-        await dataService.animals.delete(animal.id);
+        await dataService.deleteAnimal(animal.id);
         loadAnimals();
         setShowLifecycleCard(false);
         toast({
@@ -1122,11 +1148,17 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
         {animalType === "male" ? (
           // Enhanced Males Table with Tabs
           <Tabs defaultValue="all" className="w-full" dir="rtl">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="all">جميع الذكور ({analytics.totalCount})</TabsTrigger>
               <TabsTrigger value="ready">جاهز للبيع ({analytics.readyForSale})</TabsTrigger>
               <TabsTrigger value="attention">يحتاج انتباه ({analytics.needingAttention})</TabsTrigger>
               <TabsTrigger value="lifecycle">دورة الحياة</TabsTrigger>
+              <TabsTrigger value="performance">
+                <div className="flex items-center">
+                  <TrendingUp className="h-4 w-4 ml-1" />
+                  أداء الحيوانات
+                </div>
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="all" className="space-y-4">
@@ -1734,17 +1766,328 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                 </CardContent>
               </Card>
             </TabsContent>
+
+            <TabsContent value="performance" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <TrendingUp className="h-5 w-5 ml-2 text-blue-600" />
+                    أداء الحيوانات
+                  </CardTitle>
+                  <CardDescription>
+                    تحليلات أداء الحيوانات ومعدلات النمو وكفاءة التغذية
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <AnimalPerformanceDashboard 
+                    animalType={animalType}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        ) : (animalType as AnimalCategory) === "female" ? (
+          // Enhanced Females Table with Tabs
+          <Tabs defaultValue="all" className="w-full" dir="rtl">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="all">جميع الإناث ({analytics.totalCount})</TabsTrigger>
+              <TabsTrigger value="pregnant">حوامل ({analytics.pregnantCount})</TabsTrigger>
+              <TabsTrigger value="lifecycle">دورة الحياة</TabsTrigger>
+              <TabsTrigger value="performance">
+                <div className="flex items-center">
+                  <TrendingUp className="h-4 w-4 ml-1" />
+                  أداء الحيوانات
+                </div>
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="all" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>قائمة جميع الإناث</CardTitle>
+                  <CardDescription>
+                    إجمالي {filteredAnimals.length} من الإناث
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="rounded-md border" dir="rtl">
+                    <Table className="rtl:text-right">
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-right">رقم الأذن</TableHead>
+                          <TableHead className="text-right">نوع الإنتاج</TableHead>
+                          <TableHead className="text-right">الوزن الحالي</TableHead>
+                          <TableHead className="text-right">الحالة الصحية</TableHead>
+                          <TableHead className="text-right">الحظيرة</TableHead>
+                          <TableHead className="text-right">حالة الحمل</TableHead>
+                          <TableHead className="text-right">السعر الحالي</TableHead>
+                          <TableHead className="text-right">المورد</TableHead>
+                          <TableHead className="text-right">الإجراءات</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredAnimals.map((animal) => (
+                          <TableRow key={animal.id}>
+                            <TableCell className="font-medium text-right">
+                              {animal.earTagId}
+                              {animal.isIsolated && (
+                                <Badge
+                                  variant="outline"
+                                  className="mr-2 bg-orange-50 text-orange-700"
+                                >
+                                  عزل
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {getProductionTypeBadge(animal)}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-start gap-1">
+                                {farmHelpers.formatWeight(animal.weight)}
+                                {recentlyUpdatedAnimals.has(animal.id) && (
+                                  <Badge 
+                                    variant="outline" 
+                                    className="bg-green-50 text-green-600 text-xs mr-1"
+                                  >
+                                    محدث
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Badge
+                                className={getHealthStatusColor(animal.healthStatus)}
+                              >
+                                {animal.healthStatus}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Badge
+                                variant="outline"
+                                className="flex items-center w-fit"
+                              >
+                                <MapPin className="h-3 w-3 ml-1" />
+                                {getBarnName(animal.barnId)}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {animal.isPregnant ? (
+                                <Badge className="bg-pink-100 text-pink-800">
+                                  حامل
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline">غير حامل</Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {farmHelpers.formatCurrency(
+                                animal.currentPrice || animal.purchasePrice,
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {getSupplierDisplay(animal)}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center gap-1 justify-start">
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => handleDelete(animal)}
+                                  className="h-8 w-8 p-0"
+                                  title="حذف"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleWeightRecord(animal)}
+                                  className="h-8 w-8 p-0 text-green-600 hover:text-green-700"
+                                  title="تسجيل وزن"
+                                >
+                                  <Scale className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleEdit(animal)}
+                                  className="h-8 w-8 p-0"
+                                  title="تعديل"
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedAnimal(animal);
+                                    setShowLifecycleCard(true);
+                                  }}
+                                  className="h-8 w-8 p-0 text-pink-600 hover:text-pink-700"
+                                  title="عرض دورة الحياة"
+                                >
+                                  <Heart className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        {filteredAnimals.length === 0 && (
+                          <TableRow>
+                            <TableCell colSpan={9} className="text-center py-8">
+                              لا توجد نتائج مطابقة للبحث
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="pregnant" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Heart className="h-5 w-5 ml-2 text-pink-600" />
+                    الإناث الحوامل
+                  </CardTitle>
+                  <CardDescription>
+                    الإناث الحوامل التي تحتاج متابعة ورعاية خاصة
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-4" dir="rtl">
+                    {filteredAnimals.filter(animal => animal.isPregnant).map((female) => (
+                      <div key={female.id} className="space-y-2">
+                        <FemaleLifecycleCard animal={female} />
+                        <div className="flex gap-2 justify-end">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(female)}
+                          >
+                            تعديل
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleWeightRecord(female)}
+                          >
+                            تسجيل وزن
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDelete(female)}
+                          >
+                            حذف
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    {filteredAnimals.filter(animal => animal.isPregnant).length === 0 && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        لا يوجد إناث حوامل حالياً
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="lifecycle" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>دورة حياة الإناث التفصيلية</CardTitle>
+                  <CardDescription>
+                    عرض تفصيلي لدورة حياة كل أنثى في المزرعة
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-4" dir="rtl">
+                    {filteredAnimals.map((female) => (
+                      <div key={female.id} className="space-y-2">
+                        <FemaleLifecycleCard animal={female} />
+                        <div className="flex gap-2 justify-end">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(female)}
+                          >
+                            تعديل
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleWeightRecord(female)}
+                          >
+                            تسجيل وزن
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDelete(female)}
+                          >
+                            حذف
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    {filteredAnimals.length === 0 && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        لا توجد نتائج مطابقة للبحث
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="performance" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <TrendingUp className="h-5 w-5 ml-2 text-blue-600" />
+                    أداء الحيوانات
+                  </CardTitle>
+                  <CardDescription>
+                    تحليلات أداء الحيوانات ومعدلات النمو وكفاءة التغذية
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <AnimalPerformanceDashboard 
+                    animalType={animalType}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
           </Tabs>
         ) : (
-          // Regular Animals Table for Newborns
-          <Card>
-            <CardHeader>
-              <CardTitle>قائمة {getAnimalTypeLabel(animalType)}</CardTitle>
-              <CardDescription>
-                إجمالي {filteredAnimals.length} من {getAnimalTypeLabel(animalType)}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+          // Enhanced Newborns Table with Tabs
+          <Tabs defaultValue="all" className="w-full" dir="rtl">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="all">جميع المواليد ({analytics.totalCount})</TabsTrigger>
+              <TabsTrigger value="lifecycle">دورة الحياة</TabsTrigger>
+              <TabsTrigger value="performance">
+                <div className="flex items-center">
+                  <TrendingUp className="h-4 w-4 ml-1" />
+                  أداء الحيوانات
+                </div>
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="all" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>قائمة {getAnimalTypeLabel(animalType)}</CardTitle>
+                  <CardDescription>
+                    إجمالي {filteredAnimals.length} من {getAnimalTypeLabel(animalType)}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
               <div className="rounded-md border" dir="rtl">
                 <Table className="rtl:text-right">
                   <TableHeader>
@@ -1753,10 +2096,10 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
                       <TableHead className="text-right">الوزن الحالي</TableHead>
                       <TableHead className="text-right">الحالة الصحية</TableHead>
                       <TableHead className="text-right">الحظيرة</TableHead>
-                      {(animalType as string) === "female" && (
+                      {(animalType as AnimalCategory) === "female" && (
                         <TableHead className="text-right">حالة الحمل</TableHead>
                       )}
-                      {(animalType as string) === "newborn" && (
+                      {(animalType as AnimalCategory) === "newborn" && (
                         <TableHead className="text-right">الأم</TableHead>
                       )}
                       {animalType !== "newborn" && (
@@ -1884,6 +2227,47 @@ export default function AnimalsPage({ animalType }: AnimalsPageProps) {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="lifecycle" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Baby className="h-5 w-5 ml-2 text-pink-600" />
+                دورة حياة المواليد
+              </CardTitle>
+              <CardDescription>
+                مراحل نمو وتطوير المواليد من الولادة إلى الفطام
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8">
+                <Baby className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">سيتم إضافة دورة حياة المواليد قريباً</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="performance" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <TrendingUp className="h-5 w-5 ml-2 text-blue-600" />
+                أداء الحيوانات
+              </CardTitle>
+              <CardDescription>
+                تحليلات أداء المواليد ومعدلات النمو وكفاءة التغذية
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AnimalPerformanceDashboard 
+                animalType={animalType}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
         )}
       </div>
 

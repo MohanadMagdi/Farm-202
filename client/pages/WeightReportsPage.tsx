@@ -32,7 +32,7 @@ import {
   type CumulativeWeight,
 } from "@/lib/weights";
 import { formatArabicDate, formatArabicNumber } from "@/lib/arabic-utils";
-import { dataService } from "@/lib/data-service";
+import dataService from "@/lib/data-service-unified";
 import type { Animal } from "@shared/types";
 import { EnhancedWeightTrackingTable } from "@/components/EnhancedWeightTrackingTable";
 
@@ -74,8 +74,8 @@ export default function WeightReportsPage() {
     try {
       setLoading(true);
       const [animalsData, barnsData] = await Promise.all([
-        dataService.animals.getAll(),
-        dataService.barns.getAll(),
+        dataService.getAnimals(),
+        dataService.getBarns(),
       ]);
 
       // Include all animals, but filter those that have weightHistory for the main view
@@ -208,7 +208,7 @@ export default function WeightReportsPage() {
       result[`weight_${weightNum}_date`] = weight.date;
       result[`weight_${weightNum}_kg`] = weight.weightKg;
 
-      // Calculate differences from previous weight
+      // Calculate differences from previous weight (consecutive)
       if (index > 0) {
         const prevWeight = sortedWeights[index - 1];
         const daysDiff = calculateDaysDifference(prevWeight.date, weight.date);
@@ -218,6 +218,23 @@ export default function WeightReportsPage() {
         result[`weight_${index}_to_${weightNum}_days`] = daysDiff;
         result[`weight_${index}_to_${weightNum}_diff`] = weightDiff;
         result[`weight_${index}_to_${weightNum}_adg`] = adg;
+      }
+
+      // Advanced ADG calculations for weights 3+ (calculate to all previous weights)
+      if (index >= 2) {
+        // For weight 3: calculate ADG to weight 2 and weight 1
+        // For weight 4: calculate ADG to weight 3, weight 2, and weight 1
+        for (let prevIndex = index - 1; prevIndex >= 0; prevIndex--) {
+          const prevWeight = sortedWeights[prevIndex];
+          const daysDiffToPrev = calculateDaysDifference(prevWeight.date, weight.date);
+          const weightDiffToPrev = weight.weightKg - prevWeight.weightKg;
+          const adgToPrev = daysDiffToPrev > 0 ? (weightDiffToPrev / daysDiffToPrev) * 1000 : 0;
+          
+          // Store advanced ADG calculation
+          result[`adg_${weightNum}_to_${prevIndex + 1}_days`] = daysDiffToPrev;
+          result[`adg_${weightNum}_to_${prevIndex + 1}_diff`] = weightDiffToPrev;
+          result[`adg_${weightNum}_to_${prevIndex + 1}_value`] = adgToPrev;
+        }
       }
     });
 
@@ -255,6 +272,15 @@ export default function WeightReportsPage() {
         headers.push(`الفرق ${formatArabicNumber(i-1)}-${formatArabicNumber(i)} (كجم)`);
         headers.push(`الأيام ${formatArabicNumber(i-1)}-${formatArabicNumber(i)}`);
         headers.push(`ADG ${formatArabicNumber(i-1)}-${formatArabicNumber(i)} (جم/يوم)`);
+      }
+      
+      // Add advanced ADG headers for weights 3+
+      if (i >= 3) {
+        for (let j = i - 2; j >= 1; j--) {
+          headers.push(`ADG ${formatArabicNumber(i)}-${formatArabicNumber(j)} الأيام`);
+          headers.push(`ADG ${formatArabicNumber(i)}-${formatArabicNumber(j)} الفرق (كجم)`);
+          headers.push(`ADG ${formatArabicNumber(i)}-${formatArabicNumber(j)} القيمة (جم/يوم)`);
+        }
       }
     }
     
@@ -381,6 +407,23 @@ export default function WeightReportsPage() {
                   cells.push(`<td>${daysValue ? formatArabicNumber(daysValue) + ' يوم' : '-'}</td>`);
                   cells.push(`<td class="${(adgValue || 0) >= 0 ? 'positive' : 'negative'}">${adgValue !== undefined ? formatArabicNumber(Number(adgValue.toFixed(1))) + ' جم/يوم' : '-'}</td>`);
                 }
+                
+                // Advanced ADG columns for weights 3+
+                if (i >= 3) {
+                  for (let j = i - 2; j >= 1; j--) {
+                    const advDaysKey = `adg_${i}_to_${j}_days`;
+                    const advDiffKey = `adg_${i}_to_${j}_diff`;
+                    const advAdgKey = `adg_${i}_to_${j}_value`;
+                    
+                    const advDaysValue = row[advDaysKey];
+                    const advDiffValue = row[advDiffKey];
+                    const advAdgValue = row[advAdgKey];
+                    
+                    cells.push(`<td>${advDaysValue ? formatArabicNumber(advDaysValue) + ' يوم' : '-'}</td>`);
+                    cells.push(`<td class="${(advDiffValue || 0) >= 0 ? 'positive' : 'negative'}">${advDiffValue !== undefined ? formatArabicNumber(advDiffValue) + ' كجم' : '-'}</td>`);
+                    cells.push(`<td class="${(advAdgValue || 0) >= 0 ? 'positive' : 'negative'}">${advAdgValue !== undefined ? formatArabicNumber(Number(advAdgValue.toFixed(1))) + ' جم/يوم' : '-'}</td>`);
+                  }
+                }
               }
               
               // Add summary columns
@@ -474,6 +517,23 @@ export default function WeightReportsPage() {
           rowData.push(diffValue !== undefined ? formatArabicNumber(diffValue) : "");
           rowData.push(daysValue ? formatArabicNumber(daysValue) : "");
           rowData.push(adgValue !== undefined ? formatArabicNumber(Number(adgValue.toFixed(1))) : "");
+        }
+        
+        // Advanced ADG columns for weights 3+
+        if (i >= 3) {
+          for (let j = i - 2; j >= 1; j--) {
+            const advDaysKey = `adg_${i}_to_${j}_days`;
+            const advDiffKey = `adg_${i}_to_${j}_diff`;
+            const advAdgKey = `adg_${i}_to_${j}_value`;
+            
+            const advDaysValue = row[advDaysKey];
+            const advDiffValue = row[advDiffKey];
+            const advAdgValue = row[advAdgKey];
+            
+            rowData.push(advDaysValue ? formatArabicNumber(advDaysValue) : "");
+            rowData.push(advDiffValue !== undefined ? formatArabicNumber(advDiffValue) : "");
+            rowData.push(advAdgValue !== undefined ? formatArabicNumber(Number(advAdgValue.toFixed(1))) : "");
+          }
         }
       }
       
@@ -664,6 +724,8 @@ export default function WeightReportsPage() {
         animals={filteredAnimals} 
         onRefresh={loadData}
       />
+      
+     
 
       {/* Legacy Weight Entry Modal (kept for compatibility) */}
       {showWeightModal && (

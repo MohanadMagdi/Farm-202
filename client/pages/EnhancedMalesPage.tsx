@@ -13,7 +13,8 @@ import AnimalFormModal from "@/components/forms/AnimalFormModal";
 import WeightRecordModal from "@/components/forms/WeightRecordModal";
 import MaleLifecycleCard from "@/components/MaleLifecycleCard";
 import { toast } from "@/hooks/use-toast";
-import { dataService, farmHelpers } from "@/lib/data-service";
+import dataService from "@/lib/data-service-unified";
+import { farmHelpers } from "@/lib/data-service";
 import { maleManagementService } from "@/lib/male-management-service";
 import type { Animal } from "@shared/types";
 import {
@@ -60,7 +61,7 @@ export default function EnhancedMalesPage() {
   const loadMales = async () => {
     try {
       setLoading(true);
-      const animalsData = await dataService.animals.getByCategory("male");
+      const animalsData = await dataService.getAnimalsByCategory("male");
       setMales(animalsData);
       calculateAnalytics(animalsData);
     } catch (error) {

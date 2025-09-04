@@ -50,7 +50,17 @@ class MockServiceAdapter<T extends { id: string }> {
 
   async getAll(): Promise<T[]> {
     const result = await mockFirestore.collection(this.collectionName).get();
-    return result.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as T);
+    const data = result.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as T);
+    
+    // Convert date strings to Date objects for weight and feeding records
+    if (this.collectionName === 'weightRecords' || this.collectionName === 'feedingRecords') {
+      return data.map((item: any) => ({
+        ...item,
+        date: item.date instanceof Date ? item.date : new Date(item.date)
+      })) as T[];
+    }
+    
+    return data;
   }
 
   async getById(id: string): Promise<T | null> {
