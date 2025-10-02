@@ -40,6 +40,7 @@ import { formatArabicDate } from "@/lib/arabic-utils";
 import dataService from "@/lib/data-service-unified";
 import { farmHelpers } from "@/lib/data-service";
 import { exportInventoryReport } from "@/lib/export-utils";
+import { integratedInventoryService } from "@/lib/integrated-inventory-service";
 import {
   updateItemExpiryCountdown,
   calculateExpiryStats,
@@ -47,6 +48,7 @@ import {
   formatRemainingDays,
   getExpiryBadgeVariant,
 } from "@/lib/expiry-notifications";
+import useInventorySync from "@/hooks/use-inventory-sync";
 import type {
   WarehouseItem,
   WarehouseType,
@@ -68,6 +70,7 @@ import {
   ShoppingCart,
   FileText,
   Clock,
+  Trash2,
   Warehouse,
   Beaker,
   PillBottle,
@@ -76,7 +79,7 @@ import {
   Settings,
   Activity,
   RotateCw,
-  Trash2,
+  Wheat,
 } from "lucide-react";
 
 const warehouseTypes: Record<
@@ -108,6 +111,16 @@ const warehouseTypes: Record<
     icon: Wrench,
     color: "text-orange-600",
   },
+  feed: {
+    label: "الأعلاف",
+    icon: Wheat,
+    color: "text-amber-600",
+  },
+  inventory: {
+    label: "المخزون العام",
+    icon: Package,
+    color: "text-gray-600",
+  },
 };
 
 export default function InventoryPage() {
@@ -115,6 +128,7 @@ export default function InventoryPage() {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [activeTab, setActiveTab] = useState<string>("all");
+  const { warehouseItems: syncedItems, refreshInventory } = useInventorySync();
   const [warehouseItems, setWarehouseItems] = useState<WarehouseItem[]>([]);
   const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
   const [loading, setLoading] = useState(true);
@@ -134,9 +148,22 @@ export default function InventoryPage() {
   const [selectedItem, setSelectedItem] = useState<WarehouseItem | null>(null);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [stockModalMode, setStockModalMode] = useState<"in" | "out">("in");
+  const [isCleaningUp, setIsCleaningUp] = useState(false);
 
   useEffect(() => {
-    loadData();
+    const initializeData = async () => {
+      // Clean up duplicates silently on first load
+      try {
+        await integratedInventoryService.cleanupDuplicateItems();
+      } catch (error) {
+        console.warn("Silent cleanup failed:", error);
+      }
+      
+      // Load data
+      await loadData();
+    };
+    
+    initializeData();
 
     // Check for URL parameters
     const urlParams = new URLSearchParams(window.location.search);
@@ -148,10 +175,9 @@ export default function InventoryPage() {
 
   const loadData = async () => {
     try {
-      const [itemsData, movementsData] = await Promise.all([
-        dataService.getWarehouseItems(),
-        dataService.getStockMovements(),
-      ]);
+      // Use synced items if available, otherwise fetch fresh data
+      const itemsData = syncedItems.length > 0 ? syncedItems : await dataService.getWarehouseItems();
+      const movementsData = await dataService.getStockMovements();
 
       // Update expiry countdown for all items
       const updatedItems = updateItemExpiryCountdown(itemsData);
@@ -239,6 +265,28 @@ export default function InventoryPage() {
         description: "حدث خطأ أثناء حذف الصنف. يرجى المحاولة مرة أخرى",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleCleanupDuplicates = async () => {
+    setIsCleaningUp(true);
+    try {
+      await integratedInventoryService.cleanupDuplicateItems();
+      await refreshInventory(); // Refresh synced data
+      toast({
+        title: "تم تنظيف البيانات",
+        description: "تم دمج العناصر المكررة بنجاح",
+      });
+      loadData(); // Reload the items list
+    } catch (error) {
+      console.error("Error cleaning up duplicates:", error);
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء تنظيف البيانات المكررة",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCleaningUp(false);
     }
   };
 
@@ -416,6 +464,15 @@ export default function InventoryPage() {
             </Button>
 
           </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleCleanupDuplicates}
+            disabled={isCleaningUp}
+          >
+            <Trash2 className="h-4 w-4 ml-2" />
+            {isCleaningUp ? "جاري التنظيف..." : "تنظيف المكررات"}
+          </Button>
           <Button variant="outline" size="sm" onClick={createDispatchOrder}>
             <FileText className="h-4 w-4 ml-2" />
             إذن صرف
@@ -957,7 +1014,11 @@ export default function InventoryPage() {
                             item.minStockLevel,
                           );
                           const expiryBadge = getExpiryBadge(item);
-                          const warehouseConfig = warehouseTypes[item.type];
+                          const warehouseConfig = warehouseTypes[item.type] || {
+                            label: item.type,
+                            icon: Package,
+                            color: "text-gray-600"
+                          };
 
                           return (
                             <TableRow key={item.id}>
@@ -1176,7 +1237,11 @@ export default function InventoryPage() {
                         item.minStockLevel,
                       );
                       const expiryBadge = getExpiryBadge(item);
-                      const warehouseConfig = warehouseTypes[item.type];
+                      const warehouseConfig = warehouseTypes[item.type] || {
+                        label: item.type,
+                        icon: Package,
+                        color: "text-gray-600"
+                      };
 
                       return (
                         <TableRow key={item.id}>
@@ -1593,7 +1658,11 @@ export default function InventoryPage() {
                       
                       return filteredMovements.length > 0 ? filteredMovements.map((movement) => {
                         const item = warehouseItems.find((i) => i.id === movement.itemId);
-                        const warehouseConfig = item ? warehouseTypes[item.type] : null;
+                        const warehouseConfig = item ? (warehouseTypes[item.type] || {
+                          label: item.type,
+                          icon: Package,
+                          color: "text-gray-600"
+                        }) : null;
 
                         return (
                           <TableRow key={movement.id}>

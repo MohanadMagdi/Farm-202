@@ -29,7 +29,9 @@ import {
   Settings, 
   Wrench,
   Calendar,
-  AlertTriangle 
+  AlertTriangle,
+  Wheat,
+  Package
 } from "lucide-react";
 
 interface InventoryFormModalProps {
@@ -46,6 +48,8 @@ const warehouseTypes: Record<WarehouseType, { label: string; icon: any; color: s
   medical_supplies: { label: "المستلزمات الطبية", icon: Stethoscope, color: "text-pink-600" },
   equipment: { label: "المعدات والأجهزة", icon: Settings, color: "text-purple-600" },
   maintenance: { label: "الصيانة والإصلاح", icon: Wrench, color: "text-orange-600" },
+  feed: { label: "الأعلاف", icon: Wheat, color: "text-amber-600" },
+  inventory: { label: "مخزون عام", icon: Package, color: "text-gray-600" },
 };
 
 export default function InventoryFormModal({
@@ -216,7 +220,7 @@ export default function InventoryFormModal({
     }
   };
 
-  const warehouseConfig = warehouseTypes[formData.type];
+  const warehouseConfig = warehouseTypes[formData.type] || warehouseTypes.chemicals;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

@@ -196,6 +196,8 @@ class UnifiedDataService {
 
   // ========== خدمات المخزن ==========
   async getWarehouseItems(): Promise<WarehouseItem[]> {
+    await this.ensureInitialized();
+    
     if (USE_MOCK_DATA) {
       return this.mockService.getData().warehouseItems;
     } else {
@@ -204,6 +206,8 @@ class UnifiedDataService {
   }
 
   async getWarehouseItemById(id: string): Promise<WarehouseItem | null> {
+    await this.ensureInitialized();
+    
     if (USE_MOCK_DATA) {
       const items = this.mockService.getData().warehouseItems;
       return items.find((item: WarehouseItem) => item.id === id) || null;
@@ -225,15 +229,36 @@ class UnifiedDataService {
   }
 
   async updateWarehouseItem(id: string, updates: Partial<WarehouseItem>): Promise<void> {
+    await this.ensureInitialized();
+    
+    // إضافة وقت التحديث إذا لم يتم تضمينه
+    if (!updates.updatedAt) {
+      updates.updatedAt = new Date();
+    }
+    
     if (USE_MOCK_DATA) {
       const items = this.mockService.getData().warehouseItems;
       const index = items.findIndex((item: WarehouseItem) => item.id === id);
       if (index !== -1) {
         items[index] = { ...items[index], ...updates, updatedAt: new Date() };
-        console.log('📝 تم تحديث عنصر المخزن (وهمي):', id);
+        console.log('📝 تم تحديث عنصر المخزن (وهمي):', id, updates);
+        
+        // بث حدث لإعلام جميع المكونات بالتغيير
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('warehouse-item-updated', { 
+            detail: { itemId: id, updates }
+          }));
+        }
       }
     } else {
       await this.firestoreService.warehouseItemsService.update(id, updates);
+      
+      // بث حدث لإعلام جميع المكونات بالتغيير
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('warehouse-item-updated', { 
+          detail: { itemId: id, updates }
+        }));
+      }
     }
   }
 
@@ -275,23 +300,35 @@ class UnifiedDataService {
       const newMovement = { ...movementData, id: newId, createdAt: new Date(), updatedAt: new Date() };
       this.mockService.getData().stockMovements.push(newMovement as StockMovement);
       
-      // تحديث المخزن
-      const items = this.mockService.getData().warehouseItems;
-      const itemIndex = items.findIndex((item: WarehouseItem) => item.id === movementData.itemId);
-      if (itemIndex !== -1) {
-        const item = items[itemIndex];
-        if (movementData.type === 'in') {
-          item.currentStock += movementData.quantity;
-        } else {
-          item.currentStock -= movementData.quantity;
-        }
-        item.updatedAt = new Date();
-      }
+      // ملاحظة: لا نقوم بتحديث المخزون هنا لأنه يتم تحديثه بشكل منفصل في الخدمات المتخصصة
+      // لتجنب التضاعف في الكمية
       
       console.log('📦 تم إضافة حركة مخزنية جديدة (وهمية):', newId);
       return newId;
     } else {
       return await this.firestoreService.stockMovementsService.create(movementData);
+    }
+  }
+
+  async getStockMovementById(id: string): Promise<StockMovement | null> {
+    if (USE_MOCK_DATA) {
+      const movements = this.mockService.getData().stockMovements;
+      return movements.find((movement: StockMovement) => movement.id === id) || null;
+    } else {
+      return await this.firestoreService.stockMovementsService.getById(id);
+    }
+  }
+
+  async deleteWarehouseItem(id: string): Promise<void> {
+    if (USE_MOCK_DATA) {
+      const items = this.mockService.getData().warehouseItems;
+      const index = items.findIndex((item: WarehouseItem) => item.id === id);
+      if (index !== -1) {
+        items.splice(index, 1);
+        console.log('🗑️ تم حذف عنصر المخزن (وهمي):', id);
+      }
+    } else {
+      await this.firestoreService.warehouseItemsService.delete(id);
     }
   }
 
@@ -505,7 +542,9 @@ export const {
   getLowStockItems,
   getExpiredItems,
   getStockMovements,
+  getStockMovementById,
   createStockMovement,
+  deleteWarehouseItem,
   getFeedingRecords,
   createFeedingRecord,
   getWeightRecords,

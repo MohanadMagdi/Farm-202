@@ -18,7 +18,9 @@ export type WarehouseType =
   | "medicines"
   | "medical_supplies"
   | "equipment"
-  | "maintenance";
+  | "maintenance"
+  | "feed"
+  | "inventory";
 export type UserRole =
   | "owner"
   | "manager"
@@ -26,7 +28,55 @@ export type UserRole =
   | "inventory"
   | "barn_manager"
   | "accountant"
-  | "sales";
+  | "sales"
+  | "farm_worker";
+
+// Feed types - unified across the entire system
+export type FeedMainType = "concentrated" | "saline_material";
+export type ConcentratedFeedSubType = "14%" | "16%" | "21%";
+export type SalineMaterialSubType = "hay" | "straw"; // دريس | تبن
+
+export interface FeedTypeDefinition {
+  mainType: FeedMainType;
+  subType: ConcentratedFeedSubType | SalineMaterialSubType;
+  arabicName: string;
+  englishName: string;
+}
+
+// Standard feed type definitions
+export const FEED_TYPES: Record<string, FeedTypeDefinition> = {
+  "concentrated_14": {
+    mainType: "concentrated",
+    subType: "14%",
+    arabicName: "علف مركز 14%",
+    englishName: "Concentrated Feed 14%"
+  },
+  "concentrated_16": {
+    mainType: "concentrated", 
+    subType: "16%",
+    arabicName: "علف مركز 16%",
+    englishName: "Concentrated Feed 16%"
+  },
+  "concentrated_21": {
+    mainType: "concentrated",
+    subType: "21%", 
+    arabicName: "علف مركز 21%",
+    englishName: "Concentrated Feed 21%"
+  },
+  "saline_hay": {
+    mainType: "saline_material",
+    subType: "hay",
+    arabicName: "مادة مالحة - دريس",
+    englishName: "Saline Material - Hay"
+  },
+  "saline_straw": {
+    mainType: "saline_material",
+    subType: "straw", 
+    arabicName: "مادة مالحة - تبن",
+    englishName: "Saline Material - Straw"
+  }
+};
+
 export type MovementType = "in" | "out" | "transfer";
 export type PricingMethod = "manual" | "formula" | "market_rate";
 

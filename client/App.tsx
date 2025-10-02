@@ -1,16 +1,17 @@
 import "./global.css";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 
 import { Toaster } from "@/components/ui/toaster";
 import { createRoot } from "react-dom/client";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { initializeDataSync } from "@/lib/data-sync";
 import { expiryCountdownService } from "@/lib/expiry-countdown-service";
 import { automaticWeaningService } from "@/lib/automatic-weaning-service";
+import { DatabaseInitService } from "@/lib/database-init-service";
 import Layout from "@/components/Layout";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -26,6 +27,7 @@ import WeightReportsPage from "./pages/WeightReportsPage";
 import UsersPage from "./pages/UsersPage";
 import BirthAnalyticsPage from "./pages/BirthAnalyticsPage";
 import { InternalProductionDashboard } from "@/components/InternalProductionDashboard";
+import WorkerDashboardPage from "./pages/WorkerDashboardPage";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +45,7 @@ const WeightReportsManagement = () => <WeightReportsPage />;
 const UsersManagement = () => <UsersPage />;
 const BirthAnalyticsManagement = () => <BirthAnalyticsPage />;
 const InternalProductionManagement = () => <InternalProductionDashboard />;
+const WorkerDashboard = () => <WorkerDashboardPage />;
 
 // Protected route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -66,6 +69,78 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+// Worker-specific protected route that redirects workers to their dashboard
+function WorkerProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    console.log('WorkerProtectedRoute effect:', { 
+      loading, 
+      user: user?.role, 
+      userEmail: user?.email,
+      pathname: location.pathname 
+    });
+    
+    if (!loading && user) {
+      // Redirect farm workers to their specialized dashboard
+      if (user.role === 'farm_worker' && location.pathname !== '/worker-dashboard') {
+        console.log('Redirecting farm worker to dashboard');
+        navigate('/worker-dashboard', { replace: true });
+        return;
+      }
+
+      // Prevent non-workers from accessing worker dashboard
+      if (user.role !== 'farm_worker' && location.pathname === '/worker-dashboard') {
+        console.log('Redirecting non-worker away from dashboard');
+        navigate('/', { replace: true });
+        return;
+      }
+    }
+  }, [user, loading, location.pathname, navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-farm-600 mx-auto mb-4"></div>
+          <p className="text-muted-foreground">جاري تحميل النظام...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginPage />;
+  }
+
+  // Show loading while redirecting
+  if (user.role === 'farm_worker' && location.pathname !== '/worker-dashboard') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-farm-600 mx-auto mb-4"></div>
+          <p className="text-muted-foreground">جاري التوجيه إلى لوحة العامل...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (user.role !== 'farm_worker' && location.pathname === '/worker-dashboard') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-farm-600 mx-auto mb-4"></div>
+          <p className="text-muted-foreground">جاري التوجيه...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}
+
 function AppRoutes() {
   return (
     <Routes>
@@ -73,11 +148,11 @@ function AppRoutes() {
       <Route
         path="/"
         element={
-          <ProtectedRoute>
+          <WorkerProtectedRoute>
             <Layout>
               <Index />
             </Layout>
-          </ProtectedRoute>
+          </WorkerProtectedRoute>
         }
       />
       <Route
@@ -190,6 +265,16 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/worker-dashboard"
+        element={
+          <WorkerProtectedRoute>
+            <Layout>
+              <WorkerDashboard />
+            </Layout>
+          </WorkerProtectedRoute>
+        }
+      />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </Routes>
@@ -205,6 +290,11 @@ const App = () => {
 
     // Initialize data synchronization
     initializeDataSync();
+
+    // Initialize warehouse items if needed
+    DatabaseInitService.autoInitialize().catch(error => 
+      console.error('Failed to initialize warehouse:', error)
+    );
 
     // Initialize expiry countdown service
     if (!expiryCountdownService.isServiceRunning()) {

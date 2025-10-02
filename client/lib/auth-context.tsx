@@ -65,6 +65,13 @@ const mockUsers: Record<string, User> = {
     displayName: 'سارة أحمد - مسؤولة المخزون',
     role: 'inventory',
     permissions: ['inventory', 'feeding', 'reports']
+  },
+  'worker@farm.com': {
+    id: 'user_005',
+    email: 'worker@farm.com',
+    displayName: 'علي حسن - عامل المزرعة',
+    role: 'farm_worker',
+    permissions: ['feeding', 'animals', 'medicines']
   }
 };
 
@@ -76,17 +83,27 @@ const rolePermissions: Record<UserRole, string[]> = {
   inventory: ['inventory', 'feeding', 'reports'],
   barn_manager: ['animals', 'barns', 'feeding', 'reports'],
   accountant: ['reports', 'inventory'],
-  sales: ['animals', 'reports']
+  sales: ['animals', 'reports'],
+  farm_worker: ['feeding', 'animals', 'medicines']
 };
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    // Try to get user from localStorage on initial load
+    try {
+      const savedUser = localStorage.getItem('farm_user');
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch {
+      return null;
+    }
+  });
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // In development mode, skip Firebase auth listener
     if (import.meta.env.DEV) {
+      console.log('Auth context initialized in dev mode. User from localStorage:', user);
       setLoading(false);
       return () => {};
     }
@@ -123,14 +140,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     // Use mock authentication in development mode
     if (import.meta.env.DEV) {
+      console.log('Dev mode sign in attempt:', { email, password });
       const mockUser = mockUsers[email];
+      console.log('Found mock user:', mockUser);
+      
       if (mockUser && password === 'demo123') {
+        console.log('Setting user:', mockUser);
         setUser(mockUser);
+        
+        // Save user to localStorage
+        localStorage.setItem('farm_user', JSON.stringify(mockUser));
+        
         setFirebaseUser({
           uid: mockUser.id,
           email: mockUser.email,
           displayName: mockUser.displayName
         } as FirebaseUser);
+        console.log('User set successfully');
         return;
       }
       throw new Error('بيانات تسجيل الدخول غير صحيحة');
@@ -147,6 +173,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOutUser = async () => {
     try {
+      // Clear all farm-related localStorage data
+      localStorage.removeItem('farm_user');
+      localStorage.removeItem('farm_data');
+      localStorage.removeItem('last_sync');
+      
+      // Clear any other relevant storage keys
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('farm_') || key.startsWith('barn_') || key.startsWith('animal_')) {
+          localStorage.removeItem(key);
+        }
+      });
+      
       // In development mode, just clear the state
       if (import.meta.env.DEV) {
         setUser(null);

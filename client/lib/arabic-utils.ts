@@ -142,7 +142,8 @@ export function calculateAgeInDays(animal: {
 }
 
 /**
- * Feed types
+ * Legacy feed types - use FEED_TYPES from shared/types instead
+ * @deprecated Use FEED_TYPES from @shared/types for new code
  */
 export const feedTypes = {
   hay: "دريس",

@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,7 +27,21 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const { signIn } = useAuth();
+  const [selectedAccount, setSelectedAccount] = useState<string>('');
+  const { signIn, user } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect after successful login
+  useEffect(() => {
+    if (user) {
+      console.log('User logged in, redirecting based on role:', user.role);
+      if (user.role === 'farm_worker') {
+        navigate('/worker-dashboard', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +54,9 @@ export default function LoginPage() {
     setError('');
 
     try {
+      console.log('Attempting login with:', { email, password });
       await signIn(email, password);
+      console.log('Login successful');
       toast({
         title: 'تم تسجيل الدخول بنجاح',
         description: 'مرحباً بك في نظام إدارة المزرعة',
@@ -84,12 +101,30 @@ export default function LoginPage() {
       icon: Package,
       color: 'text-purple-600',
       permissions: 'المخزون، التغذية، التقارير'
+    },
+    {
+      email: 'worker@farm.com',
+      password: 'demo123',
+      role: 'عامل المزرعة',
+      icon: Home,
+      color: 'text-orange-600',
+      permissions: 'التغذية، الأدوية، الحيوانات (تسجيل أساسي)'
     }
   ];
 
   const quickLogin = (demoEmail: string, demoPassword: string) => {
+    console.log('Setting demo account data:', { demoEmail, demoPassword });
     setEmail(demoEmail);
     setPassword(demoPassword);
+    setSelectedAccount(demoEmail);
+    setError(''); // Clear any previous errors
+    
+    // Show success message that data has been filled
+    toast({
+      title: 'تم ملء البيانات',
+      description: 'اضغط على "تسجيل الدخول" للمتابعة',
+      variant: "default"
+    });
   };
 
   return (
@@ -127,7 +162,10 @@ export default function LoginPage() {
                     id="email"
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setSelectedAccount(''); // Reset selection when typing manually
+                    }}
                     placeholder="admin@farm.com"
                     className="pr-10"
                     dir="ltr"
@@ -143,7 +181,10 @@ export default function LoginPage() {
                     id="password"
                     type="password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setSelectedAccount(''); // Reset selection when typing manually
+                    }}
                     placeholder="••••••••"
                     className="pr-10"
                     dir="ltr"
@@ -157,9 +198,19 @@ export default function LoginPage() {
                 </Alert>
               )}
 
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button 
+                type="submit" 
+                className={`w-full ${selectedAccount ? 'bg-farm-600 hover:bg-farm-700 shadow-lg' : ''}`}
+                disabled={loading}
+              >
                 {loading ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
               </Button>
+              
+              {selectedAccount && (
+                <p className="text-sm text-center text-farm-600 font-medium">
+                  ✓ تم ملء البيانات - جاهز لتسجيل الدخول
+                </p>
+              )}
             </form>
 
             <div className="mt-6 text-center">
@@ -175,7 +226,7 @@ export default function LoginPage() {
           <CardHeader>
             <CardTitle className="text-lg">حسابات تجريبية</CardTitle>
             <CardDescription>
-              اختر أحد الحسابات التجريبية لاستكشاف النظام
+              اختر أحد الحسابات لملء البيانات، ثم اضغط "تسجيل الدخول"
             </CardDescription>
           </CardHeader>
           
@@ -185,7 +236,11 @@ export default function LoginPage() {
               return (
                 <div
                   key={index}
-                  className="p-4 border rounded-lg hover:bg-accent transition-colors cursor-pointer"
+                  className={`p-4 border rounded-lg hover:bg-accent transition-colors cursor-pointer ${
+                    selectedAccount === account.email 
+                      ? 'border-farm-600 bg-farm-50 shadow-md' 
+                      : 'border-gray-200'
+                  }`}
                   onClick={() => quickLogin(account.email, account.password)}
                 >
                   <div className="flex items-start space-x-3 space-x-reverse">

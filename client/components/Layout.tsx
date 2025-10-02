@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -93,6 +93,17 @@ const navigation = [
   },
 ];
 
+// Worker-specific navigation
+const workerNavigation = [
+  {
+    name: "لوحة العامل",
+    href: "/worker-dashboard",
+    icon: Home,
+    permission: "feeding",
+    children: undefined,
+  },
+];
+
 const roleColors = {
   owner: "bg-red-100 text-red-800",
   manager: "bg-blue-100 text-blue-800",
@@ -101,6 +112,7 @@ const roleColors = {
   barn_manager: "bg-orange-100 text-orange-800",
   accountant: "bg-yellow-100 text-yellow-800",
   sales: "bg-pink-100 text-pink-800",
+  farm_worker: "bg-emerald-100 text-emerald-800",
 };
 
 const roleLabels = {
@@ -111,6 +123,7 @@ const roleLabels = {
   barn_manager: "مشرف حظائر",
   accountant: "محاسب",
   sales: "مسؤول مبيعات",
+  farm_worker: "عامل المزرعة",
 };
 
 interface LayoutProps {
@@ -119,18 +132,25 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, signOut, hasPermission } = useAuth();
 
   const handleSignOut = async () => {
     try {
       await signOut();
+      // Clear browser history and navigate to home page
+      window.history.pushState(null, '', '/');
+      navigate('/', { replace: true });
     } catch (error) {
       console.error("Sign out error:", error);
     }
   };
 
+  // Choose navigation based on user role
+  const currentNavigation = user?.role === 'farm_worker' ? workerNavigation : navigation;
+  
   // Filter navigation items based on user permissions
-  const filteredNavigation = navigation.filter(
+  const filteredNavigation = currentNavigation.filter(
     (item) => hasPermission("all") || hasPermission(item.permission),
   );
 
