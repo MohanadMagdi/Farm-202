@@ -232,10 +232,74 @@ export default function Layout({ children }: LayoutProps) {
         </div>
       </header>
 
-      {/* Main content */}
-      <main className="overflow-x-hidden">
-        <div className="container mx-auto p-6">{children}</div>
-      </main>
+      <div className="flex">
+        {/* Sidebar */}
+        <aside className="w-64 border-l bg-card">
+          <nav className="space-y-2 p-4">
+            {filteredNavigation.map((item) => {
+              const isActive =
+                location.pathname === item.href ||
+                (item.children &&
+                  item.children.some(
+                    (child) => location.pathname === child.href,
+                  ));
+
+              return (
+                <div key={item.name}>
+                  <Link
+                    to={item.href}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-farm-100 text-farm-800"
+                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                    )}
+                  >
+                    <item.icon className="h-5 w-5" />
+                    <span>{item.name}</span>
+                  </Link>
+
+                  {/* Sub-navigation */}
+                  {item.children && (
+                    <div className="ml-8 mt-2 space-y-1">
+                      {item.children
+                        .filter(
+                          (child) =>
+                            hasPermission("all") ||
+                            hasPermission(child.permission),
+                        )
+                        .map((child) => (
+                          <Link
+                            key={child.href}
+                            to={child.href}
+                            className={cn(
+                              "block rounded-lg px-3 py-2 text-sm transition-colors",
+                              location.pathname === child.href
+                                ? "bg-farm-50 text-farm-700 font-medium"
+                                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                            )}
+                          >
+                            {child.name}
+                          </Link>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </nav>
+
+          {/* Footer */}
+          <div className="absolute bottom-4 right-4 left-4">
+            <div className="text-xs text-muted-foreground text-center space-y-1" />
+          </div>
+        </aside>
+
+        {/* Main content */}
+        <main className="flex-1 overflow-x-hidden">
+          <div className="container mx-auto p-6">{children}</div>
+        </main>
+      </div>
     </div>
   );
 }

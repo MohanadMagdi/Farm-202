@@ -42,86 +42,12 @@ import {
 } from "lucide-react";
 
 export default function Index() {
-  const { hasPermission } = useAuth();
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [barns, setBarns] = useState<Barn[]>([]);
   const [warehouseItems, setWarehouseItems] = useState<WarehouseItem[]>([]);
   const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
   const [feedingRecords, setFeedingRecords] = useState<FeedingRecord[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // App navigation items
-  const appItems = [
-    {
-      name: "لوحة التحكم",
-      href: "/",
-      icon: Home,
-      permission: "dashboard",
-      color: "bg-blue-500",
-      description: "نظرة عامة على المزرعة"
-    },
-    {
-      name: "الحيوانات",
-      href: "/animals",
-      icon: CircleDot,
-      permission: "animals",
-      color: "bg-green-500",
-      description: "إدارة الحيوانات"
-    },
-    {
-      name: "الحظائر",
-      href: "/barns",
-      icon: Building2,
-      permission: "barns",
-      color: "bg-orange-500",
-      description: "إدارة الحظائر"
-    },
-    {
-      name: "التغذية",
-      href: "/feeding",
-      icon: Utensils,
-      permission: "feeding",
-      color: "bg-yellow-500",
-      description: "إدارة التغذية"
-    },
-    {
-      name: "المخزون",
-      href: "/inventory",
-      icon: Package,
-      permission: "inventory",
-      color: "bg-purple-500",
-      description: "إدارة المخزون"
-    },
-    {
-      name: "تقارير الأوزان",
-      href: "/reports/weights",
-      icon: Scale,
-      permission: "reports",
-      color: "bg-indigo-500",
-      description: "تقارير الأوزان"
-    },
-    {
-      name: "التقارير",
-      href: "/reports",
-      icon: FileText,
-      permission: "reports",
-      color: "bg-pink-500",
-      description: "التقارير العامة"
-    },
-    {
-      name: "المستخدمين",
-      href: "/users",
-      icon: UserCheck,
-      permission: "users",
-      color: "bg-red-500",
-      description: "إدارة المستخدمين"
-    },
-  ];
-
-  // Filter items based on permissions
-  const filteredAppItems = appItems.filter(
-    (item) => hasPermission("all") || hasPermission(item.permission)
-  );
 
   useEffect(() => {
     loadDashboardData();
@@ -334,81 +260,25 @@ export default function Index() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-farm-800">
-            مزرعة الأغنام
+            لوحة تحكم المزرعة
           </h1>
           <p className="text-muted-foreground">
-            نظام إدارة المزرعة - اختر القسم المطلوب
+            نظرة عامة على حالة المزرعة والحيوانات
           </p>
         </div>
         <div className="flex items-center space-x-4 space-x-reverse">
+          <CanvasExportButton
+            targetSelector="main"
+            filename="dashboard-export"
+            title="لوحة التحكم"
+            exportType="dashboard"
+            variant="outline"
+            size="sm"
+          />
           <Badge variant="outline" className="text-farm-600">
             آخر تحديث: اليوم {formatArabicNumber(14)}:{formatArabicNumber(30)}
           </Badge>
         </div>
-      </div>
-
-      {/* App Grid */}
-      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-        {filteredAppItems.map((item) => (
-          <Link key={item.name} to={item.href} className="block">
-            <Card className="h-full hover:shadow-lg transition-all duration-200 hover:scale-105 cursor-pointer">
-              <CardContent className="p-6 text-center">
-                <div className={`w-16 h-16 mx-auto mb-4 rounded-full ${item.color} flex items-center justify-center`}>
-                  <item.icon className="h-8 w-8 text-white" />
-                </div>
-                <h3 className="text-lg font-semibold text-farm-800 mb-2">
-                  {item.name}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {item.description}
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
-
-      {/* Quick Stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <CircleDot className="h-8 w-8 text-farm-600 mx-auto mb-2" />
-            <div className="text-2xl font-bold text-farm-800">
-              {formatArabicNumber(totalAnimals)}
-            </div>
-            <p className="text-sm text-muted-foreground">إجمالي الحيوانات</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4 text-center">
-            <Building2 className="h-8 w-8 text-farm-600 mx-auto mb-2" />
-            <div className="text-2xl font-bold text-farm-800">
-              {formatArabicNumber(barns.length)}
-            </div>
-            <p className="text-sm text-muted-foreground">عدد الحظائر</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4 text-center">
-            <Package className="h-8 w-8 text-farm-600 mx-auto mb-2" />
-            <div className="text-2xl font-bold text-farm-800">
-              {formatArabicNumber(warehouseItems.length)}
-            </div>
-            <p className="text-sm text-muted-foreground">عناصر المخزون</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4 text-center">
-            <DollarSign className="h-8 w-8 text-farm-600 mx-auto mb-2" />
-            <div className="text-2xl font-bold text-farm-800">
-              {formatEGP(totalValue)}
-            </div>
-            <p className="text-sm text-muted-foreground">قيمة المزرعة</p>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Alerts Section */}
@@ -439,6 +309,244 @@ export default function Index() {
           </div>
         </div>
       )}
+
+      {/* KPI Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {/* Total Animals */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              إجمالي الحيوانات
+            </CardTitle>
+            <CircleDot className="h-4 w-4 text-farm-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-farm-800">
+              {formatArabicNumber(totalAnimals)}
+            </div>
+            <div className="flex items-center space-x-2 space-x-reverse text-xs text-muted-foreground">
+              <TrendingUp className="h-3 w-3 text-green-500" />
+              <span>+{formatArabicNumber(monthlyGrowth)}% هذا الشهر</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Farm Value */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">قيمة المزرعة</CardTitle>
+            <DollarSign className="h-4 w-4 text-farm-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-farm-800">
+              {formatEGP(totalValue)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              متوسط السعر:{" "}
+              {totalAnimals > 0
+                ? formatEGP(Math.round(totalValue / totalAnimals))
+                : formatEGP(0)}{" "}
+              للحيوان
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Average Weight */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">متوسط الوزن</CardTitle>
+            <Scale className="h-4 w-4 text-farm-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-farm-800">
+              {formatWeight(averageWeight)}
+            </div>
+            <p className="text-xs text-muted-foreground">للحيوانات البالغة</p>
+          </CardContent>
+        </Card>
+
+        {/* Barn Occupancy */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">إشغال الحظائر</CardTitle>
+            <Building2 className="h-4 w-4 text-farm-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-farm-800">
+              {totalCapacity > 0
+                ? Math.round((currentOccupancy / totalCapacity) * 100)
+                : 0}
+              %
+            </div>
+            <Progress
+              value={
+                totalCapacity > 0 ? (currentOccupancy / totalCapacity) * 100 : 0
+              }
+              className="mt-2"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              {formatArabicNumber(currentOccupancy)} من{" "}
+              {formatArabicNumber(totalCapacity)}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Animal Breakdown */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2 space-x-reverse">
+              <Users className="h-5 w-5 text-farm-600" />
+              <span>توزيع الحيوانات</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Link to="/animals/males" className="block">
+              <div className="flex items-center justify-between p-2 rounded hover:bg-accent transition-colors">
+                <div className="flex items-center space-x-2 space-x-reverse">
+                  <div className="h-3 w-3 rounded-full bg-blue-500"></div>
+                  <span>{animalTypes.male}</span>
+                </div>
+                <div className="text-left">
+                  <span className="font-semibold">
+                    {formatArabicNumber(males)}
+                  </span>
+                  <span className="text-sm text-muted-foreground mr-1">
+                    (
+                    {totalAnimals > 0
+                      ? Math.round((males / totalAnimals) * 100)
+                      : 0}
+                    %)
+                  </span>
+                </div>
+              </div>
+            </Link>
+
+            <Link to="/animals/females" className="block">
+              <div className="flex items-center justify-between p-2 rounded hover:bg-accent transition-colors">
+                <div className="flex items-center space-x-2 space-x-reverse">
+                  <div className="h-3 w-3 rounded-full bg-pink-500"></div>
+                  <span>{animalTypes.female}</span>
+                </div>
+                <div className="text-left">
+                  <span className="font-semibold">
+                    {formatArabicNumber(females)}
+                  </span>
+                  <span className="text-sm text-muted-foreground mr-1">
+                    (
+                    {totalAnimals > 0
+                      ? Math.round((females / totalAnimals) * 100)
+                      : 0}
+                    %)
+                  </span>
+                </div>
+              </div>
+            </Link>
+
+            <Link to="/animals/newborns" className="block">
+              <div className="flex items-center justify-between p-2 rounded hover:bg-accent transition-colors">
+                <div className="flex items-center space-x-2 space-x-reverse">
+                  <div className="h-3 w-3 rounded-full bg-green-500"></div>
+                  <span>{animalTypes.newborn}</span>
+                </div>
+                <div className="text-left">
+                  <span className="font-semibold">
+                    {formatArabicNumber(newborns)}
+                  </span>
+                  <span className="text-sm text-muted-foreground mr-1">
+                    (
+                    {totalAnimals > 0
+                      ? Math.round((newborns / totalAnimals) * 100)
+                      : 0}
+                    %)
+                  </span>
+                </div>
+              </div>
+            </Link>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2 space-x-reverse">
+              <Calendar className="h-5 w-5 text-farm-600" />
+              <span>النشاط الأخير</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {recentActivity.map((activity) => (
+                <div
+                  key={activity.id}
+                  className="flex items-start space-x-3 space-x-reverse"
+                >
+                  <div className="h-2 w-2 rounded-full bg-farm-500 mt-2"></div>
+                  <div className="flex-1 space-y-1">
+                    <p className="text-sm font-medium">{activity.action}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {activity.animal && `${activity.animal} - `}
+                      {activity.weight && `${activity.weight} - `}
+                      {activity.barn && `${activity.barn} - `}
+                      <span className="text-xs">{activity.time}</span>
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Quick Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>إجراءات سريعة</CardTitle>
+          <CardDescription>
+            الإجراءات الأكثر استخداماً في إدارة المزرعة
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Link to="/animals">
+              <Button
+                className="h-auto flex-col space-y-2 p-4 w-full"
+                variant="outline"
+              >
+                <CircleDot className="h-6 w-6" />
+                <span>إضافة حيوان جديد</span>
+              </Button>
+            </Link>
+            <Link to="/animals">
+              <Button
+                className="h-auto flex-col space-y-2 p-4 w-full"
+                variant="outline"
+              >
+                <Scale className="h-6 w-6" />
+                <span>تسجيل وزن</span>
+              </Button>
+            </Link>
+            <Link to="/inventory">
+              <Button
+                className="h-auto flex-col space-y-2 p-4 w-full"
+                variant="outline"
+              >
+                <Package className="h-6 w-6" />
+                <span>صرف علف</span>
+              </Button>
+            </Link>
+            <Link to="/animals">
+              <Button
+                className="h-auto flex-col space-y-2 p-4 w-full"
+                variant="outline"
+              >
+                <Heart className="h-6 w-6" />
+                <span>تسجيل علاج</span>
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
