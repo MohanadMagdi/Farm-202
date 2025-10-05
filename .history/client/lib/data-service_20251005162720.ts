@@ -172,7 +172,7 @@ export const farmHelpers = {
   // Calculate ADG for an animal
   calculateADG: (animal: Animal): number => {
     const birthDate = animal.birthDate ? new Date(animal.birthDate) : 
-                      animal.purchaseDate ? new Date(animal.purchaseDate) : null;
+                      animal.acquisitionDate ? new Date(animal.acquisitionDate) : null;
     if (!birthDate) return 0;
     
     const daysSinceBirth = Math.floor(
@@ -180,7 +180,7 @@ export const farmHelpers = {
     );
 
     const estimatedBirthWeight = 3.5; // kg for sheep
-    const currentWeight = animal.weight || 0;
+    const currentWeight = animal.currentWeight || 0;
     return daysSinceBirth > 0
       ? (currentWeight - estimatedBirthWeight) / daysSinceBirth
       : 0;
@@ -210,7 +210,7 @@ export const farmHelpers = {
     ]);
 
     const totalValue = items.reduce(
-      (sum, item) => sum + (item.currentStock || 0) * (item.unitPrice || 0),
+      (sum, item) => sum + item.currentStock * (item.costPerUnit || 0),
       0,
     );
     const lowStockItems = await dataService.warehouseItems.getLowStock();

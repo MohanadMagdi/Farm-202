@@ -210,7 +210,7 @@ export const farmHelpers = {
     ]);
 
     const totalValue = items.reduce(
-      (sum, item) => sum + (item.currentStock || 0) * (item.unitPrice || 0),
+      (sum, item) => sum + (item.currentStock || 0) * (item.costPerUnit || 0),
       0,
     );
     const lowStockItems = await dataService.warehouseItems.getLowStock();

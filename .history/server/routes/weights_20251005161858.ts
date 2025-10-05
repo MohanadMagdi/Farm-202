@@ -148,12 +148,21 @@ export const getWeightStatisticsHandler: RequestHandler = async (req, res) => {
       averageWeight: stats.averageWeight || 0,
       minWeight: stats.minWeight || 0,
       maxWeight: stats.maxWeight || 0,
-      totalAnimals: animalsDb.getAll().length,
-      trackedAnimals: weightsDb.getAll().length,
     });
   } catch (error) {
     console.error('Error in getWeightStatisticsHandler:', error);
     res.status(500).json({ error: 'حدث خطأ في الخادم' });
   }
 };
-
+      totalAnimals: 0,
+      trackedAnimals: 0,
+      trackingPercentage: 0,
+      averageWeightGain: 0,
+      averageADG: 0
+    };
+    res.status(200).json(mockStats);
+  } catch (error) {
+    console.error('Error in getWeightStatisticsHandler:', error);
+    res.status(500).json({ error: 'حدث خطأ في الخادم' });
+  }
+};
