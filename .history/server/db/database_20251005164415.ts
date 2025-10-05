@@ -61,7 +61,7 @@ export function initializeDatabase() {
   `);
 
   // Barns table
-  dbInstance.exec(`
+  db.exec(`
     CREATE TABLE IF NOT EXISTS barns (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -77,7 +77,7 @@ export function initializeDatabase() {
   `);
 
   // Warehouse items table
-  dbInstance.exec(`
+  db.exec(`
     CREATE TABLE IF NOT EXISTS warehouse_items (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -98,7 +98,7 @@ export function initializeDatabase() {
   `);
 
   // Stock movements table
-  dbInstance.exec(`
+  db.exec(`
     CREATE TABLE IF NOT EXISTS stock_movements (
       id TEXT PRIMARY KEY,
       itemId TEXT NOT NULL,
@@ -116,7 +116,7 @@ export function initializeDatabase() {
   `);
 
   // Weight records table
-  dbInstance.exec(`
+  db.exec(`
     CREATE TABLE IF NOT EXISTS weight_records (
       id TEXT PRIMARY KEY,
       animalId TEXT NOT NULL,
@@ -130,7 +130,7 @@ export function initializeDatabase() {
   `);
 
   // Feeding records table
-  dbInstance.exec(`
+  db.exec(`
     CREATE TABLE IF NOT EXISTS feeding_records (
       id TEXT PRIMARY KEY,
       animalId TEXT,
@@ -148,7 +148,7 @@ export function initializeDatabase() {
   `);
 
   // Health records table
-  dbInstance.exec(`
+  db.exec(`
     CREATE TABLE IF NOT EXISTS health_records (
       id TEXT PRIMARY KEY,
       animalId TEXT NOT NULL,
@@ -167,7 +167,7 @@ export function initializeDatabase() {
   `);
 
   // Barn movements table
-  dbInstance.exec(`
+  db.exec(`
     CREATE TABLE IF NOT EXISTS barn_movements (
       id TEXT PRIMARY KEY,
       animalId TEXT NOT NULL,
@@ -184,7 +184,7 @@ export function initializeDatabase() {
   `);
 
   // Feeding schedules table
-  dbInstance.exec(`
+  db.exec(`
     CREATE TABLE IF NOT EXISTS feeding_schedules (
       id TEXT PRIMARY KEY,
       barnId TEXT,
@@ -203,7 +203,7 @@ export function initializeDatabase() {
   `);
 
   // Barn equipment table
-  dbInstance.exec(`
+  db.exec(`
     CREATE TABLE IF NOT EXISTS barn_equipment (
       id TEXT PRIMARY KEY,
       barnId TEXT NOT NULL,
@@ -222,7 +222,7 @@ export function initializeDatabase() {
   `);
 
   // Mortality records table
-  dbInstance.exec(`
+  db.exec(`
     CREATE TABLE IF NOT EXISTS mortality_records (
       id TEXT PRIMARY KEY,
       animalId TEXT NOT NULL,
@@ -239,7 +239,7 @@ export function initializeDatabase() {
   `);
 
   // Feed efficiency records table
-  dbInstance.exec(`
+  db.exec(`
     CREATE TABLE IF NOT EXISTS feed_efficiency_records (
       id TEXT PRIMARY KEY,
       animalId TEXT,
@@ -258,6 +258,7 @@ export function initializeDatabase() {
   `);
 
   // Create indexes for better query performance
+  const dbInstance = getDb();
   dbInstance.exec(`
     CREATE INDEX IF NOT EXISTS idx_animals_earTag ON animals(earTag);
     CREATE INDEX IF NOT EXISTS idx_animals_barnId ON animals(currentBarnId);
